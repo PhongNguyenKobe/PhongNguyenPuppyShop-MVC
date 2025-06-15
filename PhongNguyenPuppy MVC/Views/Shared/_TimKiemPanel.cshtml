@@ -1,6 +1,35 @@
 ﻿<form asp-action="Search" asp-controller="HangHoa">
-    <input type="search" class="form-control p-3" placeholder="keywords" aria-describedby="search-icon-1" name="query">
-    <button>
-        <span id="search-icon-1" class="input-group-text p-3"><i class="fa fa-search"></i></span>
-    </button>
+    <div class="input-group" style="max-width: 600px; margin: 0 auto; display: flex; align-items: center;">
+        <input type="search" class="form-control p-3" placeholder="keywords" name="query"
+               style="flex: 1; border-radius: 25px 0 0 25px; border: 1px solid #ccc; padding: 15px; font-size: 16px;">
+        <button style="border-radius: 0 25px 25px 0; background-color: #007BFF; border: none; padding: 15px; color: #fff; font-size: 16px; cursor: pointer;">
+            <i class="fa fa-search"></i>
+        </button>
+    </div>
 </form>
+<style>
+.input-group {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+}
+
+.input-group input {
+    flex: 1;
+    border-radius: 25px 0 0 25px;
+    border: 1px solid #ccc;
+    padding: 15px;
+    font-size: 16px;
+}
+
+.input-group button {
+    border-radius: 0 25px 25px 0;
+    background-color: #007BFF;
+    border: none;
+    padding: 15px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+</style>
