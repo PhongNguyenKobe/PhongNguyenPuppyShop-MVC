@@ -32,7 +32,7 @@
                     <div class="col-lg-6">
                         <h4 class="fw-bold mb-3">@Model.TenHh</h4>
                         <p class="mb-3">@Model.TenLoai</p>
-                        <p class="fw-bold mb-3">@Model.DonGia VNĐ</p>
+                        <p class="fw-bold mb-3">@Model.DonGia.ToString("N0") VNĐ</p>
                         <div class="d-flex mb-4">
                             <i class="fa fa-star text-secondary"></i>
                             <i class="fa fa-star text-secondary"></i>
@@ -190,8 +190,8 @@
                                     <i class="fa fa-star"></i>
                                 </div>
                                 <div class="d-flex mb-2">
-                                    <h5 class="fw-bold me-2">@Model.DonGia</h5>
-                                    <h5 class="text-danger text-decoration-line-through">@Model.DonGia</h5>
+                                    <h5 class="fw-bold me-2">@Model.DonGia.ToString("N0") VNĐ</h5>
+                                    <h5 class="text-danger text-decoration-line-through">@Model.DonGia.ToString("N0") VNĐ</h5>
                                 </div>
                             </div>
                         </div>
@@ -209,8 +209,8 @@
                                     <i class="fa fa-star"></i>
                                 </div>
                                 <div class="d-flex mb-2">
-                                    <h5 class="fw-bold me-2">@Model.DonGia</h5>
-                                    <h5 class="text-danger text-decoration-line-through">@Model.DonGia</h5>
+                                    <h5 class="fw-bold me-2">@Model.DonGia.ToString("N0") VNĐ</h5>
+                                    <h5 class="text-danger text-decoration-line-through">@Model.DonGia.ToString("N0") VNĐ</h5>
                                 </div>
                             </div>
                         </div>
@@ -243,7 +243,7 @@
                         <h4>Parsely</h4>
                         <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
                         <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia / kg</p>
+                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
                             <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
                         </div>
                     </div>
@@ -257,7 +257,7 @@
                         <h4>Parsely</h4>
                         <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
                         <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia / kg</p>
+                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
                             <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
                         </div>
                     </div>
@@ -271,7 +271,7 @@
                         <h4>Parsely</h4>
                         <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
                         <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia / kg</p>
+                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
                             <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
                         </div>
                     </div>
@@ -285,7 +285,7 @@
                         <h4>Parsely</h4>
                         <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
                         <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia / kg</p>
+                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
                             <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
                         </div>
                     </div>
@@ -299,7 +299,7 @@
                         <h4>Parsely</h4>
                         <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
                         <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia / kg</p>
+                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
                             <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
                         </div>
                     </div>
@@ -313,7 +313,7 @@
                         <h4>Parsely</h4>
                         <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
                         <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia / kg</p>
+                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
                             <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
                         </div>
                     </div>
@@ -327,7 +327,7 @@
                         <h4>Parsely</h4>
                         <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
                         <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia / kg</p>
+                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
                             <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
                         </div>
                     </div>
@@ -341,7 +341,7 @@
                         <h4>Parsely</h4>
                         <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
                         <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia / kg</p>
+                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
                             <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
                         </div>
                     </div>

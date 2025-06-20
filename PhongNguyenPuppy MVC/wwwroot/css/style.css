@@ -375,10 +375,6 @@
     margin-bottom: 0.5rem;
 }
 
-/* Giá tiền với ký hiệu ₫ */
-.fruite-item .price::after {
-    content: " ₫";
-}
 
 /* Bố cục linh hoạt */
 .d-flex.justify-content-between.flex-lg-wrap {
