@@ -15,8 +15,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             db = Context;
         }
 
-        const string CART_KEY = "MYCART";
-        public List<CartItem> Cart => HttpContext.Session.Get<List<CartItem>>(CART_KEY) ?? new List<CartItem>();
+        public List<CartItem> Cart => HttpContext.Session.Get<List<CartItem>>(MySetting.CART_KEY) ?? new List<CartItem>();
         public IActionResult Index()
         {
             return View(Cart);
@@ -48,7 +47,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             {
                 item.SoLuong += quantity;
             }
-            HttpContext.Session.Set(CART_KEY, giohang);
+            HttpContext.Session.Set(MySetting.CART_KEY, giohang);
             return RedirectToAction("Index");
         }
 
@@ -59,7 +58,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             if (item != null)
             {
                 giohang.Remove(item);
-                HttpContext.Session.Set(CART_KEY, giohang);
+                HttpContext.Session.Set(MySetting.CART_KEY, giohang);
             }
             return RedirectToAction("Index");
         }
