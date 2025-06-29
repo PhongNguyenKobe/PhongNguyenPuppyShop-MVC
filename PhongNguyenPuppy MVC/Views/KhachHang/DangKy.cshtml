@@ -1,0 +1,90 @@
+﻿@model PhongNguyenPuppy_MVC.ViewModels.RegisterVM
+@{
+	ViewData["Title"] = "Đăng Ký";
+}
+
+<div class="container py-5">
+	<div class="container py-5 mt-5">
+		<h2 class="mb-4">Đăng ký thành viên</h2>
+
+		<form asp-action="DangKy" method="post" enctype="multipart/form-data">
+
+			<div class="row mb-3">
+				<div class="col-md-6">
+					<label asp-for="MaKh" class="form-label"></label>
+					<input asp-for="MaKh" class="form-control" />
+					<span asp-validation-for="MaKh" class="text-danger"></span>
+				</div>
+				<div class="col-md-6">
+					<label asp-for="MatKhau" class="form-label"></label>
+					<input asp-for="MatKhau" class="form-control" type="password" />
+					<span asp-validation-for="MatKhau" class="text-danger"></span>
+				</div>
+			</div>
+
+			<div class="mb-3">
+				<label asp-for="HoTen" class="form-label"></label>
+				<input asp-for="HoTen" class="form-control" />
+				<span asp-validation-for="HoTen" class="text-danger"></span>
+			</div>
+
+			<div class="mb-3">
+				<label class="form-label">Giới tính</label>
+				<div class="row">
+					<div class="col-auto">
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="GioiTinh" value="true" checked />
+							<label class="form-check-label">Nam</label>
+						</div>
+					</div>
+					<div class="col-auto">
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="GioiTinh" value="false" />
+							<label class="form-check-label">Nữ</label>
+						</div>
+					</div>
+				</div>
+			</div>
+
+
+			<div class="mb-3">
+				<label asp-for="NgaySinh" class="form-label"></label>
+				<input asp-for="NgaySinh" class="form-control" type="date" />
+				<span asp-validation-for="NgaySinh" class="text-danger"></span>
+			</div>
+
+			<div class="mb-3">
+				<label asp-for="DiaChi" class="form-label"></label>
+				<input asp-for="DiaChi" class="form-control" />
+				<span asp-validation-for="DiaChi" class="text-danger"></span>
+			</div>
+
+			<div class="row mb-3">
+				<div class="col-md-6">
+					<label asp-for="DienThoai" class="form-label"></label>
+					<input asp-for="DienThoai" class="form-control" />
+					<span asp-validation-for="DienThoai" class="text-danger"></span>
+				</div>
+
+				<div class="col-md-6">
+					<label asp-for="Email" class="form-label"></label>
+					<input asp-for="Email" class="form-control" type="email" />
+					<span asp-validation-for="Email" class="text-danger"></span>
+				</div>
+			</div>
+
+
+			<div class="mb-3">
+				<label asp-for="Hinh" class="form-label">Hình đại diện</label>
+				<input asp-for="Hinh" class="form-control" type="file" name="Hinh" />
+			</div>
+
+			<button type="submit" class="btn btn-primary custom-hover">Đăng ký</button>
+		</form>
+	</div>
+
+</div>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+}
