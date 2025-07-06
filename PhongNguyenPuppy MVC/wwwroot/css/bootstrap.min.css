@@ -4028,7 +4028,7 @@ textarea.form-control-lg {
     padding-bottom: .5rem
 }
 
-    .navbar > .container, .navbar > .container-fluid, .navbar > .container-sm, .navbar > .container-md, .navbar > .container-lg, .navbar > .container-xl, .navbar > .container-xxl {
+    .navbar > .container, .navbar > .container-fluid, .navbar > .container-sm, .navbar > .container-md, .navbar > .container-lg, .navbar > .container-xl, .navbar > .container-xxl > .topbar{
         display: flex;
         flex-wrap: inherit;
         align-items: center;

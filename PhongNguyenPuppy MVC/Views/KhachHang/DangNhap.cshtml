@@ -1,0 +1,34 @@
+﻿@model PhongNguyenPuppy_MVC.ViewModels.LoginVM
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="d-flex justify-content-center align-items-center vh-100 bg-light">
+    <div class="card shadow-sm p-4" style="min-width: 400px;">
+        <div class="text-center mb-4">
+            <h3 class="fw-bold text-primary">Chào mừng trở lại! 👋</h3>
+            <p class="text-muted">Vui lòng đăng nhập để tiếp tục</p>
+        </div>
+
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+        <form asp-action="DangNhap">
+            <div class="form-floating mb-3">
+                <input asp-for="UserName" class="form-control" placeholder="Tên đăng nhập" />
+                <label asp-for="UserName"><i class="bi bi-person"></i> Tên đăng nhập</label>
+                <span asp-validation-for="UserName" class="text-danger small"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Password" type="password" class="form-control" placeholder="Mật khẩu" />
+                <label asp-for="Password"><i class="bi bi-lock"></i> Mật khẩu</label>
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">🔐 Đăng nhập</button>
+                <a asp-controller="KhachHang" asp-action="QuenMatKhau" class="btn btn-link text-decoration-none">Quên mật khẩu?</a>
+            </div>
+        </form>
+    </div>
+</div>

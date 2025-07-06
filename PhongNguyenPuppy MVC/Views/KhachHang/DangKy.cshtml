@@ -1,90 +1,79 @@
 ﻿@model PhongNguyenPuppy_MVC.ViewModels.RegisterVM
 @{
-	ViewData["Title"] = "Đăng Ký";
+    ViewData["Title"] = "Đăng Ký";
 }
 
-<div class="container py-5">
-	<div class="container py-5 mt-5">
-		<h2 class="mb-4">Đăng ký thành viên</h2>
+<div class="d-flex justify-content-center align-items-center bg-light" style="min-height: calc(100vh - 80px); padding-top: 170px;">
+    <div class="card shadow-sm p-4" style="min-width: 500px;">
+        <div class="text-center mb-4">
+            <h3 class="fw-bold text-success">Đăng ký tài khoản mới 🐾</h3>
+            <p class="text-muted">Hãy điền thông tin bên dưới để đăng ký thành viên!</p>
+        </div>
 
-		<form asp-action="DangKy" method="post" enctype="multipart/form-data">
+        <form asp-action="DangKy" method="post" enctype="multipart/form-data">
+            <div class="form-floating mb-3">
+                <input asp-for="MaKh" class="form-control" placeholder="Mã khách hàng" />
+                <label asp-for="MaKh">Tên đăng nhập</label>
+                <span asp-validation-for="MaKh" class="text-danger small"></span>
+            </div>
 
-			<div class="row mb-3">
-				<div class="col-md-6">
-					<label asp-for="MaKh" class="form-label"></label>
-					<input asp-for="MaKh" class="form-control" />
-					<span asp-validation-for="MaKh" class="text-danger"></span>
-				</div>
-				<div class="col-md-6">
-					<label asp-for="MatKhau" class="form-label"></label>
-					<input asp-for="MatKhau" class="form-control" type="password" />
-					<span asp-validation-for="MatKhau" class="text-danger"></span>
-				</div>
-			</div>
+            <div class="form-floating mb-3">
+                <input asp-for="MatKhau" class="form-control" type="password" placeholder="Mật khẩu" />
+                <label asp-for="MatKhau">Mật khẩu</label>
+                <span asp-validation-for="MatKhau" class="text-danger small"></span>
+            </div>
 
-			<div class="mb-3">
-				<label asp-for="HoTen" class="form-label"></label>
-				<input asp-for="HoTen" class="form-control" />
-				<span asp-validation-for="HoTen" class="text-danger"></span>
-			</div>
+            <div class="form-floating mb-3">
+                <input asp-for="HoTen" class="form-control" placeholder="Họ tên" />
+                <label asp-for="HoTen">Họ tên</label>
+                <span asp-validation-for="HoTen" class="text-danger small"></span>
+            </div>
 
-			<div class="mb-3">
-				<label class="form-label">Giới tính</label>
-				<div class="row">
-					<div class="col-auto">
-						<div class="form-check">
-							<input class="form-check-input" type="radio" name="GioiTinh" value="true" checked />
-							<label class="form-check-label">Nam</label>
-						</div>
-					</div>
-					<div class="col-auto">
-						<div class="form-check">
-							<input class="form-check-input" type="radio" name="GioiTinh" value="false" />
-							<label class="form-check-label">Nữ</label>
-						</div>
-					</div>
-				</div>
-			</div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Giới tính</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="GioiTinh" value="true" checked />
+                    <label class="form-check-label">Nam</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="GioiTinh" value="false" />
+                    <label class="form-check-label">Nữ</label>
+                </div>
+            </div>
 
+            <div class="form-floating mb-3">
+                <input asp-for="NgaySinh" class="form-control" type="date" placeholder="Ngày sinh" />
+                <label asp-for="NgaySinh">Ngày sinh</label>
+                <span asp-validation-for="NgaySinh" class="text-danger small"></span>
+            </div>
 
-			<div class="mb-3">
-				<label asp-for="NgaySinh" class="form-label"></label>
-				<input asp-for="NgaySinh" class="form-control" type="date" />
-				<span asp-validation-for="NgaySinh" class="text-danger"></span>
-			</div>
+            <div class="form-floating mb-3">
+                <input asp-for="DiaChi" class="form-control" placeholder="Địa chỉ" />
+                <label asp-for="DiaChi">Địa chỉ</label>
+                <span asp-validation-for="DiaChi" class="text-danger small"></span>
+            </div>
 
-			<div class="mb-3">
-				<label asp-for="DiaChi" class="form-label"></label>
-				<input asp-for="DiaChi" class="form-control" />
-				<span asp-validation-for="DiaChi" class="text-danger"></span>
-			</div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6 form-floating">
+                    <input asp-for="DienThoai" class="form-control" placeholder="Số điện thoại" />
+                    <label asp-for="DienThoai">Số điện thoại</label>
+                    <span asp-validation-for="DienThoai" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 form-floating">
+                    <input asp-for="Email" class="form-control" type="email" placeholder="Email" />
+                    <label asp-for="Email">Email</label>
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+            </div>
 
-			<div class="row mb-3">
-				<div class="col-md-6">
-					<label asp-for="DienThoai" class="form-label"></label>
-					<input asp-for="DienThoai" class="form-control" />
-					<span asp-validation-for="DienThoai" class="text-danger"></span>
-				</div>
+            <div class="mb-3">
+                <label asp-for="Hinh" class="form-label fw-semibold">Ảnh đại diện</label>
+                <input asp-for="Hinh" class="form-control" type="file" />
+            </div>
 
-				<div class="col-md-6">
-					<label asp-for="Email" class="form-label"></label>
-					<input asp-for="Email" class="form-control" type="email" />
-					<span asp-validation-for="Email" class="text-danger"></span>
-				</div>
-			</div>
-
-
-			<div class="mb-3">
-				<label asp-for="Hinh" class="form-label">Hình đại diện</label>
-				<input asp-for="Hinh" class="form-control" type="file" name="Hinh" />
-			</div>
-
-			<button type="submit" class="btn btn-primary custom-hover">Đăng ký</button>
-		</form>
-	</div>
-
+            <div class="d-grid">
+                <button type="submit" class="btn btn-success btn-lg">🎉 Tạo tài khoản</button>
+            </div>
+        </form>
+    </div>
 </div>
-
-@section Scripts {
-	<partial name="_ValidationScriptsPartial" />
-}

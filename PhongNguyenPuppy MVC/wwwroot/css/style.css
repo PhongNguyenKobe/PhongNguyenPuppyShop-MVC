@@ -1,3 +1,30 @@
+/* Ẩn dropdown mặc định */
+.custom-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 16px);
+    right: 0;
+    min-width: 180px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    z-index: 1050;
+    padding: 8px;
+}
+
+/* Hiển thị bằng hover trên desktop */
+@media (min-width: 992px) {
+    .user-hover:hover .custom-dropdown {
+        display: block;
+    }
+}
+
+/* Khi có class 'show', dùng cho mobile click */
+.custom-dropdown.show {
+    display: block !important;
+}
+
+
 .custom-hover {
     background-color: #1694c1; /* Màu gốc của btn-primary */
     color: white;
@@ -136,6 +163,7 @@
         display: flex;
         align-items: center;
     }
+
 
         .topbar .top-link a {
             letter-spacing: 1px;

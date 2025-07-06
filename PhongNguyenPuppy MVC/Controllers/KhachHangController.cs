@@ -18,6 +18,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             _env = env;
         }
 
+        #region Register in
         [HttpGet]
         public IActionResult DangKy()
         {
@@ -65,6 +66,19 @@ namespace PhongNguyenPuppy_MVC.Controllers
             TempData["Success"] = "Đăng ký thành công!";
             return RedirectToAction("DangNhap");
         }
+        #endregion
+
+
+
+        #region Login in
+        [HttpGet]
+        public IActionResult DangNhap(string? ReturnUrl)
+        {
+            ViewBag.ReturnUrl = ReturnUrl;
+            return View();
+        }
+
+        #endregion
     }
 }
 
