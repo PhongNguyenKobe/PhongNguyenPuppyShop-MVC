@@ -10,9 +10,7 @@
             <p class="text-muted">Vui lòng đăng nhập để tiếp tục</p>
         </div>
 
-        <div asp-validation-summary="All" class="text-danger mb-3"></div>
-
-        <form asp-action="DangNhap">
+        <form asp-action="DangNhap" asp-route-returnurl="@ViewBag.ReturnUrl" >
             <div class="form-floating mb-3">
                 <input asp-for="UserName" class="form-control" placeholder="Tên đăng nhập" />
                 <label asp-for="UserName"><i class="bi bi-person"></i> Tên đăng nhập</label>
@@ -26,7 +24,7 @@
             </div>
 
             <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary btn-lg">🔐 Đăng nhập</button>
+                <button type="submit" class="btn btn-primary btn-lg">🔐Đăng nhập</button>
                 <a asp-controller="KhachHang" asp-action="QuenMatKhau" class="btn btn-link text-decoration-none">Quên mật khẩu?</a>
             </div>
         </form>

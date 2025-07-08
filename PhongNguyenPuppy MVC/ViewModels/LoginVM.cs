@@ -10,7 +10,7 @@ namespace PhongNguyenPuppy_MVC.ViewModels
         public string UserName { get; set; }
 
         [Display(Name = "Mật khẩu")]
-        [Required(ErrorMessage = "*")]
+        [Required(ErrorMessage = "Chưa nhập mật khẩu")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
 

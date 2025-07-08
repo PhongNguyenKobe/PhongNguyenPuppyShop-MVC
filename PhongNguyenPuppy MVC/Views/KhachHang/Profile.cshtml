@@ -1,0 +1,40 @@
+﻿@using System.Security.Claims
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="vh-100 d-flex justify-content-center align-items-center pt-lg-5 pt-4">
+    <div class="container my-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex align-items-center mb-4">
+                <div class="me-3">
+                    <img src="/Hinh/KhachHang/default-avatar.png" alt="Avatar" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                </div>
+                <div>
+                    <h4 class="mb-0 fw-semibold text-primary">Xin chào, @User.Identity.Name 👋</h4>
+                    <small class="text-muted">Khách hàng thân thiết</small>
+                </div>
+            </div>
+
+            <div class="row gy-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Email</label>
+                    <div class="form-control bg-light">@User.FindFirstValue(ClaimTypes.Email)</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Mã khách hàng</label>
+                    <div class="form-control bg-light">@User.FindFirstValue("CustomerID")</div>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex justify-content-end">
+                <a asp-action="DoiMatKhau" asp-controller="KhachHang" class="btn btn-outline-primary me-2">
+                    🔒 Đổi mật khẩu
+                </a>
+                <a asp-action="DangXuat" asp-controller="KhachHang" class="btn btn-danger">
+                    🚪 Đăng xuất
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

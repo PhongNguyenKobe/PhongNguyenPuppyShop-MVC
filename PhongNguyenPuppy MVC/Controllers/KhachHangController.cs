@@ -4,6 +4,10 @@ using PhongNguyenPuppy_MVC.ViewModels;
 using PhongNguyenPuppy_MVC.Models; // nếu có entity KhachHang
 using System.IO;
 using PhongNguyenPuppy_MVC.Helpers;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PhongNguyenPuppy_MVC.Controllers
 {
@@ -70,7 +74,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
 
 
-        #region Login in
+        #region Login
         [HttpGet]
         public IActionResult DangNhap(string? ReturnUrl)
         {
@@ -78,7 +82,67 @@ namespace PhongNguyenPuppy_MVC.Controllers
             return View();
         }
 
+        [HttpPost]
+        public async Task<IActionResult> DangNhap(LoginVM model, string? ReturnUrl)
+        {
+            ViewBag.ReturnUrl = ReturnUrl;
+
+           
+            var khachHang = db.KhachHangs.SingleOrDefault(kh => kh.MaKh == model.UserName);
+            if (khachHang == null)
+            {
+                ModelState.AddModelError("Lỗi", "Tên đăng nhập không tồn tại.");
+                return View(model);
+            }
+
+            if (!khachHang.HieuLuc)
+            {
+                ModelState.AddModelError("Lỗi", "Tài khoản của bạn chưa được kích hoạt. Vui lòng kiểm tra email để kích hoạt tài khoản.");
+                return View(model);
+            }
+
+            string hashedPassword = model.Password.ToMd5Hash(khachHang.RandomKey);
+            if (khachHang.MatKhau != hashedPassword)
+            {
+                ModelState.AddModelError("Lỗi", "Sai thông tin đăng nhập.");
+                return View(model);
+            }
+
+            // Xây dựng Claims
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Email, khachHang.Email ?? ""),
+        new Claim(ClaimTypes.Name, khachHang.HoTen ?? ""),
+        new Claim("CustomerID", khachHang.MaKh),
+        new Claim(ClaimTypes.Role, "Customer")
+    };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(claimsIdentity);
+
+            // Đăng nhập
+            await HttpContext.SignInAsync(principal);
+
+            // Điều hướng theo ReturnUrl nếu hợp lệ
+            if (!string.IsNullOrEmpty(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
+            {
+                return Redirect(ReturnUrl);
+            }
+
+            return RedirectToAction("Profile", "KhachHang");
+        }
         #endregion
+
+        [Authorize]
+        public IActionResult Profile()
+        {
+            return View();
+        }
+        [Authorize]
+        public async Task<IActionResult> DangXuat()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Index", "Home");
+        }
     }
 }
-
