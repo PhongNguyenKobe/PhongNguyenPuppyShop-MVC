@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PhongNguyenPuppy_MVC.Data;
 using PhongNguyenPuppy_MVC.Helpers;
 using PhongNguyenPuppy_MVC.ViewModels;
@@ -61,6 +62,16 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 HttpContext.Session.Set(MySetting.CART_KEY, giohang);
             }
             return RedirectToAction("Index");
+        }
+
+        [Authorize]
+        public IActionResult Checkout()
+        {
+            if(Cart.Count == 0)
+            {
+                return RedirectToAction("Index");
+            }
+            return View(Cart);
         }
     }
 }
