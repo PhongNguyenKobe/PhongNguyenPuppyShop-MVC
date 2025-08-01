@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+<!DOCTYPE html>
 
 <html>
 <head>
@@ -87,16 +88,35 @@
                             @await Component.InvokeAsync("Cart")
 
                             <!-- Dropdown đăng nhập/đăng ký -->
+                            @{
+                                var hoTen = User.Identity.IsAuthenticated ? User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value : null;
+                                var email = User.Identity.IsAuthenticated ? User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value : null;
+                                var maKH = User.Identity.IsAuthenticated ? User.Claims.FirstOrDefault(c => c.Type == "CustomerID")?.Value : null;
+                            }
+
                             <div class="nav-item position-relative user-hover ms-3">
                                 <button type="button" class="nav-link p-0 toggle-user-dropdown" style="background: none; border: none;">
                                     <i class="fas fa-user fa-2x text-primary"></i>
                                 </button>
 
                                 <div class="dropdown-menu custom-dropdown border shadow-sm p-2">
-                                    <a class="dropdown-item" asp-controller="KhachHang" asp-action="DangNhap">🔐 Đăng nhập</a>
-                                    <a class="dropdown-item" asp-controller="KhachHang" asp-action="DangKy">📝 Đăng ký</a>
+                                    @if (User.Identity.IsAuthenticated)
+                                    {
+                                        <span class="dropdown-item-text">👋 Xin chào, @hoTen</span>
+                                        <span class="dropdown-item-text">📧 @email</span>
+                                        <span class="dropdown-item-text">🆔 Mã KH: @maKH</span>
+                                        <hr class="dropdown-divider" />
+                                        <a class="dropdown-item" asp-controller="KhachHang" asp-action="Profile">👤 Thông tin tài khoản</a>
+                                        <a class="dropdown-item" asp-controller="KhachHang" asp-action="DangXuat">🚪 Đăng xuất</a>
+                                    }
+                                    else
+                                    {
+                                        <a class="dropdown-item" asp-controller="KhachHang" asp-action="DangNhap">🔐 Đăng nhập</a>
+                                        <a class="dropdown-item" asp-controller="KhachHang" asp-action="DangKy">📝 Đăng ký</a>
+                                    }
                                 </div>
                             </div>
+
 
                         </div>
 
