@@ -42,12 +42,14 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+
 app.UseHttpsRedirection();
 app.UseStaticFiles(); // Đảm bảo bạn thêm dòng này để phục vụ các tệp tĩnh từ wwwroot
 app.UseRouting();
 
 app.UseSession(); // Thêm dòng này để sử dụng Session
 
+app.UseAuthentication(); // Thêm dòng này để sử dụng Authentication
 app.UseAuthorization();
 
 app.MapControllerRoute(
