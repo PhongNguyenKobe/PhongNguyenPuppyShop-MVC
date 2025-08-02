@@ -12,6 +12,7 @@ namespace PhongNguyenPuppy_MVC.ViewModels
 
         [Display(Name = "Mật khẩu")]
         [Required(ErrorMessage = "*")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu phải từ 6 ký tự trở lên")]
         [DataType(DataType.Password)]
         public string? MatKhau { get; set; }
 
