@@ -91,7 +91,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             var khachHang = db.KhachHangs.SingleOrDefault(kh => kh.MaKh == model.UserName);
             if (khachHang == null)
             {
-                ModelState.AddModelError("Lỗi", "Tên đăng nhập không tồn tại.");
+                ModelState.AddModelError(nameof(model.UserName), "Tên đăng nhập không tồn tại.");
                 return View(model);
             }
 
@@ -104,7 +104,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             string hashedPassword = model.Password.ToMd5Hash(khachHang.RandomKey);
             if (khachHang.MatKhau != hashedPassword)
             {
-                ModelState.AddModelError("Lỗi", "Sai thông tin đăng nhập.");
+                ModelState.AddModelError(nameof(model.Password), "Sai thông tin đăng nhập.");
                 return View(model);
             }
 
