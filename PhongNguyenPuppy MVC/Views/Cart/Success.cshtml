@@ -1,0 +1,20 @@
+﻿@{
+	ViewData["Title"] = "Đặt hàng thành công";
+}
+
+<div class="d-flex justify-content-center align-items-center bg-light" style="min-height: 100vh; padding-top: 190px;padding-bottom: 70px;">
+	<div class="card shadow-sm p-5 text-center" style="max-width: 500px;">
+		<div class="mb-4">
+			<i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+		</div>
+		<h3 class="fw-bold text-success">Đặt hàng thành công! 🎉</h3>
+		<p class="text-muted mt-3">Cảm ơn bạn đã mua hàng tại <strong>PhongNguyen Puppy</strong>.</p>
+		<p class="text-muted">Mã đơn hàng: <strong>@ViewBag.MaHd</strong></p>
+		<p class="text-muted">Đơn hàng của bạn đang được xử lý và sẽ sớm được giao đến bạn.</p>
+
+		<div class="d-grid gap-2 mt-4">
+			<a asp-controller="Home" asp-action="Index" class="btn btn-outline-primary">🏠 Về trang chủ</a>
+			<a asp-controller="KhachHang" asp-action="Profile" class="btn btn-primary">📦 Xem đơn hàng</a>
+		</div>
+	</div>
+</div>

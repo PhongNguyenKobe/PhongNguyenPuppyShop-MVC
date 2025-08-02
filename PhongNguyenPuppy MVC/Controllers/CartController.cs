@@ -65,11 +65,75 @@ namespace PhongNguyenPuppy_MVC.Controllers
         }
 
         [Authorize]
+        [HttpGet]
         public IActionResult Checkout()
         {
             if(Cart.Count == 0)
             {
                 return RedirectToAction("Index");
+            }
+            return View(Cart);
+        }
+
+        [Authorize]
+        [HttpPost]
+        public IActionResult Checkout(CheckoutVM model)
+        {
+            if (ModelState.IsValid)
+            {
+                var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type ==  MySetting.CLAIM_CUSTOMERID).Value;
+
+                var khachHang = new KhachHang();
+                if (model.GiongKhachHang)
+                {
+                    khachHang = db.KhachHangs.SingleOrDefault(p => p.MaKh == customerId);
+                }
+                var hoadon = new HoaDon
+                {
+                    MaKh = customerId,
+                    DiaChi = model.DiaChi?? khachHang?.DiaChi,
+                    DienThoai = model.DienThoai?? khachHang?.DienThoai,
+                    HoTen = model.HoTen ?? khachHang?.HoTen,
+                    NgayDat = DateTime.Now,
+                    CachThanhToan = "Thanh toán khi nhận hàng",
+                    CachVanChuyen = "Giao hàng tận nơi",
+                    MaTrangThai = 0,
+                    GhiChu = model.GhiChu,
+                };
+
+                db.Database.BeginTransaction();
+                try
+                {
+                    db.Database.CommitTransaction();
+                    db.Add(hoadon);
+                    db.SaveChanges();
+
+                    var cthds = new List<ChiTietHd>();
+                    foreach(var item in Cart)
+                    {
+                        cthds.Add(new ChiTietHd
+                        {
+                            MaHd = hoadon.MaHd,
+                            SoLuong = item.SoLuong,
+                            DonGia = item.DonGia,
+                            MaHh = item.MaHh,
+                            GiamGia = 0,
+                        });
+                    }
+                    db.AddRange(cthds);
+                    db.SaveChanges();
+
+                    HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
+                    //Truyền mã đơn hàng vào ViewBag
+                    ViewBag.MaHd = hoadon.MaHd;
+                    return View("Success");
+                }
+                catch
+                {
+                    db.Database.RollbackTransaction();
+                    ModelState.AddModelError("Lỗi", "Đặt hàng không thành công. Vui lòng thử lại sau.");
+                    return View(Cart);
+                }
             }
             return View(Cart);
         }

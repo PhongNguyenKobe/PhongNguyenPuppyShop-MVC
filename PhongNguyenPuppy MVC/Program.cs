@@ -44,7 +44,7 @@ if (!app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
-app.UseStaticFiles(); // Đảm bảo bạn thêm dòng này để phục vụ các tệp tĩnh từ wwwroot
+app.UseStaticFiles(); //  thêm dòng này để phục vụ các tệp tĩnh từ wwwroot
 app.UseRouting();
 
 app.UseSession(); // Thêm dòng này để sử dụng Session
