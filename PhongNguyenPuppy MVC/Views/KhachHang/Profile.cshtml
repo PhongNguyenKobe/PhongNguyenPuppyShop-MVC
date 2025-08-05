@@ -8,7 +8,13 @@
         <div class="card border-0 shadow-sm rounded-4 p-4">
             <div class="d-flex align-items-center mb-4">
                 <div class="me-3">
-                    <img src="/Hinh/KhachHang/default-avatar.png" alt="Avatar" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                    @{
+                        var avatar = User.FindFirstValue("Avatar");
+                        var avatarPath = string.IsNullOrEmpty(avatar) ? "/Hinh/KhachHang/default-avatar.png" : avatar;
+                    }
+                    <div class="me-3">
+                        <img src="@avatarPath" alt="Avatar" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                    </div>
                 </div>
                 <div>
                     <h4 class="mb-0 fw-semibold text-primary">Xin chào, @User.Identity.Name 👋</h4>
@@ -28,7 +34,7 @@
             </div>
 
             <div class="mt-4 d-flex justify-content-end">
-                <a asp-action="DoiMatKhau" asp-controller="KhachHang" class="btn btn-outline-primary me-2">
+                <a asp-action="DatLaiMatKhau" asp-controller="KhachHang" class="btn btn-outline-primary me-2">
                     🔒 Đổi mật khẩu
                 </a>
                 <a asp-action="DangXuat" asp-controller="KhachHang" class="btn btn-danger">
