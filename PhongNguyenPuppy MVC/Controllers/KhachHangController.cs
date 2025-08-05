@@ -8,6 +8,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace PhongNguyenPuppy_MVC.Controllers
 {
@@ -15,11 +16,12 @@ namespace PhongNguyenPuppy_MVC.Controllers
     {
         private readonly PhongNguyenPuppyContext db;
         private readonly IWebHostEnvironment _env;
-
-        public KhachHangController(PhongNguyenPuppyContext context, IWebHostEnvironment env)
+        private readonly MyEmailHelper _emailHelper;
+        public KhachHangController(PhongNguyenPuppyContext context, IWebHostEnvironment env, MyEmailHelper emailHelper)
         {
             db = context;
             _env = env;
+            _emailHelper = emailHelper;
         }
 
         #region Register in
@@ -38,6 +40,12 @@ namespace PhongNguyenPuppy_MVC.Controllers
             }
 
             string? imgPath = null;
+
+            if (db.KhachHangs.Any(k => k.Email == model.Email))
+            {
+                ModelState.AddModelError("Email", "Email đã được sử dụng.");
+                return View(model);
+            }
 
             // Lưu ảnh nếu có upload  
             if (model.Hinh != null)
@@ -74,6 +82,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
 
 
+
         #region Login
         [HttpGet]
         public IActionResult DangNhap(string? ReturnUrl)
@@ -87,7 +96,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
         {
             ViewBag.ReturnUrl = ReturnUrl;
 
-           
+
             var khachHang = db.KhachHangs.SingleOrDefault(kh => kh.MaKh == model.UserName);
             if (khachHang == null)
             {
@@ -110,12 +119,13 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
             // Xây dựng Claims
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.Email, khachHang.Email ?? ""),
-        new Claim(ClaimTypes.Name, khachHang.HoTen ?? ""),
-        new Claim(MySetting.CLAIM_CUSTOMERID, khachHang.MaKh),
-        new Claim(ClaimTypes.Role, "Customer")
-    };
+            {
+                new Claim(ClaimTypes.Email, khachHang.Email ?? ""),
+                new Claim(ClaimTypes.Name, khachHang.HoTen ?? ""),
+                new Claim(MySetting.CLAIM_CUSTOMERID, khachHang.MaKh),
+                new Claim(ClaimTypes.Role, "Customer"),
+                new Claim("Avatar", khachHang.Hinh ?? "default-avatar.png")
+            };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(claimsIdentity);
@@ -132,6 +142,96 @@ namespace PhongNguyenPuppy_MVC.Controllers
             return RedirectToAction("Profile", "KhachHang");
         }
         #endregion
+
+        #region Quên mật khẩu
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult QuenMatKhau()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> QuenMatKhau(ForgotPasswordVM model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var kh = await db.KhachHangs.SingleOrDefaultAsync(k => k.Email == model.Email);
+            if (kh == null)
+            {
+                ModelState.AddModelError("Email", "Email không tồn tại.");
+                return View(model);
+            }
+
+            // Tạo token ngẫu nhiên
+            string token = Guid.NewGuid().ToString();
+
+            // Lưu token và thời hạn
+            kh.ResetToken = token;
+            kh.ResetTokenExpiry = DateTime.Now.AddHours(1);
+            await db.SaveChangesAsync();
+
+            // Tạo link đặt lại mật khẩu
+            string resetLink = Url.Action("DatLaiMatKhau", "KhachHang", new { token }, Request.Scheme);
+
+            // Gửi email
+            string subject = "Yêu cầu đặt lại mật khẩu";
+            string body = $@"
+        <p>Xin chào {kh.HoTen},</p>
+        <p>Bạn đã yêu cầu đặt lại mật khẩu. Bấm vào liên kết bên dưới để thực hiện:</p>
+        <p><a href='{resetLink}'>Đặt lại mật khẩu</a></p>
+        <p>Liên kết sẽ hết hạn sau 1 giờ.</p>";
+
+            await _emailHelper.SendMailAsync(kh.Email, subject, body);
+
+            TempData["Success"] = "Liên kết đặt lại mật khẩu đã được gửi đến email.";
+            return RedirectToAction("DangNhap");
+        }
+
+        #endregion
+
+
+        #region dat lai mat khau
+        [HttpGet]
+        public IActionResult DatLaiMatKhau(string token)
+        {
+            var kh = db.KhachHangs.SingleOrDefault(k => k.ResetToken == token && k.ResetTokenExpiry > DateTime.Now);
+            if (kh == null)
+            {
+                TempData["Error"] = "Liên kết không hợp lệ hoặc đã hết hạn.";
+                return RedirectToAction("DangNhap");
+            }
+
+            return View(new ResetPasswordVM { Token = token });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DatLaiMatKhau(ResetPasswordVM model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var kh = db.KhachHangs.SingleOrDefault(k => k.ResetToken == model.Token && k.ResetTokenExpiry > DateTime.Now);
+            if (kh == null)
+            {
+                TempData["Error"] = "Liên kết không hợp lệ hoặc đã hết hạn.";
+                return RedirectToAction("DangNhap");
+            }
+
+            kh.MatKhau = model.NewPassword.ToMd5Hash(kh.RandomKey);
+            kh.ResetToken = null;
+            kh.ResetTokenExpiry = null;
+            await db.SaveChangesAsync();
+
+            // Chuyển đến view xác nhận, truyền username
+            return View("DatLaiMatKhauThanhCong", kh.MaKh); 
+        }
+
+        #endregion
+
+
 
         [Authorize]
         public IActionResult Profile()

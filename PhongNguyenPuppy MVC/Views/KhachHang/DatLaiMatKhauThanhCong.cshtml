@@ -1,0 +1,13 @@
+﻿@model string
+@{
+    ViewData["Title"] = "Đặt lại mật khẩu thành công";
+}
+
+<div class="container py-5" style="margin-top: 110px;">
+    <div class="alert alert-success rounded-3">
+        ✅ Mật khẩu đã được cập nhật thành công!
+        <br />
+        Tên đăng nhập của bạn là: <strong>@Model</strong>
+    </div>
+    <a href="/KhachHang/DangNhap" class="btn btn-primary mt-3">Đăng nhập ngay</a>
+</div>

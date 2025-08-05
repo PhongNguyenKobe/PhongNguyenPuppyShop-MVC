@@ -34,9 +34,10 @@
             </div>
 
             <div class="mt-4 d-flex justify-content-end">
-                <a asp-action="DatLaiMatKhau" asp-controller="KhachHang" class="btn btn-outline-primary me-2">
+                <a asp-action="QuenMatKhau" asp-controller="KhachHang" asp-route-email="@User.FindFirstValue(ClaimTypes.Email)" class="btn btn-outline-primary me-2">
                     🔒 Đổi mật khẩu
                 </a>
+
                 <a asp-action="DangXuat" asp-controller="KhachHang" class="btn btn-danger">
                     🚪 Đăng xuất
                 </a>

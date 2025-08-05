@@ -1,0 +1,23 @@
+﻿@model PhongNguyenPuppy_MVC.ViewModels.ForgotPasswordVM
+@{
+    ViewData["Title"] = "Quên mật khẩu";
+}
+
+<div class="container py-5" style="margin-top: 110px;">
+        <div class="card shadow-sm p-4 rounded-4">
+            <h4 class="mb-4 text-primary fw-semibold">🔒 Quên mật khẩu</h4>
+
+            <form asp-action="QuenMatKhau" method="post">
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Gửi liên kết đặt lại</button>
+            </form>
+        </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

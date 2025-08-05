@@ -2,8 +2,12 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using PhongNguyenPuppy_MVC.Data;
+using PhongNguyenPuppy_MVC.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Đọc thêm từ appsettings.Secret.json
+builder.Configuration.AddJsonFile("appsettings.Secret.json", optional: true, reloadOnChange: true);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -22,6 +26,12 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Thêm dịch vụ Email
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddTransient<MyEmailHelper>();
+
+
 // Thêm dịch vụ Cookie
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -31,6 +41,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // Thời gian hết hạn của cookie
         options.SlidingExpiration = true; // Kích hoạt gia hạn thời gian hết hạn khi người dùng hoạt động
     });
+
 
 var app = builder.Build();
 
