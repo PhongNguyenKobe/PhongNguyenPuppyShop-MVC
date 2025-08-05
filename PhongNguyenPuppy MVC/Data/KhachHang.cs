@@ -21,6 +21,10 @@ public partial class KhachHang
 
     public string Email { get; set; } = null!;
 
+    public string? ResetToken { get; set; }
+
+    public DateTime? ResetTokenExpiry { get; set; }
+
     public string? Hinh { get; set; }
 
     public bool HieuLuc { get; set; }
