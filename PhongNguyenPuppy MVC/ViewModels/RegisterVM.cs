@@ -16,6 +16,11 @@ namespace PhongNguyenPuppy_MVC.ViewModels
         [DataType(DataType.Password)]
         public string? MatKhau { get; set; }
 
+        [Required(ErrorMessage = "Vui lòng nhập lại mật khẩu")]
+        [DataType(DataType.Password)]
+        [Compare("MatKhau", ErrorMessage = "Mật khẩu nhập lại không khớp")]
+        public string? MatKhauNhapLai { get; set; }
+
 
         [Display(Name = "Họ tên")]
         [Required(ErrorMessage = "*")]
@@ -38,8 +43,10 @@ namespace PhongNguyenPuppy_MVC.ViewModels
         [RegularExpression(@"^(\+84|0)[0-9]{9,10}$", ErrorMessage = "Số điện thoại không hợp lệ")]
         public string? DienThoai { get; set; }
 
-        [MaxLength(24, ErrorMessage = "Email không được quá 24 ký tự")]
+        [StringLength(256)]
+        [EmailAddress]
         public string Email { get; set; }
+
 
         [Display(Name = "Hình ảnh")]
         public IFormFile Hinh { get; set; }
