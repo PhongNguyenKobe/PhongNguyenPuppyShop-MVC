@@ -42,6 +42,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true; // Kích hoạt gia hạn thời gian hết hạn khi người dùng hoạt động
     });
 
+// Thêm dịch vụ PayPal dạng Singleton() - chỉ có một instances duy nhất trong toàn bộ ứng dụng
+builder.Services.AddSingleton(x => new PaypalClient(
+    builder.Configuration["PaypalOptions:AppId"] ?? throw new ArgumentNullException("ClientId is not configured"),
+    builder.Configuration["PaypalOptions:AppSecret"] ?? throw new ArgumentNullException("ClientSecret is not configured"),
+    builder.Configuration["PaypalOptions:Mode"] ?? throw new ArgumentNullException("Mode is not configured")
+));
+    
 
 var app = builder.Build();
 
