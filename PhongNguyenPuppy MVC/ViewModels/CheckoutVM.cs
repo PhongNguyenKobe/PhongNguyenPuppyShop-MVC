@@ -7,7 +7,7 @@
         public string? DiaChi { get; set; }
         public string? DienThoai { get; set; }
         public string? GhiChu { get; set; }
-
+        public int PhiVanChuyen { get; set; }
 
     }
 }

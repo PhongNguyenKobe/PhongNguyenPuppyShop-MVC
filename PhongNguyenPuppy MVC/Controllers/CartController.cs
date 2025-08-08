@@ -22,6 +22,20 @@ namespace PhongNguyenPuppy_MVC.Controllers
             _vnPayService = vnPayService;
         }
 
+        [HttpPost]
+        public IActionResult UpdateQuantity(int id, int quantity)
+        {
+            var giohang = Cart;
+            var item = giohang.SingleOrDefault(p => p.MaHh == id);
+            if (item != null && quantity > 0)
+            {
+                item.SoLuong = quantity;
+                HttpContext.Session.Set(MySetting.CART_KEY, giohang);
+            }
+            return Ok(new { success = true });
+        }
+
+
         public List<CartItem> Cart => HttpContext.Session.Get<List<CartItem>>(MySetting.CART_KEY) ?? new List<CartItem>();
         public IActionResult Index()
         {
@@ -79,6 +93,12 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 return RedirectToAction("Index");
             }
             ViewBag.PaypalClientId = _paypalClient.ClientId;
+
+            // Lấy địa chỉ khách hàng từ database
+            var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
+            var khachHang = db.KhachHangs.SingleOrDefault(p => p.MaKh == customerId);
+            ViewBag.CustomerAddress = khachHang?.DiaChi ?? ""; // Truyền địa chỉ từ database vào ViewBag
+
             return View(Cart);
         }
 
@@ -86,6 +106,26 @@ namespace PhongNguyenPuppy_MVC.Controllers
         [HttpPost]
         public IActionResult Checkout(CheckoutVM model, string payment = "COD")
         {
+            var gioHang = Cart;
+            int tongTienHang = (int)gioHang.Sum(p => p.ThanhTien);
+            int phiVanChuyen = 30000;
+
+            // Lấy địa chỉ khách hàng từ database nếu chọn "Giống khách hàng"
+            string finalAddress = model.DiaChi;
+            if (model.GiongKhachHang)
+            {
+                var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID).Value;
+                var khachHang = db.KhachHangs.SingleOrDefault(p => p.MaKh == customerId);
+                finalAddress = khachHang?.DiaChi ?? model.DiaChi; // Sử dụng địa chỉ khách hàng nếu có
+            }
+
+            if (finalAddress.ToLower().Contains("hồ chí minh") || finalAddress.ToLower().Contains("tp. hcm") || tongTienHang >= 500000)
+            {
+                phiVanChuyen = 0;
+            }
+
+            int tongCong = tongTienHang + phiVanChuyen;
+
             if (payment == "Thanh toán VNPay")
             {
                 var vnpayModel = new VnPaymentRequestModel
