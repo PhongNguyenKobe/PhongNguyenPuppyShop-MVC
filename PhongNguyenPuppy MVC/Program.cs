@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using PhongNguyenPuppy_MVC.Data;
 using PhongNguyenPuppy_MVC.Helpers;
+using PhongNguyenPuppy_MVC.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,7 +49,10 @@ builder.Services.AddSingleton(x => new PaypalClient(
     builder.Configuration["PaypalOptions:AppSecret"] ?? throw new ArgumentNullException("ClientSecret is not configured"),
     builder.Configuration["PaypalOptions:Mode"] ?? throw new ArgumentNullException("Mode is not configured")
 ));
-    
+
+// Thêm dịch vụ VnPay
+builder.Services.AddSingleton<IVnPayService, VnPayService>();
+
 
 var app = builder.Build();
 

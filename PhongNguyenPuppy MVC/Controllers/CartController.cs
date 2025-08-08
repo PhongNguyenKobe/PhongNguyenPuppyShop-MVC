@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PhongNguyenPuppy_MVC.Data;
 using PhongNguyenPuppy_MVC.Helpers;
+using PhongNguyenPuppy_MVC.Services;
 using PhongNguyenPuppy_MVC.ViewModels;
 
 namespace PhongNguyenPuppy_MVC.Controllers
@@ -11,12 +12,14 @@ namespace PhongNguyenPuppy_MVC.Controllers
     {
         private readonly PhongNguyenPuppyContext db;
         private readonly PaypalClient _paypalClient;
+        private readonly IVnPayService _vnPayService;
 
-        public CartController(PhongNguyenPuppyContext Context, PaypalClient paypalClient)
+        public CartController(PhongNguyenPuppyContext Context, PaypalClient paypalClient, IVnPayService vnPayService)
         {
             // Constructor logic can be added here if needed
             db = Context;
             _paypalClient = paypalClient;
+            _vnPayService = vnPayService;
         }
 
         public List<CartItem> Cart => HttpContext.Session.Get<List<CartItem>>(MySetting.CART_KEY) ?? new List<CartItem>();
@@ -81,8 +84,23 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
         [Authorize]
         [HttpPost]
-        public IActionResult Checkout(CheckoutVM model)
+        public IActionResult Checkout(CheckoutVM model, string payment = "COD")
         {
+            if (payment == "Thanh toán VNPay")
+            {
+                var vnpayModel = new VnPaymentRequestModel
+                {
+                    Amount = Cart.Sum(p => p.ThanhTien),
+                    CreatedDate = DateTime.Now,
+                    Description = $"{model.HoTen} {model.DienThoai}",
+                    FullName = model.HoTen,
+                    OrderId = new Random().Next(1000, 10000),
+                };
+
+                var paymentUrl = _vnPayService.CreatePaymentUrl(HttpContext, vnpayModel);
+                return Redirect(paymentUrl); //Redirect trực tiếp đến VNPay
+            }
+
             if (ModelState.IsValid)
             {
                 var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID).Value;
@@ -127,6 +145,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     transaction.Commit(); // Commit sau khi tất cả thao tác DB thành công
                     HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
                     //Truyền mã đơn hàng vào ViewBag
+                    ViewBag.PaymentMethod = "COD";
                     ViewBag.MaHd = hoadon.MaHd;
                     return View("Success");
                 }
@@ -144,6 +163,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
         [Authorize]
         public IActionResult PaymentSuccess(int mahd)
         {
+            ViewBag.PaymentMethod = "PayPal";
             ViewBag.MaHd = mahd;
             return View("Success");
         }
@@ -242,9 +262,77 @@ namespace PhongNguyenPuppy_MVC.Controllers
             }
         }
 
-
         #endregion
 
+
+        [Authorize]
+        public IActionResult PaymentFail()
+        {
+            return View();
+        }
+
+        [Authorize]
+        public IActionResult PaymentCallBack()
+        {
+            var response = _vnPayService.PaymentExecute(Request.Query);
+
+            if (response == null || response.VnPayResponseCode != "00")
+            {
+                TempData["Message"] = $"Thanh toán VNPay không thành công. Vui lòng thử lại. Mã lỗi: {response?.VnPayResponseCode}";
+                return RedirectToAction("PaymentFail");
+            }
+
+            // ✅ Lưu đơn hàng vào cơ sở dữ liệu
+            var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
+            var hoadon = new HoaDon
+            {
+                MaKh = customerId,
+                DiaChi = "Địa chỉ mặc định", // Bạn có thể lấy từ session hoặc lưu tạm trước đó
+                DienThoai = "SĐT mặc định",
+                HoTen = "Tên KH mặc định",
+                NgayDat = DateTime.Now,
+                CachThanhToan = "Thanh toán VNPay",
+                CachVanChuyen = "Giao hàng tận nơi",
+                MaTrangThai = 0,
+                GhiChu = "Đơn hàng thanh toán qua VNPay"
+            };
+
+            using var transaction = db.Database.BeginTransaction();
+            try
+            {
+                db.Add(hoadon);
+                db.SaveChanges();
+
+                var cthds = new List<ChiTietHd>();
+                foreach (var item in Cart)
+                {
+                    cthds.Add(new ChiTietHd
+                    {
+                        MaHd = hoadon.MaHd,
+                        SoLuong = item.SoLuong,
+                        DonGia = item.DonGia,
+                        MaHh = item.MaHh,
+                        GiamGia = 0,
+                    });
+                }
+
+                db.AddRange(cthds);
+                db.SaveChanges();
+                transaction.Commit();
+
+                HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
+                ViewBag.PaymentMethod = "VNPay";
+                ViewBag.MaHd = hoadon.MaHd;
+                ViewBag.VnPayCode = response.VnPayResponseCode;
+                return View("Success");
+            }
+            catch
+            {
+                transaction.Rollback();
+                TempData["Message"] = "Đặt hàng không thành công sau khi thanh toán. Vui lòng liên hệ hỗ trợ.";
+                return RedirectToAction("PaymentFail");
+            }
+        }
 
     }
 }

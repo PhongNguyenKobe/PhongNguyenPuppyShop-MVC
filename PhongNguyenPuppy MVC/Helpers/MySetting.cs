@@ -7,4 +7,10 @@
 
 
     }
+    public class PaymentType
+    {
+        public static string Paypal = "Paypal";
+        public static string COD = "COD";
+    }
+   
 }

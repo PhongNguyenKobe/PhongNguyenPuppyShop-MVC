@@ -1,7 +1,6 @@
 ﻿namespace PhongNguyenPuppy_MVC.ViewModels
 {
-    namespace ECommerceMVC.ViewModels
-    {
+    
         public class VnPaymentResponseModel
         {
             public bool Success { get; set; }
@@ -22,5 +21,5 @@
             public double Amount { get; set; }
             public DateTime CreatedDate { get; set; }
         }
-    }
+    
 }
