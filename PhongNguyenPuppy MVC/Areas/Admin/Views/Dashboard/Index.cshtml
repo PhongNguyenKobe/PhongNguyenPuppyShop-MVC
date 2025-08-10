@@ -1,0 +1,9 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h2>Chào mừng @User.Identity?.Name</h2>
+
+<p>Đây là trang quản trị.</p>
+
+<a asp-action="Logout" asp-controller="Admin" asp-area="Admin">Đăng xuất</a>
