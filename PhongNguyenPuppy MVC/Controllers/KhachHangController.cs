@@ -96,7 +96,6 @@ namespace PhongNguyenPuppy_MVC.Controllers
         {
             ViewBag.ReturnUrl = ReturnUrl;
 
-
             var khachHang = db.KhachHangs.SingleOrDefault(kh => kh.MaKh == model.UserName);
             if (khachHang == null)
             {
@@ -119,21 +118,21 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
             // Xây dựng Claims
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Email, khachHang.Email ?? ""),
-                new Claim(ClaimTypes.Name, khachHang.HoTen ?? ""),
-                new Claim(MySetting.CLAIM_CUSTOMERID, khachHang.MaKh),
-                new Claim(ClaimTypes.Role, "Customer"),
-                new Claim("Avatar", khachHang.Hinh ?? "default-avatar.png")
-            };
+    {
+        new Claim(ClaimTypes.Email, khachHang.Email ?? ""),
+        new Claim(ClaimTypes.Name, khachHang.HoTen ?? ""),
+        new Claim(MySetting.CLAIM_CUSTOMERID, khachHang.MaKh),
+        new Claim(ClaimTypes.Role, "Customer"),
+        new Claim("Avatar", khachHang.Hinh ?? "default-avatar.png")
+    };
 
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            // Quan trọng: AuthenticationType phải trùng scheme
+            var claimsIdentity = new ClaimsIdentity(claims, "CustomerScheme");
             var principal = new ClaimsPrincipal(claimsIdentity);
 
-            // Đăng nhập
-            await HttpContext.SignInAsync(principal);
+            // Đăng nhập đúng scheme khách hàng
+            await HttpContext.SignInAsync("CustomerScheme", principal);
 
-            // Điều hướng theo ReturnUrl nếu hợp lệ
             if (!string.IsNullOrEmpty(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
             {
                 return Redirect(ReturnUrl);
@@ -141,6 +140,8 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
             return RedirectToAction("Profile", "KhachHang");
         }
+
+        [Authorize(AuthenticationSchemes = "CustomerScheme")]
         #endregion
 
         #region Quên mật khẩu
@@ -233,15 +234,15 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
 
 
-        [Authorize]
+        [Authorize(AuthenticationSchemes = "CustomerScheme")]
         public IActionResult Profile()
         {
             return View();
         }
-        [Authorize]
+        [Authorize(AuthenticationSchemes = "CustomerScheme")]
         public async Task<IActionResult> DangXuat()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync("CustomerScheme");
             return RedirectToAction("Index", "Home");
         }
     }
