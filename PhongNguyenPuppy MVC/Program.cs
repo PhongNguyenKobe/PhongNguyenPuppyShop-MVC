@@ -34,14 +34,25 @@ builder.Services.AddTransient<MyEmailHelper>();
 
 
 // Thêm dịch vụ Cookie
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/KhachHang/DangNhap"; // Đường dẫn đến trang đăng nhập
-        options.AccessDeniedPath = "/Login/AccessDenied"; // Đường dẫn đến trang từ chối truy cập
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // Thời gian hết hạn của cookie
-        options.SlidingExpiration = true; // Kích hoạt gia hạn thời gian hết hạn khi người dùng hoạt động
-    });
+// Thêm dịch vụ Cookie cho 2 scheme riêng biệt
+builder.Services.AddAuthentication()
+.AddCookie("CustomerScheme", options =>
+{
+    options.LoginPath = "/KhachHang/DangNhap";
+    options.AccessDeniedPath = "/KhachHang/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    options.SlidingExpiration = true;
+})
+.AddCookie("AdminScheme", options =>
+{
+    options.LoginPath = "/Admin/Admin/Login";
+    options.AccessDeniedPath = "/Admin/Admin/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    options.SlidingExpiration = true;
+});
+
+
+
 
 // Thêm dịch vụ PayPal dạng Singleton() - chỉ có một instances duy nhất trong toàn bộ ứng dụng
 builder.Services.AddSingleton(x => new PaypalClient(
@@ -73,6 +84,12 @@ app.UseSession(); // Thêm dòng này để sử dụng Session
 
 app.UseAuthentication(); // Thêm dòng này để sử dụng Authentication
 app.UseAuthorization();
+
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}"
+);
 
 app.MapControllerRoute(
     name: "default",
