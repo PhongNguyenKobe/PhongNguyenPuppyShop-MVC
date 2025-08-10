@@ -33,6 +33,8 @@ public partial class PhongNguyenPuppyContext : DbContext
 
     public virtual DbSet<Loai> Loais { get; set; }
 
+    public virtual DbSet<MaGiamGia> MaGiamGias { get; set; }
+
     public virtual DbSet<NhaCungCap> NhaCungCaps { get; set; }
 
     public virtual DbSet<NhanVien> NhanViens { get; set; }
@@ -259,7 +261,7 @@ public partial class PhongNguyenPuppyContext : DbContext
                 .HasColumnName("MaKH");
             entity.Property(e => e.DiaChi).HasMaxLength(60);
             entity.Property(e => e.DienThoai).HasMaxLength(24);
-            entity.Property(e => e.Email).HasMaxLength(50);
+            entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.Hinh)
                 .HasMaxLength(50)
                 .HasDefaultValue("Photo.gif");
@@ -288,6 +290,28 @@ public partial class PhongNguyenPuppyContext : DbContext
             entity.Property(e => e.TenLoaiAlias).HasMaxLength(50);
         });
 
+        modelBuilder.Entity<MaGiamGia>(entity =>
+        {
+            entity.HasKey(e => e.MaGg);
+
+            entity.HasIndex(e => e.Code, "UQ__MaGiamGi__A25C5AA7D70E7E47").IsUnique();
+
+            entity.Property(e => e.MaGg).HasColumnName("MaGG");
+            entity.Property(e => e.Code).HasMaxLength(50);
+            entity.Property(e => e.HanSuDung).HasColumnType("datetime");
+            entity.Property(e => e.MaNv)
+                .HasMaxLength(50)
+                .HasColumnName("MaNV");
+            entity.Property(e => e.MoTa)
+                .HasMaxLength(255)
+                .UseCollation("Vietnamese_CI_AS");
+            entity.Property(e => e.TrangThai).HasDefaultValue(true);
+
+            entity.HasOne(d => d.MaNvNavigation).WithMany(p => p.MaGiamGias)
+                .HasForeignKey(d => d.MaNv)
+                .HasConstraintName("FK_MaGiamGia_NhanVien");
+        });
+
         modelBuilder.Entity<NhaCungCap>(entity =>
         {
             entity.HasKey(e => e.MaNcc).HasName("PK_Suppliers");
@@ -299,7 +323,7 @@ public partial class PhongNguyenPuppyContext : DbContext
                 .HasColumnName("MaNCC");
             entity.Property(e => e.DiaChi).HasMaxLength(50);
             entity.Property(e => e.DienThoai).HasMaxLength(50);
-            entity.Property(e => e.Email).HasMaxLength(50);
+            entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.Logo).HasMaxLength(50);
             entity.Property(e => e.NguoiLienLac).HasMaxLength(50);
             entity.Property(e => e.TenCongTy).HasMaxLength(50);
@@ -314,7 +338,7 @@ public partial class PhongNguyenPuppyContext : DbContext
             entity.Property(e => e.MaNv)
                 .HasMaxLength(50)
                 .HasColumnName("MaNV");
-            entity.Property(e => e.Email).HasMaxLength(50);
+            entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.HoTen).HasMaxLength(50);
             entity.Property(e => e.MatKhau).HasMaxLength(50);
         });

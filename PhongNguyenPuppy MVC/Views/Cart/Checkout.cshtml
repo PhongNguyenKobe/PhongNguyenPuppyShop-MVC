@@ -96,6 +96,14 @@
                         </table>
                     </div>
 
+                    <!-- Ô nhập mã giảm giá -->
+                    <div class="form-item my-3">
+                        <label class="form-label">Mã giảm giá</label>
+                        <input type="text" id="MaGiamGia" name="MaGiamGia" class="form-control" placeholder="Nhập mã...">
+                        <button type="button" id="ApDungMa" class="btn btn-primary mt-2">Áp dụng</button>
+                        <span id="GiamGiaStatus" class="text-success mt-3"></span>
+                    </div>
+
                     <!-- Phương thức thanh toán -->
                     <div class="form-check my-3">
                         <input type="checkbox" id="Transfer-1" name="Transfer" class="form-check-input"> Chuyển khoản ngân hàng trực tiếp
@@ -128,8 +136,7 @@
 
 <!-- Checkout Page End -->
 @section Scripts {
-    @* thanh toán paypal *@
-
+    <!-- Thanh toán PayPal -->
 	<script src="https://www.paypal.com/sdk/js?client-id=@ViewBag.PaypalClientId "></script>
 
 	<script>
@@ -173,7 +180,7 @@
 		}).render('#paypal-button-container');
 	</script>
 
-    @* Phí vận chuyển *@
+    <!-- Phí vận chuyển và mã giảm giá -->
     <script>
         $(document).ready(function () {
             const baseTotal = @Model.Sum(p => p.ThanhTien);
@@ -188,23 +195,21 @@
                 return (isHCM || isFreeByTotal) ? 0 : 30000;
             }
 
-            function capNhatTongTien() {
-                const diaChi = diaChiInput.val();
+            function capNhatTongTien(diaChi, giamGia) {
                 const phi = tinhPhiVanChuyen(diaChi, baseTotal);
-                const tong = baseTotal + phi;
-
+                const tong = baseTotal - (giamGia || 0) + phi;
                 $('#shippingFee').text(phi.toLocaleString() + " VNĐ");
+                $('#giamGia').text((giamGia || 0).toLocaleString() + " VNĐ");
                 $('#grandTotal').text(tong.toLocaleString() + " VNĐ");
                 $('#PhiVanChuyen').val(phi);
             }
 
-            // Khi gõ vào ô địa chỉ (đảm bảo luôn tính phí)
             diaChiInput.on('input', function () {
-                capNhatTongTien();
+                capNhatTongTien($(this).val(), parseFloat($('#giamGia').text().replace(/[^\d.-]/g, '')) || 0);
             });
 
             // Khi bấm checkbox "Giống khách hàng"
-            $('#GiongKhachHang').change(function () {
+           $('#GiongKhachHang').change(function () {
                 if ($(this).prop('checked')) {
                     $(this).val('true');
                     $(".delivery-info").addClass("d-none");
@@ -212,13 +217,47 @@
                 } else {
                     $(this).val('false');
                     $(".delivery-info").removeClass("d-none");
-                    diaChiInput.val(""); // Xóa địa chỉ khi bỏ chọn
+                    diaChiInput.val("");
                 }
-                capNhatTongTien(); // Cập nhật phí vận chuyển ngay
+                capNhatTongTien(diaChiInput.val(), parseFloat($('#giamGia').text().replace(/[^\d.-]/g, '')) || 0);
             });
 
-            // Khởi tạo
-            capNhatTongTien(); // Tính phí dựa trên giá trị ban đầu của ô địa chỉ
+            capNhatTongTien(diaChiInput.val(), 0);
+
+            // Xử lý áp dụng mã giảm giá
+            $('#ApDungMa').click(function () {
+                var ma = $('#MaGiamGia').val();
+                if (ma) {
+                    $.ajax({
+                        url: '/Cart/KiemTraMaGiamGia',
+                        type: 'POST',
+                        data: { maGiamGia: ma },
+                        success: function (response) {
+                            if (response.success) {
+                                $('#giamGia').text(response.giamGia.toLocaleString() + ' VNĐ');
+                                var phi = parseInt($('#PhiVanChuyen').val());
+                                var tong = baseTotal - response.giamGia + phi;
+                                $('#grandTotal').text(tong.toLocaleString() + ' VNĐ');
+                                $('#GiamGiaStatus').text('Áp dụng thành công: ' + response.moTa);
+                            } else {
+                                $('#GiamGiaStatus').addClass('text-danger').text(response.message);
+                                $('#giamGia').text('0 VNĐ');
+                                var phi = parseInt($('#PhiVanChuyen').val());
+                                var tong = baseTotal + phi;
+                                $('#grandTotal').text(tong.toLocaleString() + ' VNĐ');
+                            }
+                        },
+                        error: function () {
+                            console.log('Lỗi Ajax: ', error); // Thêm log để debug
+                            $('#GiamGiaStatus').addClass('text-danger').text('Lỗi khi kiểm tra mã giảm giá.');
+                            $('#giamGia').text('0 VNĐ');
+                            var phi = parseInt($('#PhiVanChuyen').val());
+                            var tong = baseTotal + phi;
+                            $('#grandTotal').text(tong.toLocaleString() + ' VNĐ');
+                        }
+                    });
+                }
+            });
         });
     </script>
 

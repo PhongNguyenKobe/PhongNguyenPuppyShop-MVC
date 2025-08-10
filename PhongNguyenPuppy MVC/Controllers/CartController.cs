@@ -124,13 +124,34 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 phiVanChuyen = 0;
             }
 
-            int tongCong = tongTienHang + phiVanChuyen;
+            double giamGia = 0; // Giá trị giảm từ mã
+            if (!string.IsNullOrEmpty(model.MaGiamGia))
+            {
+                var coupon = db.MaGiamGias
+                    .SingleOrDefault(c => c.Code == model.MaGiamGia
+                                       && c.TrangThai
+                                       && (c.HanSuDung == null || c.HanSuDung > DateTime.Now)
+                                       && (c.SoLuongToiDa == null || c.SoLuongDaDung < c.SoLuongToiDa));
+                if (coupon != null)
+                {
+                    giamGia = coupon.LoaiGiam ? coupon.GiaTri : (tongTienHang * (coupon.GiaTri / 100));
+                    giamGia = Math.Min(giamGia, tongTienHang); // Đảm bảo giảm giá không vượt tổng tiền hàng
+                }
+                else
+                {
+                    ModelState.AddModelError("MaGiamGia", "Mã giảm giá không hợp lệ hoặc hết hạn.");
+                    ViewBag.PaypalClientId = _paypalClient.ClientId;
+                    return View(Cart);
+                }
+            }
+
+            int tongCong = tongTienHang - (int)giamGia + phiVanChuyen;
 
             if (payment == "Thanh toán VNPay")
             {
                 var vnpayModel = new VnPaymentRequestModel
                 {
-                    Amount = Cart.Sum(p => p.ThanhTien),
+                    Amount = tongCong, // Cập nhật amount với tổng sau khi giảm giá
                     CreatedDate = DateTime.Now,
                     Description = $"{model.HoTen} {model.DienThoai}",
                     FullName = model.HoTen,
@@ -138,7 +159,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 };
 
                 var paymentUrl = _vnPayService.CreatePaymentUrl(HttpContext, vnpayModel);
-                return Redirect(paymentUrl); //Redirect trực tiếp đến VNPay
+                return Redirect(paymentUrl); // Redirect trực tiếp đến VNPay
             }
 
             if (ModelState.IsValid)
@@ -161,7 +182,10 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     CachVanChuyen = "Giao hàng tận nơi",
                     MaTrangThai = 0,
                     GhiChu = model.GhiChu,
+                    PhiVanChuyen = phiVanChuyen,
+                    GiamGia = (float)giamGia // Lưu giá trị giảm giá vào hóa đơn
                 };
+
                 using var transaction = db.Database.BeginTransaction();
                 try
                 {
@@ -177,14 +201,24 @@ namespace PhongNguyenPuppy_MVC.Controllers
                             SoLuong = item.SoLuong,
                             DonGia = item.DonGia,
                             MaHh = item.MaHh,
-                            GiamGia = 0,
+                            GiamGia = 0, // Giảm giá chi tiết để 0, vì đã tính ở hóa đơn
                         });
                     }
                     db.AddRange(cthds);
                     db.SaveChanges();
+
+                    // Cập nhật số lượng đã dùng của mã giảm giá
+                    if (giamGia > 0)
+                    {
+                        var coupon = db.MaGiamGias.Single(c => c.Code == model.MaGiamGia);
+                        coupon.SoLuongDaDung++;
+                        db.Update(coupon);
+                        db.SaveChanges();
+                    }
+
                     transaction.Commit(); // Commit sau khi tất cả thao tác DB thành công
                     HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
-                    //Truyền mã đơn hàng vào ViewBag
+                    // Truyền mã đơn hàng vào ViewBag
                     ViewBag.PaymentMethod = "COD";
                     ViewBag.MaHd = hoadon.MaHd;
                     return View("Success");
@@ -197,7 +231,27 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     return View(Cart);
                 }
             }
+
+            ViewBag.PaypalClientId = _paypalClient.ClientId;
             return View(Cart);
+        }
+
+        [HttpPost]
+        public IActionResult KiemTraMaGiamGia(string maGiamGia)
+        {
+            var tongTienHang = Cart.Sum(p => p.ThanhTien);
+            var coupon = db.MaGiamGias
+                .SingleOrDefault(c => c.Code == maGiamGia
+                                   && c.TrangThai
+                                   && (c.HanSuDung == null || c.HanSuDung > DateTime.Now)
+                                   && (c.SoLuongToiDa == null || c.SoLuongDaDung < c.SoLuongToiDa));
+            if (coupon != null)
+            {
+                double giamGia = coupon.LoaiGiam ? coupon.GiaTri : (tongTienHang * (coupon.GiaTri / 100));
+                giamGia = Math.Min(giamGia, tongTienHang); // Đảm bảo không vượt tổng tiền hàng
+                return Ok(new { success = true, giamGia = giamGia, moTa = coupon.MoTa });
+            }
+            return Ok(new { success = false, message = "Mã giảm giá không hợp lệ hoặc hết hạn." });
         }
 
         [Authorize]

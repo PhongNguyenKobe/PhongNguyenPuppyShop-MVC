@@ -19,5 +19,7 @@ public partial class NhanVien
 
     public virtual ICollection<HoiDap> HoiDaps { get; set; } = new List<HoiDap>();
 
+    public virtual ICollection<MaGiamGia> MaGiamGias { get; set; } = new List<MaGiamGia>();
+
     public virtual ICollection<PhanCong> PhanCongs { get; set; } = new List<PhanCong>();
 }
