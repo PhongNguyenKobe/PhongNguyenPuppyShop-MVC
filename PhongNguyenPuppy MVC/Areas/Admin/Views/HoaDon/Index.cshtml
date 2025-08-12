@@ -65,16 +65,14 @@
         }
     </tbody>
 </table>
-
 @section Scripts {
     <script>
-                $(document).ready(function () {
+        $(document).ready(function () {
             $('.btn-luu-trangthai').click(function () {
                 const maHd = $(this).data('id');
                 const select = $(`.trang-thai-select[data-id='${maHd}']`);
                 const maTrangThai = select.val();
-
-                const token = $('input[name="__RequestVerificationToken"]').val(); // 👈 lấy token
+                const token = $('input[name="__RequestVerificationToken"]').val();
 
                 $.ajax({
                     url: '/Admin/HoaDon/CapNhatTrangThai',
@@ -85,18 +83,31 @@
                         maTrangThai: maTrangThai
                     },
                     success: function () {
-                        alert('✅ Cập nhật trạng thái thành công!');
-                        location.reload();
+                        const toastEl = document.getElementById('toastThongBao');
+                        const toastBody = toastEl.querySelector('.toast-body');
+                        toastBody.textContent = '✅ Cập nhật trạng thái thành công!';
+                        toastEl.classList.remove('bg-danger');
+                        toastEl.classList.add('bg-success');
+                        const toast = new bootstrap.Toast(toastEl);
+                        toast.show();
+
+                        setTimeout(() => location.reload(), 2500); // Reload sau khi toast hiển thị
                     },
                     error: function (xhr) {
                         console.error("Lỗi:", xhr.responseText);
-                        alert('❌ Có lỗi xảy ra khi cập nhật trạng thái.');
+                        const toastEl = document.getElementById('toastThongBao');
+                        const toastBody = toastEl.querySelector('.toast-body');
+                        toastBody.textContent = '❌ Có lỗi xảy ra khi cập nhật trạng thái.';
+                        toastEl.classList.remove('bg-success');
+                        toastEl.classList.add('bg-danger');
+                        const toast = new bootstrap.Toast(toastEl);
+                        toast.show();
                     }
                 });
             });
         });
-
     </script>
 }
+
 
 
