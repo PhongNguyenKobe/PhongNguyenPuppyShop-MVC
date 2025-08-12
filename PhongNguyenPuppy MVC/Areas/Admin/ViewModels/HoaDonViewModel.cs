@@ -37,10 +37,13 @@
         public string MaGiamGia { get; set; } // THÊM: Lưu mã giảm giá (Code từ MaGiamGia)
     }
 
-    public class HoaDonEditViewModel
+    public class HoaDonPagedViewModel
     {
-        public int MaHd { get; set; }
-        public int MaTrangThai { get; set; }
+        public List<HoaDonViewModel> HoaDons { get; set; }
+        public int PageNumber { get; set; }
+        public int TotalPages { get; set; }
+        public string TuKhoa { get; set; }
     }
+
 
 }

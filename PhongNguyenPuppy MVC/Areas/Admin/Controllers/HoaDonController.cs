@@ -12,16 +12,16 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
     public class HoaDonController : Controller
     {
         private readonly PhongNguyenPuppyContext _context;
-
+        private const int PageSize = 10;
         public HoaDonController(PhongNguyenPuppyContext context)
         {
             _context = context;
         }
 
         // Danh sách hóa đơn
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string tuKhoa, int page = 1)
         {
-            var hoaDonList = await _context.HoaDons
+            var query = _context.HoaDons
                 .Include(h => h.MaTrangThaiNavigation)
                 .Include(h => h.ChiTietHds)
                 .Include(h => h.MaKhNavigation)
@@ -31,15 +31,31 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
                     HoTen = h.HoTen ?? h.MaKhNavigation.HoTen,
                     NgayDat = h.NgayDat,
                     TrangThai = h.MaTrangThaiNavigation.TenTrangThai,
-                    TongTien = (float)(h.ChiTietHds.Sum(ct => (ct.DonGia * ct.SoLuong) * (1 - ct.GiamGia / 100)) - h.GiamGia + h.PhiVanChuyen)
-                })
+                    TongTien = h.ChiTietHds.Sum(ct => (ct.DonGia * ct.SoLuong) * (1 - ct.GiamGia / 100)) - h.GiamGia + h.PhiVanChuyen
+                });
+            if (!string.IsNullOrEmpty(tuKhoa))
+            {
+                query = query.Where(h =>
+                    h.HoTen.Contains(tuKhoa) ||
+                    h.MaHd.ToString().Contains(tuKhoa));
+            }
+
+            var totalItems = await query.CountAsync();
+            var hoaDonList = await query
+                .OrderByDescending(h => h.NgayDat)
+                .Skip((page - 1) * PageSize)
+                .Take(PageSize)
                 .ToListAsync();
             ViewBag.TrangThaiList = await _context.TrangThais
-        .Select(t => new SelectListItem
-        {
-            Value = t.MaTrangThai.ToString(),
-            Text = t.TenTrangThai
-        }).ToListAsync();
+                .Select(t => new SelectListItem
+                {
+                    Value = t.MaTrangThai.ToString(),
+                    Text = t.TenTrangThai
+                }).ToListAsync();
+
+            ViewBag.PageNumber = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / PageSize);
+            ViewBag.TuKhoa = tuKhoa;
 
             return View(hoaDonList);
         }
