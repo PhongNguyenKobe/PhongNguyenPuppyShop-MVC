@@ -13,42 +13,66 @@ namespace PhongNguyenPuppy_MVC.Controllers
         {
             db = context;
         }
-        public IActionResult Index(int? loai)
+        public IActionResult Index(int? loai, int page = 1)
         {
-            var hangHoas = db.HangHoas.AsQueryable();
+            int pageSize = 12;
+            IQueryable<HangHoa> hangHoas = db.HangHoas.Include(p => p.MaLoaiNavigation);
 
             if (loai.HasValue)
             {
                 hangHoas = hangHoas.Where(p => p.MaLoai == loai.Value);
             }
-            var result = hangHoas.Select(p => new HangHoaVM
+            var totalItems = hangHoas.Count();
+            var result = hangHoas
+                               .OrderBy(p => p.TenHh)
+                               .Skip((page - 1) * pageSize)
+                               .Take(pageSize)
+                               .Select(p => new HangHoaVM
             {
-                MaHh = p.MaHh,
+           MaHh = p.MaHh,
                 TenHh = p.TenHh,
                 DonGia = p.DonGia ?? 0,
                 Hinh = p.Hinh ?? "",
                 MoTaNgan = p.MoTaDonVi ?? "",
                 TenLoai = p.MaLoaiNavigation.TenLoai
             });
+            ViewBag.PageNumber = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            ViewBag.Loai = loai;
+
             return View(result);
         }
 
-        public IActionResult Search(string? query)
+        public IActionResult Search(string? query, int page = 1)
         {
-            var hangHoas = db.HangHoas.AsQueryable();
-            if (query != null)
+            int pageSize = 12;
+            IQueryable<HangHoa> hangHoas = db.HangHoas.Include(p => p.MaLoaiNavigation);
+
+            if (!string.IsNullOrEmpty(query))
             {
                 hangHoas = hangHoas.Where(p => p.TenHh.Contains(query));
             }
-            var result = hangHoas.Select(p => new HangHoaVM
-            {
-                MaHh = p.MaHh,
-                TenHh = p.TenHh,
-                DonGia = p.DonGia ?? 0,
-                Hinh = p.Hinh ?? "",
-                MoTaNgan = p.MoTaDonVi ?? "",
-                TenLoai = p.MaLoaiNavigation.TenLoai
-            });
+
+            var totalItems = hangHoas.Count();
+
+            var result = hangHoas
+                .OrderBy(p => p.TenHh)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new HangHoaVM
+                {
+                    MaHh = p.MaHh,
+                    TenHh = p.TenHh,
+                    DonGia = p.DonGia ?? 0,
+                    Hinh = p.Hinh ?? "",
+                    MoTaNgan = p.MoTaDonVi ?? "",
+                    TenLoai = p.MaLoaiNavigation.TenLoai
+                }).ToList();
+
+            ViewBag.PageNumber = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            ViewBag.Query = query;
+
             return View(result);
         }
 
