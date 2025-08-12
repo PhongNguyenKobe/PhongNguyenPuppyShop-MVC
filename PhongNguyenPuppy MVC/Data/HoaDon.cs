@@ -33,7 +33,7 @@ public partial class HoaDon
 
     public string? GhiChu { get; set; }
 
-    public float GiamGia { get; set; }
+    public double GiamGia { get; set; }
 
     public virtual ICollection<ChiTietHd> ChiTietHds { get; set; } = new List<ChiTietHd>();
 
