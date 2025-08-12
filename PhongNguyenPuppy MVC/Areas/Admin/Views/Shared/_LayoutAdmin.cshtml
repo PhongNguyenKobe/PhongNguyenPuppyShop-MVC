@@ -1,19 +1,379 @@
-﻿<!DOCTYPE html>
-<html>
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <title>@ViewData["Title"] - Admin</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - PhongNguyenPuppy Admin</title>
+
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <style>
+        :root {
+            --brand: #1e3a8a; /* accent (darker) */
+            --brand-soft: #e8eefc; /* hover background (soft) */
+            --sidebar-bg: #f4f6f8; /* sidebar background (light) */
+            --sidebar-text: #2c3e50; /* sidebar text */
+            --icon-muted: #64748b; /* icon color */
+            --highlight: #ffc857; /* accent highlight (optional) */
+            --header-height: 64px;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* Header (fixed) */
+        .admin-header {
+            height: var(--header-height);
+            background: #fff;
+            border-bottom: 1px solid #e6eef8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1050;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-weight: 700;
+            color: var(--brand);
+            font-size: 1.05rem;
+        }
+
+            .brand .logo-circle {
+                width: 36px;
+                height: 36px;
+                border-radius: 8px;
+                background: linear-gradient(135deg,var(--brand),#4b7bd3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-weight: 700;
+            }
+
+        /* Layout containers */
+        .admin-wrapper {
+            display: flex;
+            width: 100%;
+            padding-top: var(--header-height); /* ensure content not hidden by header */
+        }
+
+        /* Sidebar */
+        .admin-sidebar {
+            width: 260px;
+            min-width: 260px;
+            height: calc(100vh - var(--header-height));
+            background: var(--sidebar-bg);
+            border-right: 1px solid #e6eef8;
+            position: sticky;
+            top: var(--header-height);
+            transition: transform 320ms cubic-bezier(.2,.8,.2,1), width 220ms ease;
+            z-index: 1040;
+            overflow-y: auto;
+        }
+
+            /* collapsed: slide left (for smaller screens or toggled) */
+            .admin-sidebar.collapsed {
+                transform: translateX(-100%);
+            }
+
+        /* Sidebar inner */
+        .sidebar-inner {
+            padding: .75rem 0;
+        }
+
+        .sidebar-brand {
+            padding: .75rem 1rem;
+            display: flex;
+            gap: .6rem;
+            align-items: center;
+            color: var(--sidebar-text);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .nav-admin {
+            list-style: none;
+            margin: 0;
+            padding: 0.5rem 0;
+        }
+
+            .nav-admin .nav-item {
+                padding: 0;
+            }
+
+            .nav-admin .nav-link {
+                display: flex;
+                align-items: center;
+                gap: .75rem;
+                padding: .6rem 1rem;
+                color: var(--sidebar-text);
+                text-decoration: none;
+                border-radius: 8px;
+                margin: 6px .6rem;
+                transition: background-color .18s ease, color .18s ease, transform .18s ease;
+            }
+
+                .nav-admin .nav-link .bi {
+                    color: var(--icon-muted);
+                    font-size: 1.15rem;
+                    transition: color .18s ease, transform .18s ease;
+                }
+
+                .nav-admin .nav-link:hover {
+                    background: var(--brand-soft);
+                    color: var(--brand);
+                    transform: translateX(3px);
+                }
+
+                    .nav-admin .nav-link:hover .bi {
+                        color: var(--brand);
+                        transform: translateX(2px);
+                    }
+
+                .nav-admin .nav-link.active {
+                    background: rgba(30,58,138,0.08);
+                    color: var(--brand);
+                }
+
+        /* Submenu (collapse) */
+        .submenu {
+            padding-left: 2.1rem;
+            margin-top: 4px;
+        }
+
+            .submenu .nav-link {
+                padding: .45rem 1rem;
+                font-size: .95rem;
+            }
+
+        /* Main content */
+        .admin-content {
+            flex: 1;
+            min-height: calc(100vh - var(--header-height));
+            padding: 1.25rem;
+            transition: margin-left 320ms cubic-bezier(.2,.8,.2,1);
+        }
+
+        /* Overlay for mobile when sidebar open */
+        .sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.35);
+            z-index: 1030;
+            display: none;
+        }
+
+            .sidebar-backdrop.show {
+                display: block;
+            }
+
+        
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">Admin</a>
-        <!-- menu: Products, Orders, Users, Reports -->
-    </nav>
-    <div class="container-fluid mt-3">
-        @RenderBody()
+    <!-- Header -->
+    <header class="admin-header">
+        <div class="d-flex align-items-center gap-2">
+            <button id="btnToggle" class="btn btn-outline-secondary btn-sm" aria-label="Mở/đóng menu">
+                <i class="bi bi-list"></i>
+            </button>
+            <a class="brand" href="/">
+                <span class="logo-circle">🐶</span>
+                <span>PhongNguyenPuppy</span>
+            </a>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            <!-- Quick links (example) -->
+            <nav class="d-none d-md-flex align-items-center gap-3">
+                <a class="text-muted small" href="/"><i class="bi bi-house-door"></i> Trang chủ</a>
+                <a class="text-muted small" href="/"><i class="bi bi-bag"></i> Cửa hàng</a>
+            </nav>
+
+            <!-- User dropdown -->
+            <div class="dropdown user-menu">
+                <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="~/images/default-avatar.png" alt="avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" />
+                    <span class="ms-2 d-none d-sm-inline text-muted">Quản trị viên</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                    <li><a class="dropdown-item" href="/Admin/Profile">Hồ sơ</a></li>
+                    <li><a class="dropdown-item" href="/Admin/CaiDat">Cài đặt</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="/Account/Logout">Đăng xuất</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- Wrapper: sidebar + content -->
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="admin-sidebar" role="navigation" aria-label="Main navigation">
+            <div class="sidebar-inner">
+                <div class="sidebar-brand px-3">
+                    <i class="bi bi-paw-fill" style="color:var(--brand);font-size:1.1rem"></i>
+                    <span style="font-weight:700;color:#0f172a;margin-left:6px">PhongNguyenPuppy</span>
+                </div>
+
+                <ul class="nav-admin px-2">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/Admin/Dashboard">
+                            <i class="bi bi-speedometer2"></i><span class="link-text">Trang tổng quan</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link d-flex justify-content-between align-items-center"
+                           data-bs-toggle="collapse" href="#productMenu" role="button" aria-expanded="false" aria-controls="productMenu">
+                            <span><i class="bi bi-box-seam"></i><span class="link-text">Quản lý sản phẩm</span></span>
+                            <i class="bi bi-chevron-down"></i>
+                        </a>
+                        <div class="collapse" id="productMenu">
+                            <ul class="submenu list-unstyled mb-0">
+                                <li><a class="nav-link" href="/Admin/Product">Danh sách sản phẩm</a></li>
+                                <li><a class="nav-link" href="/Admin/Product/Create">Thêm sản phẩm</a></li>
+                                <li><a class="nav-link" href="/Admin/Product/Categories">Quản lý danh mục</a></li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Admin/Orders"><i class="bi bi-receipt"></i><span class="link-text">Quản lý đơn hàng</span></a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Admin/Customers"><i class="bi bi-people"></i><span class="link-text">Quản lý khách hàng</span></a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Admin/Reports"><i class="bi bi-bar-chart"></i><span class="link-text">Báo cáo thống kê</span></a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Admin/CaiDat"><i class="bi bi-gear"></i><span class="link-text">Cài đặt hệ thống</span></a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Backdrop for mobile -->
+        <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+        <!-- Content -->
+        <main id="mainContent" class="admin-content" role="main">
+            @RenderBody()
+        </main>
     </div>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        (function () {
+            const btn = document.getElementById('btnToggle');
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            const MAIN_BREAKPOINT = 992; // md/lg breakpoint for responsive behavior
+
+            // helper to check viewport width
+            function isMobile() {
+                return window.innerWidth < MAIN_BREAKPOINT;
+            }
+
+            // Toggle behavior
+            function openSidebar() {
+                if (isMobile()) {
+                    sidebar.classList.add('open');
+                    backdrop.classList.add('show');
+                } else {
+                    // desktop: simply hide via translateX (we used transform earlier for mobile; for desktop keep visible)
+                    sidebar.classList.remove('collapsed');
+                }
+            }
+            function closeSidebar() {
+                if (isMobile()) {
+                    sidebar.classList.remove('open');
+                    backdrop.classList.remove('show');
+                } else {
+                    // desktop: collapse by translate to left (we emulate by adding 'collapsed' that moves it away)
+                    sidebar.classList.add('collapsed');
+                }
+            }
+            function toggleSidebar() {
+                if (isMobile()) {
+                    if (sidebar.classList.contains('open')) {
+                        closeSidebar();
+                    } else {
+                        openSidebar();
+                    }
+                } else {
+                    if (sidebar.classList.contains('collapsed')) {
+                        openSidebar();
+                    } else {
+                        closeSidebar();
+                    }
+                }
+            }
+
+            // initial state: if mobile, collapsed; if desktop, shown
+            function init() {
+                if (isMobile()) {
+                    sidebar.classList.remove('collapsed');
+                    sidebar.classList.remove('open');
+                    backdrop.classList.remove('show');
+                } else {
+                    sidebar.classList.remove('open');
+                    sidebar.classList.remove('collapsed');
+                }
+            }
+
+            btn.addEventListener('click', toggleSidebar);
+            backdrop.addEventListener('click', closeSidebar);
+
+            // close sidebar when navigating collapse links on mobile
+            document.querySelectorAll('.nav-admin .nav-link').forEach(el => {
+                el.addEventListener('click', function (e) {
+                    // if mobile and click a link that is not a collapse toggle, close sidebar
+                    const href = el.getAttribute('href') || '';
+                    const isToggle = el.getAttribute('data-bs-toggle') === 'collapse';
+                    if (isMobile() && !isToggle && href && href !== '#') {
+                        closeSidebar();
+                    }
+                });
+            });
+
+            // handle resize to reset classes
+            window.addEventListener('resize', function () {
+                init();
+            });
+
+            // kick off initial
+            init();
+        })();
+    </script>
+
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

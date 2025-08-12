@@ -35,7 +35,11 @@ builder.Services.AddTransient<MyEmailHelper>();
 
 // Thêm dịch vụ Cookie
 // Thêm dịch vụ Cookie cho 2 scheme riêng biệt
-builder.Services.AddAuthentication()
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "CustomerScheme";
+    options.DefaultChallengeScheme = "CustomerScheme";
+})
 .AddCookie("CustomerScheme", options =>
 {
     options.LoginPath = "/KhachHang/DangNhap";

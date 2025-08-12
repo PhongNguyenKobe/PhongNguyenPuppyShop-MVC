@@ -1,9 +1,41 @@
 ﻿@{
-    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Title"] = "Dashboard";
+    Layout = "_LayoutAdmin";
 }
 
-<h2>Chào mừng @User.Identity?.Name</h2>
+<div class="row">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body pb-0">
+                <div class="fs-4 fw-semibold">9.823 <span class="fs-6 fw-normal">(+40%)</span></div>
+                <div>Người dùng</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-<p>Đây là trang quản trị.</p>
+<div class="card mt-4">
+    <div class="card-header">Thống kê</div>
+    <div class="card-body">
+        <canvas id="trafficChart"></canvas>
+    </div>
+</div>
 
-<a asp-action="Logout" asp-controller="Admin" asp-area="Admin">Đăng xuất</a>
+@section Scripts {
+    <script>
+        const ctx = document.getElementById('trafficChart');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Lượt truy cập',
+                    data: [65, 59, 80, 81, 56, 55],
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            }
+        });
+    </script>
+}
