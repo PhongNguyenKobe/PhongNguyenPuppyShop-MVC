@@ -1,0 +1,70 @@
+﻿@model PhongNguyenPuppy_MVC.Areas.Admin.ViewModels.HangHoaCreateViewModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Thêm sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<validation-summary asp-validation-summary="All" class="text-danger"></validation-summary>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label asp-for="TenHh" class="form-label"></label>
+        <input asp-for="TenHh" class="form-control" />
+        <span asp-validation-for="TenHh" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MaLoai" class="form-label">Loại sản phẩm</label>
+        <select asp-for="MaLoai" asp-items="@(new SelectList(ViewBag.LoaiList, "MaLoai", "TenLoai"))" class="form-control">
+            <option value="">-- Chọn loại sản phẩm --</option>
+        </select>
+        <span asp-validation-for="MaLoai" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MaNCC" class="form-label">Nhà cung cấp</label>
+        <select asp-for="MaNCC" asp-items="@(ViewBag.NccList != null ? new SelectList(ViewBag.NccList, "MaNcc", "TenCongTy") : new List<SelectListItem>())" class="form-control">
+            <option value="">-- Chọn nhà cung cấp --</option>
+        </select>
+
+
+        <span asp-validation-for="MaNCC" class="text-danger"></span>
+    </div>
+
+
+    <div class="mb-3">
+        <label asp-for="MoTa" class="form-label"></label>
+        <textarea asp-for="MoTa" class="form-control"></textarea>
+        <span asp-validation-for="MoTa" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="DonGia" class="form-label"></label>
+        <input asp-for="DonGia" class="form-control" />
+        <span asp-validation-for="DonGia" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Hinh" class="form-label">Hình ảnh</label>
+        <input asp-for="Hinh" type="file" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Lưu</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

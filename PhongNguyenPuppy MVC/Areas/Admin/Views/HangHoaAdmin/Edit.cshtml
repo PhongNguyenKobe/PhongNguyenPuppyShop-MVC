@@ -1,0 +1,72 @@
+﻿@model PhongNguyenPuppy_MVC.Areas.Admin.ViewModels.HangHoaEditViewModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Sửa sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="Edit" enctype="multipart/form-data" method="post">
+    <input type="hidden" asp-for="MaHh" />
+    <input type="hidden" asp-for="ExistingHinh" />
+
+    <div class="mb-3">
+        <label asp-for="TenHh" class="form-label">Tên hàng hóa</label>
+        <input asp-for="TenHh" class="form-control" />
+        <span asp-validation-for="TenHh" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MaLoai" class="form-label">Loại sản phẩm</label>
+        <select asp-for="MaLoai" asp-items="@(new SelectList(ViewBag.LoaiList, "MaLoai", "TenLoai"))" class="form-control"></select>
+        <span asp-validation-for="MaLoai" class="text-danger"></span>
+    </div>
+
+
+    <div class="mb-3">
+        <label asp-for="MaNCC" class="form-label">Nhà cung cấp</label>
+        <select asp-for="MaNCC" asp-items="@(new SelectList(ViewBag.NccList, "MaNcc", "TenCongTy"))" class="form-control"></select>
+        <span asp-validation-for="MaNCC" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MoTa" class="form-label">Mô tả</label>
+        <textarea asp-for="MoTa" class="form-control"></textarea>
+        <span asp-validation-for="MoTa" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="DonGia" class="form-label">Đơn giá</label>
+        <input asp-for="DonGia" class="form-control" />
+        <span asp-validation-for="DonGia" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Hình ảnh hiện tại</label><br />
+        @if (!string.IsNullOrEmpty(Model.ExistingHinh))
+        {
+            <img src="~/Hinh/HangHoa/@Model.ExistingHinh" width="100" />
+        }
+        else
+        {
+            <p>Không có hình ảnh</p>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Hinh" class="form-label">Hình ảnh mới</label>
+        <input asp-for="Hinh" type="file" class="form-control" />
+        <span asp-validation-for="Hinh" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    </div>
+
+    <button type="submit" class="btn btn-primary">Cập nhật</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>
+
+

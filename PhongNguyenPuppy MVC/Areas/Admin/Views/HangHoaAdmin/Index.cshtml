@@ -1,0 +1,141 @@
+﻿@model IEnumerable<PhongNguyenPuppy_MVC.Data.HangHoa>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Danh sách hàng hóa";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<h2 class="mb-4"><i class="bi bi-box-seam"></i> @ViewData["Title"]</h2>
+
+<form asp-action="Index" method="get" class="row row-cols-1 row-cols-md-5 g-2 mb-4 align-items-end">
+    <div class="col">
+        <input type="text" name="search" class="form-control" placeholder="Tìm sản phẩm..." value="@ViewBag.Search" />
+    </div>
+    <div class="col">
+        <select name="maLoai" class="form-select">
+            <option value="">-- Tất cả danh mục --</option>
+            @foreach (var loai in ViewBag.LoaiList as List<PhongNguyenPuppy_MVC.Data.Loai>)
+            {
+                var isSelected = ViewBag.SelectedLoai?.ToString() == loai.MaLoai.ToString();
+                var optionHtml = $"<option value=\"{loai.MaLoai}\" {(isSelected ? "selected" : "")}>{loai.TenLoai}</option>";
+                @Html.Raw(optionHtml)
+            }
+        </select>
+    </div>
+    <div class="col">
+        <select name="tenCongTy" class="form-select">
+            <option value="">-- Tất cả nhà cung cấp --</option>
+            @foreach (var ten in ViewBag.TenCongTyList as List<string>)
+            {
+                var isSelected = ViewBag.SelectedTenCongTy == ten;
+                var optionHtml = $"<option value=\"{ten}\" {(isSelected ? "selected" : "")}>{ten}</option>";
+                @Html.Raw(optionHtml)
+            }
+        </select>
+    </div>
+    <div class="col">
+        <select name="sortOrder" class="form-select">
+            @{
+                var sortOrder = ViewBag.SortOrder as string;
+                var options = new List<string>
+                        {
+                        "<option value=\"\">-- Sắp xếp --</option>",
+                        $"<option value=\"price_asc\" {(sortOrder == "price_asc" ? "selected" : "")}>Giá tăng dần</option>",
+                        $"<option value=\"price_desc\" {(sortOrder == "price_desc" ? "selected" : "")}>Giá giảm dần</option>"
+                        };
+                foreach (var opt in options)
+                {
+                    @Html.Raw(opt)
+                }
+            }
+        </select>
+    </div>
+    <div class="col text-end text-md-start">
+        <button type="submit" class="btn btn-primary w-150">
+            <i class="bi bi-funnel-fill"></i> Lọc
+        </button>
+    </div>
+</form>
+
+
+<p>
+    <a asp-area="Admin" asp-controller="HangHoaAdmin" asp-action="Create" class="btn btn-success"><i class="bi bi-plus-circle"></i> Thêm mới</a>
+</p>
+
+<table class="table table-bordered table-striped align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Mã HH</th>
+            <th>Tên HH</th>
+            <th>Đơn giá</th>
+            <th>Nhà cung cấp</th>
+            <th>Hình</th>
+            <th class="text-center">Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.MaHh</td>
+                <td>@item.TenHh</td>
+                <td>@String.Format("{0:N0} đ", item.DonGia)</td>
+                <td>@item.MaNccNavigation?.TenCongTy</td>
+                <td>
+                    @if (!string.IsNullOrEmpty(item.Hinh))
+                    {
+                        <img src="~/Hinh/HangHoa/@item.Hinh" alt="@item.TenHh" width="80" class="img-thumbnail" />
+                    }
+                    else
+                    {
+                        <span class="text-muted">Không có hình</span>
+                    }
+                </td>
+                <td class="text-center">
+                    <a asp-area="Admin" asp-controller="HangHoaAdmin" asp-action="Edit" asp-route-id="@item.MaHh" class="btn btn-warning btn-sm me-1">
+                        <i class="bi bi-pencil-square"></i> Sửa
+                    </a>
+                    <a asp-area="Admin" asp-controller="HangHoaAdmin" asp-action="Delete" asp-route-id="@item.MaHh" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');">
+                        <i class="bi bi-trash-fill"></i> Xóa
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (ViewBag.TotalPages > 1)
+{
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+            {
+                var active = ViewBag.CurrentPage == i ? "active" : "";
+                <li class="page-item @active">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-page="@i"
+                       asp-route-search="@ViewBag.Search"
+                       asp-route-maLoai="@ViewBag.SelectedLoai"
+                       asp-route-tenCongTy="@ViewBag.SelectedTenCongTy"
+                       asp-route-sortOrder="@ViewBag.SortOrder">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
