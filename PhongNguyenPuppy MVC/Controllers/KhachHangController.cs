@@ -1,22 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using PhongNguyenPuppy_MVC.Data;
-using PhongNguyenPuppy_MVC.ViewModels;
-using PhongNguyenPuppy_MVC.Models; // nếu có entity KhachHang
-using System.IO;
-using PhongNguyenPuppy_MVC.Helpers;
+﻿using System.IO;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PhongNguyenPuppy_MVC.Areas.Admin.ViewModels;
+using PhongNguyenPuppy_MVC.Data;
+using PhongNguyenPuppy_MVC.Helpers;
+using PhongNguyenPuppy_MVC.Models; // nếu có entity KhachHang
+using PhongNguyenPuppy_MVC.ViewModels;
 
 namespace PhongNguyenPuppy_MVC.Controllers
 {
+    [Authorize(AuthenticationSchemes = "CustomerScheme")]
     public class KhachHangController : Controller
     {
         private readonly PhongNguyenPuppyContext db;
         private readonly IWebHostEnvironment _env;
         private readonly MyEmailHelper _emailHelper;
+        private const int PageSize = 10;
         public KhachHangController(PhongNguyenPuppyContext context, IWebHostEnvironment env, MyEmailHelper emailHelper)
         {
             db = context;
@@ -232,13 +235,100 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
         #endregion
 
-
-
-        [Authorize(AuthenticationSchemes = "CustomerScheme")]
-        public IActionResult Profile()
+        //chức năng xem thông tin cá nhân và lịch sử mua hàng
+        public async Task<IActionResult> Profile(string? tuKhoa, int? nam, int page = 1)
         {
-            return View();
+            var maKh = User.FindFirstValue("CustomerID");
+            if (string.IsNullOrEmpty(maKh)) return RedirectToAction("DangNhap");
+
+            var query = db.HoaDons
+                .Include(h => h.MaTrangThaiNavigation)
+                .Include(h => h.ChiTietHds)
+                .Where(h => h.MaKh == maKh)
+                .Select(h => new HoaDonViewModel
+                {
+                    MaHd = h.MaHd,
+                    HoTen = h.HoTen,
+                    NgayDat = h.NgayDat,
+                    TrangThai = h.MaTrangThaiNavigation.TenTrangThai,
+                    TongTien = h.ChiTietHds.Sum(ct => (ct.DonGia * ct.SoLuong) * (1 - ct.GiamGia / 100)) - h.GiamGia + h.PhiVanChuyen,
+                    GiamGia = h.GiamGia
+                });
+
+            if (!string.IsNullOrEmpty(tuKhoa))
+            {
+                query = query.Where(h =>
+                    h.MaHd.ToString().Contains(tuKhoa) ||
+                    h.TrangThai.Contains(tuKhoa));
+            }
+
+            if (nam.HasValue)
+            {
+                query = query.Where(h => h.NgayDat.Year == nam.Value);
+            }
+
+            var totalItems = await query.CountAsync();
+            var hoaDons = await query
+                .OrderByDescending(h => h.NgayDat)
+                .Skip((page - 1) * PageSize)
+                .Take(PageSize)
+                .ToListAsync();
+
+            var vm = new HoaDonPagedViewModel
+            {
+                HoaDons = hoaDons,
+                PageNumber = page,
+                TotalPages = (int)Math.Ceiling((double)totalItems / PageSize),
+                TuKhoa = tuKhoa
+            };
+
+            ViewBag.Nam = nam;
+
+            return View(vm);
         }
+
+        //chức năng xem chi tiết hóa đơn
+        [Authorize(AuthenticationSchemes = "CustomerScheme")]
+        public async Task<IActionResult> Details(int id)
+        {
+            var hoaDonVM = await db.HoaDons
+                            .Include(h => h.MaKhNavigation)
+                .Include(h => h.MaTrangThaiNavigation)
+                .Include(h => h.ChiTietHds)
+                    .ThenInclude(ct => ct.MaHhNavigation)
+                .Where(h => h.MaHd == id)
+                .Select(h => new HoaDonDetailsViewModel
+                {
+                    MaHd = h.MaHd,
+                    MaKh = h.MaKh,
+                    HoTen = h.HoTen ?? h.MaKhNavigation.HoTen,
+                    NgayDat = h.NgayDat,
+                    TrangThai = h.MaTrangThaiNavigation.TenTrangThai,
+                    DiaChi = h.DiaChi,
+                    PhiVanChuyen = h.PhiVanChuyen,
+                    GhiChu = h.GhiChu,
+                    GiamGia = h.GiamGia,
+                    TongTien = (float)h.ChiTietHds.Sum(ct => (ct.DonGia * ct.SoLuong) * (1 - ct.GiamGia / 100)) - h.GiamGia + h.PhiVanChuyen,
+                    DienThoai = h.MaKhNavigation.DienThoai,
+                    Email = h.MaKhNavigation.Email,
+                    ChiTietHds = h.ChiTietHds.Select(ct => new ChiTietHdViewModel
+                    {
+                        TenHh = ct.MaHhNavigation.TenHh,
+                        DonGia = ct.DonGia,
+                        SoLuong = ct.SoLuong,
+                        GiamGia = ct.GiamGia,
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            if (hoaDonVM == null)
+                return NotFound();
+
+            return View(hoaDonVM);
+        }
+
+
+
         [Authorize(AuthenticationSchemes = "CustomerScheme")]
         public async Task<IActionResult> DangXuat()
         {

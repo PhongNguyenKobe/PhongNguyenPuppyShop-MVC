@@ -1,47 +1,147 @@
 ﻿@using System.Security.Claims
+@using PhongNguyenPuppy_MVC.Areas.Admin.ViewModels
+@model HoaDonPagedViewModel
+
 @{
-    ViewData["Title"] = "Profile";
+    ViewData["Title"] = "Thông tin cá nhân";
+
+    var tuKhoa = Model.TuKhoa ?? "";
+    var pageNumber = Model.PageNumber;
+    var totalPages = Model.TotalPages;
+    var nam = ViewBag.Nam as int?;
+    var currentYear = DateTime.Now.Year;
 }
 
-<div class="vh-100 d-flex justify-content-center align-items-center pt-lg-5 pt-4">
-    <div class="container my-5">
-        <div class="card border-0 shadow-sm rounded-4 p-4">
-            <div class="d-flex align-items-center mb-4">
-                <div class="me-3">
-                    @{
-                        var avatar = User.FindFirstValue("Avatar");
-                        var avatarPath = string.IsNullOrEmpty(avatar) ? "/Hinh/KhachHang/default-avatar.png" : avatar;
-                    }
-                    <div class="me-3">
-                        <img src="@avatarPath" alt="Avatar" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
-                    </div>
-                </div>
-                <div>
-                    <h4 class="mb-0 fw-semibold text-primary">Xin chào, @User.Identity.Name 👋</h4>
-                    <small class="text-muted">Khách hàng thân thiết</small>
-                </div>
-            </div>
+@functions {
+    public string GetBadgeClass(string trangThai) => trangThai switch
+    {
+        "Mới đặt hàng" => "bg-warning text-dark",
+        "Đã thanh toán" => "bg-info text-dark",
+        "Chờ giao hàng" => "bg-primary",
+        "Đã giao hàng" => "bg-success",
+        "Khách hàng hủy đơn hàng" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
 
-            <div class="row gy-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Email</label>
-                    <div class="form-control bg-light">@User.FindFirstValue(ClaimTypes.Email)</div>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Mã khách hàng</label>
-                    <div class="form-control bg-light">@User.FindFirstValue("CustomerID")</div>
-                </div>
-            </div>
-
-            <div class="mt-4 d-flex justify-content-end">
-                <a asp-action="QuenMatKhau" asp-controller="KhachHang" asp-route-email="@User.FindFirstValue(ClaimTypes.Email)" class="btn btn-outline-primary me-2">
-                    🔒 Đổi mật khẩu
-                </a>
-
-                <a asp-action="DangXuat" asp-controller="KhachHang" class="btn btn-danger">
-                    🚪 Đăng xuất
-                </a>
+<div class="container" style="padding-top: 180px;">
+    <!-- Thông tin khách hàng -->
+    <div class="card mb-4 p-4 shadow-sm rounded-4">
+        <div class="d-flex align-items-center mb-4">
+            @{
+                var avatar = User.FindFirstValue("Avatar");
+                var avatarPath = string.IsNullOrEmpty(avatar) ? "/Hinh/KhachHang/default-avatar.png" : avatar;
+            }
+            <img src="@avatarPath" alt="Avatar" class="rounded-circle me-3" style="width: 80px; height: 80px; object-fit: cover;">
+            <div>
+                <h4 class="mb-0 fw-semibold text-primary">Xin chào, @User.Identity.Name 👋</h4>
+                <small class="text-muted">Khách hàng thân thiết</small>
             </div>
         </div>
+
+        <div class="row gy-3">
+            <div class="col-md-6">
+                <label class="form-label text-muted">Email</label>
+                <div class="form-control bg-light">@User.FindFirstValue(ClaimTypes.Email)</div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label text-muted">Mã khách hàng</label>
+                <div class="form-control bg-light">@User.FindFirstValue("CustomerID")</div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-end">
+            <a asp-action="QuenMatKhau" asp-controller="KhachHang" asp-route-email="@User.FindFirstValue(ClaimTypes.Email)" class="btn btn-outline-primary me-2">
+                🔒 Đổi mật khẩu
+            </a>
+            <a asp-action="DangXuat" asp-controller="KhachHang" class="btn btn-danger">
+                🚪 Đăng xuất
+            </a>
+        </div>
+    </div>
+
+    <!-- Danh sách hóa đơn -->
+    <div class="card p-4 shadow-sm rounded-4">
+        <h5 class="mb-3 text-primary">📦 Đơn hàng của bạn</h5>
+
+        <form method="get" class="row mb-4">
+            <div class="col-md-4">
+                <input type="text" name="tuKhoa" value="@tuKhoa" class="form-control" placeholder="🔍 Tìm theo mã HĐ hoặc trạng thái..." />
+            </div>
+            <div class="col-md-3">
+                <select name="nam" class="form-select">
+                    <option value="">-- Tất cả năm --</option>
+                    @for (int y = currentYear; y >= currentYear - 5; y--)
+                    {
+                        <option value="@y" selected="@(nam == y ? "selected" : null)">@y</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Lọc
+                </button>
+            </div>
+        </form>
+
+        @if (Model.HoaDons.Any())
+        {
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã HĐ</th>
+                        <th>Ngày đặt</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Tổng tiền</th>
+                        <th class="text-center">Chi tiết</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var hd in Model.HoaDons)
+                    {
+                        <tr>
+                            <td>@hd.MaHd</td>
+                            <td>@hd.NgayDat.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <span class="badge @GetBadgeClass(hd.TrangThai)">
+                                    @hd.TrangThai
+                                </span>
+                            </td>
+                            <td class="text-end">@hd.TongTien.ToString("N0") VNĐ</td>
+                            <td class="text-center">
+                                <a asp-controller="KhachHang" asp-action="Details" asp-route-id="@hd.MaHd" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye"></i> Xem
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (totalPages > 1)
+            {
+                <nav aria-label="Phân trang hóa đơn">
+                    <div class="pagination d-flex justify-content-center mt-5">
+                        <a class="rounded @(pageNumber == 1 ? "disabled" : "")"
+                           href="?page=@(pageNumber - 1)&tuKhoa=@tuKhoa&nam=@nam">&laquo;</a>
+
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <a class="rounded @(i == pageNumber ? "active" : "")"
+                               href="?page=@i&tuKhoa=@tuKhoa&nam=@nam">@i</a>
+                        }
+
+                        <a class="rounded @(pageNumber == totalPages ? "disabled" : "")"
+                           href="?page=@(pageNumber + 1)&tuKhoa=@tuKhoa&nam=@nam">&raquo;</a>
+                    </div>
+                </nav>
+            }
+        }
+        else
+        {
+            <div class="text-center mt-4 text-muted">
+                Bạn chưa có đơn hàng nào.
+            </div>
+        }
     </div>
 </div>

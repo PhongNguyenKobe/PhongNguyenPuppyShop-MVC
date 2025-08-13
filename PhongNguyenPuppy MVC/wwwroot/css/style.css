@@ -89,6 +89,35 @@
 }
 /*** Spinner End ***/
 
+/* Phân trang sạch, không bị ảnh hưởng bởi template */
+.pagination-clean .page-link {
+    border-radius: 0.375rem !important;
+    padding: 0.5rem 0.75rem !important;
+    color: #0d6efd !important;
+    border: 1px solid #dee2e6 !important;
+    background-color: #fff !important;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+    .pagination-clean .page-link:hover {
+        background-color: #e9ecef !important;
+        color: #0a58ca !important;
+    }
+
+.pagination-clean .page-item.active .page-link {
+    background-color: #0d6efd !important;
+    color: #fff !important;
+    border-color: #0d6efd !important;
+}
+
+.pagination-clean .page-item.disabled .page-link {
+    color: #6c757d !important;
+    pointer-events: none;
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+}
+
 
 /*** Button Start ***/
 .btn {
