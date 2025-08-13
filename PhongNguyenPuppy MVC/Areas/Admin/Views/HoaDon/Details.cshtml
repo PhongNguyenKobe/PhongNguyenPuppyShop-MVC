@@ -1,68 +1,96 @@
 ﻿@model PhongNguyenPuppy_MVC.Areas.Admin.ViewModels.HoaDonDetailsViewModel
 @{
-    Layout = "_LayoutAdmin";
+	Layout = "_LayoutAdmin";
 
-    string GetBadgeClass(string trangThai) => trangThai switch
-    {
-        "Mới đặt hàng" => "bg-warning text-dark",
-        "Đã thanh toán" => "bg-info text-dark",
-        "Chờ giao hàng" => "bg-primary",
-        "Đã giao hàng" => "bg-success",
-        "Khách hàng hủy đơn hàng" => "bg-danger",
-        _ => "bg-secondary"
-    };
+	string GetBadgeClass(string trangThai) => trangThai switch
+	{
+		"Mới đặt hàng" => "bg-warning text-dark",
+		"Đã thanh toán" => "bg-info text-dark",
+		"Chờ giao hàng" => "bg-primary",
+		"Đã giao hàng" => "bg-success",
+		"Khách hàng hủy đơn hàng" => "bg-danger",
+		_ => "bg-secondary"
+	};
 }
+<style>
+	@@media print {
+		body * {
+			visibility: hidden;
+		}
 
-<h2 class="mb-4">Chi tiết hóa đơn <span class="text-primary">#@Model.MaHd</span></h2>
+		.print-area, .print-area * {
+			visibility: visible;
+		}
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <h5>Thông tin khách hàng</h5>
-        <p><strong>Họ tên:</strong> @Model.HoTen (@Model.MaKh)</p>
-        <p><strong>Điện thoại:</strong> @Model.DienThoai</p>
-        <p><strong>Email:</strong> @Model.Email</p>
-    </div>
-    <div class="col-md-6">
-        <h5>Thông tin đơn hàng</h5>
-        <p><strong>Ngày đặt:</strong> @Model.NgayDat.ToString("dd/MM/yyyy")</p>
-        <p><strong>Trạng thái:</strong> <span class="badge @GetBadgeClass(Model.TrangThai)">@Model.TrangThai</span></p>
-        <p><strong>Địa chỉ giao hàng:</strong> @Model.DiaChi</p>
-        <p><strong>Phí vận chuyển:</strong> @Model.PhiVanChuyen.ToString("N0") VNĐ</p>
-        <p><strong>Ghi chú:</strong> @Model.GhiChu</p>
-    </div>
+		.print-area {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+		}
+
+		.no-print {
+			display: none !important;
+		}
+	}
+</style>
+
+<div class="d-flex justify-content-end mb-3 no-print">
+	<button class="btn btn-outline-secondary" onclick="window.print()">
+		🖨️ In hóa đơn
+	</button>
 </div>
+<div class="print-area">
+	<h2 class="mb-4">Chi tiết hóa đơn <span class="text-primary">#@Model.MaHd</span></h2>
 
-<h5 class="mt-4">Danh sách sản phẩm</h5>
-<table class="table table-bordered table-striped">
-    <thead class="table-light">
-        <tr>
-            <th>Tên hàng hóa</th>
-            <th>Đơn giá</th>
-            <th>Số lượng</th>
-            <th>Thành tiền</th>
-        </tr>
-    </thead>
-    <tbody>
-        @{
-            double tamTinh = 0;
-        }
-        @foreach (var item in Model.ChiTietHds)
-        {
-            var thanhTien = (item.DonGia * item.SoLuong) * (1 - item.GiamGia / 100);
-            tamTinh += thanhTien;
-            <tr>
-                <td>@item.TenHh</td>
-                <td>@item.DonGia.ToString("N0") VNĐ</td>
-                <td>@item.SoLuong</td>
-                <td>@thanhTien.ToString("N0") VNĐ</td>
-            </tr>
-        }
-    </tbody>
-</table>
+	<div class="row mb-4">
+		<div class="col-md-6">
+			<h5>Thông tin khách hàng</h5>
+			<p><strong>Họ tên:</strong> @Model.HoTen (@Model.MaKh)</p>
+			<p><strong>Điện thoại:</strong> @Model.DienThoai</p>
+			<p><strong>Email:</strong> @Model.Email</p>
+		</div>
+		<div class="col-md-6">
+			<h5>Thông tin đơn hàng</h5>
+			<p><strong>Ngày đặt:</strong> @Model.NgayDat.ToString("dd/MM/yyyy")</p>
+			<p><strong>Trạng thái:</strong> <span class="badge @GetBadgeClass(Model.TrangThai)">@Model.TrangThai</span></p>
+			<p><strong>Địa chỉ giao hàng:</strong> @Model.DiaChi</p>
+			<p><strong>Phí vận chuyển:</strong> @Model.PhiVanChuyen.ToString("N0") VNĐ</p>
+			<p><strong>Ghi chú:</strong> @Model.GhiChu</p>
+		</div>
+	</div>
+	<h5 class="mt-4">Danh sách sản phẩm</h5>
+	<table class="table table-bordered table-striped">
+		<thead class="table-light">
+			<tr>
+				<th>Tên hàng hóa</th>
+				<th>Đơn giá</th>
+				<th>Số lượng</th>
+				<th>Thành tiền</th>
+			</tr>
+		</thead>
+		<tbody>
+			@{
+				double tamTinh = 0;
+			}
+			@foreach (var item in Model.ChiTietHds)
+			{
+				var thanhTien = (item.DonGia * item.SoLuong) * (1 - item.GiamGia / 100);
+				tamTinh += thanhTien;
+				<tr>
+					<td>@item.TenHh</td>
+					<td>@item.DonGia.ToString("N0") VNĐ</td>
+					<td>@item.SoLuong</td>
+					<td>@thanhTien.ToString("N0") VNĐ</td>
+				</tr>
+			}
+		</tbody>
+	</table>
 
-<div class="text-end mt-4">
-    <p><strong>Tạm tính:</strong> @tamTinh.ToString("N0") VNĐ</p>
-    <p><strong>Giảm giá từ mã:</strong> -@Model.GiamGia.ToString("N0") VNĐ</p>
-    <p><strong>Phí vận chuyển:</strong> +@Model.PhiVanChuyen.ToString("N0") VNĐ</p>
-    <p class="fw-bold fs-5"><strong>Tổng cộng:</strong> @((tamTinh - Model.GiamGia + Model.PhiVanChuyen).ToString("N0")) VNĐ</p>
+	<div class="text-end mt-4">
+		<p><strong>Tạm tính:</strong> @tamTinh.ToString("N0") VNĐ</p>
+		<p><strong>Giảm giá từ mã:</strong> -@Model.GiamGia.ToString("N0") VNĐ</p>
+		<p><strong>Phí vận chuyển:</strong> +@Model.PhiVanChuyen.ToString("N0") VNĐ</p>
+		<p class="fw-bold fs-5"><strong>Tổng cộng:</strong> @((tamTinh - Model.GiamGia + Model.PhiVanChuyen).ToString("N0")) VNĐ</p>
+	</div>
 </div>
