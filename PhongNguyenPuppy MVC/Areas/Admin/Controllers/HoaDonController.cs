@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PhongNguyenPuppy_MVC.Areas.Admin.ViewModels;
 using PhongNguyenPuppy_MVC.Data;
+using PhongNguyenPuppy_MVC.Helpers;
 
 namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
 {
@@ -19,7 +20,7 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
         }
 
         // Danh sách hóa đơn
-        public async Task<IActionResult> Index(string tuKhoa, int page = 1)
+        public async Task<IActionResult> Index(string tuKhoa, string locThoiGian = "tatca", int? nam = null, int page = 1)
         {
             var query = _context.HoaDons
                 .Include(h => h.MaTrangThaiNavigation)
@@ -33,19 +34,42 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
                     TrangThai = h.MaTrangThaiNavigation.TenTrangThai,
                     TongTien = h.ChiTietHds.Sum(ct => (ct.DonGia * ct.SoLuong) * (1 - ct.GiamGia / 100)) - h.GiamGia + h.PhiVanChuyen
                 });
+            // Lọc theo tên và mahđ
             if (!string.IsNullOrEmpty(tuKhoa))
             {
                 query = query.Where(h =>
                     h.HoTen.Contains(tuKhoa) ||
                     h.MaHd.ToString().Contains(tuKhoa));
             }
+            // Lọc theo thời gian
+            var now = DateTime.Now;
+
+            if (locThoiGian == "homnay")
+            {
+                query = query.Where(h => h.NgayDat.Date == now.Date);//đảm bảo hóa đơn mới nhất (ngày đặt gần nhất) sẽ hiển thị đầu tiên.
+            }
+            else if (locThoiGian == "tuannay")
+            {
+                var startOfWeek = now.AddDays(-(int)now.DayOfWeek);
+                query = query.Where(h => h.NgayDat.Date >= startOfWeek.Date);
+            }
+            else if (locThoiGian == "thangnay")
+            {
+                query = query.Where(h => h.NgayDat.Month == now.Month && h.NgayDat.Year == now.Year);
+            }
+            if (nam.HasValue)
+            {
+                query = query.Where(h => h.NgayDat.Year == nam.Value);
+            }
 
             var totalItems = await query.CountAsync();
+
             var hoaDonList = await query
                 .OrderByDescending(h => h.NgayDat)
                 .Skip((page - 1) * PageSize)
                 .Take(PageSize)
                 .ToListAsync();
+            // Tạo danh sách trạng thái để hiển thị trong dropdown
             ViewBag.TrangThaiList = await _context.TrangThais
                 .Select(t => new SelectListItem
                 {
@@ -56,7 +80,8 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
             ViewBag.PageNumber = page;
             ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / PageSize);
             ViewBag.TuKhoa = tuKhoa;
-
+            ViewBag.LocThoiGian = locThoiGian;
+            ViewBag.Nam = nam;
             return View(hoaDonList);
         }
 

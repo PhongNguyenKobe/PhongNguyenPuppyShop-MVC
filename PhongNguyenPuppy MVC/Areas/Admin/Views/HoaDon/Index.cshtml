@@ -17,6 +17,8 @@
     var tuKhoa = ViewBag.TuKhoa as string ?? "";
     var pageNumber = (int)(ViewBag.PageNumber ?? 1);
     var totalPages = (int)(ViewBag.TotalPages ?? 1);
+    var nam = ViewBag.Nam as int?;
+    var currentYear = DateTime.Now.Year;
 }
 
 <h2 class="mb-4">📋 Danh sách hóa đơn</h2>
@@ -24,6 +26,15 @@
 <form method="get" class="row mb-3">
     <div class="col-md-4">
         <input type="text" name="tuKhoa" value="@tuKhoa" class="form-control" placeholder="🔍 Tìm theo tên hoặc mã HĐ..." />
+    </div>
+    <div class="col-md-2">
+        <select name="nam" class="form-select">
+            <option value="">-- Tất cả năm --</option>
+            @for (int y = currentYear; y >= currentYear - 5; y--)
+            {
+                <option value="@y" selected="@(nam == y ? "selected" : null)">@y</option>
+            }
+        </select>
     </div>
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary">
@@ -87,7 +98,7 @@
             @for (int i = 1; i <= totalPages; i++)
             {
                 <li class="page-item @(i == pageNumber ? "active" : "")">
-                    <a class="page-link" href="?page=@i&tuKhoa=@tuKhoa">@i</a>
+                    <a class="page-link" href="?page=@i&tuKhoa=@tuKhoa&nam=@nam">@i</a>
                 </li>
             }
         </ul>
