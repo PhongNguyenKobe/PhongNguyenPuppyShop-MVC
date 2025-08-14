@@ -13,7 +13,7 @@ using PhongNguyenPuppy_MVC.ViewModels;
 
 namespace PhongNguyenPuppy_MVC.Controllers
 {
-    [Authorize(AuthenticationSchemes = "CustomerScheme")]
+    //[Authorize(AuthenticationSchemes = "CustomerScheme")] bị lỗi vòng lặp URL
     public class KhachHangController : Controller
     {
         private readonly PhongNguyenPuppyContext db;
