@@ -1,0 +1,48 @@
+﻿@model PhongNguyenPuppy_MVC.Data.MaGiamGia
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    Layout = "_LayoutAdmin";
+    ViewBag.Title = "Thêm mã giảm giá";
+}
+<h2>Thêm mã giảm giá</h2>
+
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label>Mã giảm giá</label>
+        <input asp-for="Code" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Giá trị</label>
+        <input asp-for="GiaTri" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Loại giảm</label>
+        <select asp-for="LoaiGiam" class="form-control">
+            <option value="true">Phần trăm (%)</option>
+            <option value="false">Số tiền (VNĐ)</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label>Hạn sử dụng</label>
+        <input asp-for="HanSuDung" type="date" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Số lượng tối đa</label>
+        <input asp-for="SoLuongToiDa" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Trạng thái</label>
+        <select asp-for="TrangThai" class="form-control">
+            <option value="true">Đang hoạt động</option>
+            <option value="false">Ngưng sử dụng</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label>Mô tả</label>
+        <textarea asp-for="MoTa" class="form-control"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Thêm</button>
+    <a class="nav-link" asp-area="Admin" asp-controller="MaGiamGia" asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>

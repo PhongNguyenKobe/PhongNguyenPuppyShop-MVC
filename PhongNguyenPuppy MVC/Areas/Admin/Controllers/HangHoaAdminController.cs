@@ -59,6 +59,7 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
             {
                 "price_desc" => query.OrderByDescending(h => h.DonGia),
                 "price_asc" => query.OrderBy(h => h.DonGia),
+                "newest" => query.OrderByDescending(h => h.MaHh), 
                 _ => query.OrderBy(h => h.MaHh)
             };
 

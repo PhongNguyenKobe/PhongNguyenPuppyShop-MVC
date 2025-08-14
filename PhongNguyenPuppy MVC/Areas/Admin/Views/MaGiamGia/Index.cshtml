@@ -1,0 +1,75 @@
+﻿@model IEnumerable<PhongNguyenPuppy_MVC.Data.MaGiamGia>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    Layout = "_LayoutAdmin";
+    ViewBag.Title = "Quản lý mã giảm giá";
+}
+<h2>Danh sách mã giảm giá</h2>
+<a class="btn btn-success mb-3" href="/Admin/MaGiamGia/Create">Thêm mã mới</a>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Mã</th>
+            <th>Giá trị</th>
+            <th>Loại</th>
+            <th>Hạn sử dụng</th>
+            <th>Đã dùng / Tối đa</th>
+            <th>Trạng thái</th>
+            <th>Mô tả</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Code</td>
+                <td>@item.GiaTri</td>
+                <td>@(item.LoaiGiam ? "VNĐ" : "%")</td>
+                <td>@item.HanSuDung?.ToString("dd/MM/yyyy")</td>
+                <td>@item.SoLuongDaDung / @item.SoLuongToiDa</td>
+                <td>@(item.TrangThai ? "Đang dùng" : "Ngưng")</td>
+                <td>@item.MoTa</td>
+                <td>
+                    <form asp-action="Delete" asp-controller="MaGiamGia" asp-area="Admin" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa mã này?');">
+                        <input type="hidden" name="id" value="@item.MaGg" />
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@item.MaGg)">🗑️ Xóa</button>
+                    </form>
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>
+<script>
+    function confirmDelete(id) {
+        Swal.fire({
+            title: 'Bạn có chắc muốn xóa?',
+            text: "Mã giảm giá sẽ bị xóa vĩnh viễn!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Tạo form và submit
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/Admin/MaGiamGia/Delete';
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'id';
+                input.value = id;
+
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+</script>
