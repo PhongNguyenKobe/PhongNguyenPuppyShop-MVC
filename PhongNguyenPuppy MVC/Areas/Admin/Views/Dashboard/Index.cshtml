@@ -3,39 +3,193 @@
     Layout = "_LayoutAdmin";
 }
 
-<div class="row">
-    <div class="col-sm-6 col-lg-3">
-        <div class="card text-white bg-primary">
-            <div class="card-body pb-0">
-                <div class="fs-4 fw-semibold">9.823 <span class="fs-6 fw-normal">(+40%)</span></div>
-                <div>Người dùng</div>
+<style>
+    .dashboard-card {
+        border-left: 6px solid;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        transition: 0.3s ease;
+    }
+
+        .dashboard-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+    .border-user {
+        border-color: #0d6efd;
+    }
+
+    .border-order {
+        border-color: #198754;
+    }
+
+    .border-revenue {
+        border-color: #fd7e14;
+    }
+
+    .border-product {
+        border-color: #dc3545;
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    #orderStatusChart {
+        max-height: 300px;
+        margin: 0 auto;
+    }
+
+    .admin-info {
+        background-color: #e9f5ff;
+        border-left: 5px solid #0d6efd;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+
+    }
+</style>
+
+<!--Thông tin admin -->
+<div class="admin-info mb-3 d-flex justify-content-between align-items-center flex-wrap">
+    <div class="d-flex align-items-center gap-2">
+        <span class="fs-4">👋</span>
+        <div>
+            <div class="fw-semibold">@ViewBag.Greeting, <strong>@ViewBag.HoTen</strong></div>
+            <small class="text-muted">Hôm nay: <strong>@ViewBag.Today</strong> • <strong>@ViewBag.TimeNow</strong></small>
+        </div>
+    </div>
+    <span class="badge bg-primary mt-2 mt-sm-0">Quản trị viên</span>
+</div>
+
+
+<!-- Card thống kê -->
+<div class="row mb-4">
+    <div class="col-sm-6 col-lg-3 mb-3">
+        <div class="card dashboard-card border-order text-dark text-center shadow-sm">
+            <div class="card-body">
+                <div class="stat-icon text-success">📑</div>
+                <h6 class="card-title">Đơn hàng</h6>
+                <div class="fs-4 fw-bold">@ViewBag.TotalOrders</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3 mb-3">
+        <div class="card dashboard-card border-revenue text-dark text-center shadow-sm">
+            <div class="card-body">
+                <div class="stat-icon text-warning">💰</div>
+                <h6 class="card-title">Doanh thu</h6>
+                <div class="fs-4 fw-bold">@String.Format("{0:N0} ₫", ViewBag.TotalRevenue)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3 mb-3">
+        <div class="card dashboard-card border-product text-dark text-center shadow-sm">
+            <div class="card-body">
+                <div class="stat-icon text-danger">📦</div>
+                <h6 class="card-title">Sản phẩm đã bán</h6>
+                <div class="fs-4 fw-bold">@ViewBag.TotalSoldProducts</div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card mt-4">
-    <div class="card-header">Thống kê</div>
+<!-- Biểu đồ doanh thu theo tháng -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white fw-bold">📆 Doanh thu theo tháng năm @ViewBag.CurrentYear</div>
     <div class="card-body">
-        <canvas id="trafficChart"></canvas>
+        <canvas id="monthlyRevenueChart" height="100"></canvas>
+    </div>
+</div>
+
+<!-- Biểu đồ trạng thái đơn hàng -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white fw-bold">📦 Đơn hàng theo trạng thái</div>
+    <div class="card-body">
+        <canvas id="orderStatusChart" height="50"></canvas>
+    </div>
+</div>
+
+<!-- Biểu đồ top khách hàng -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white fw-bold">🏆 Top khách hàng chi tiêu nhiều nhất</div>
+    <div class="card-body">
+        <canvas id="topCustomersChart" height="100"></canvas>
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const ctx = document.getElementById('trafficChart');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{
-                    label: 'Lượt truy cập',
-                    data: [65, 59, 80, 81, 56, 55],
-                    fill: false,
-                    borderColor: 'rgb(75, 192, 192)',
-                    tension: 0.1
-                }]
-            }
-        });
-    </script>
+        // Doanh thu theo tháng
+        const monthlyRevenueLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                    ((IEnumerable<dynamic>)ViewBag.MonthlyRevenue).Select(m => "Tháng " + m.Thang)
+            ));
+    const monthlyRevenueData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                ((IEnumerable<dynamic>)ViewBag.MonthlyRevenue).Select(m => m.TongTien)
+        ));
+
+    new Chart(document.getElementById("monthlyRevenueChart"), {
+        type: 'line',
+        data: {
+            labels: monthlyRevenueLabels,
+            datasets: [{
+                label: 'Doanh thu (₫)',
+                data: monthlyRevenueData,
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: { responsive: true }
+    });
+
+        // Trạng thái đơn hàng
+        const orderStatusLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                ((IEnumerable<dynamic>)ViewBag.OrderStatus).Select(m => m.TrangThai)
+        ));
+    const orderStatusData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                ((IEnumerable<dynamic>)ViewBag.OrderStatus).Select(m => m.SoLuong)
+        ));
+
+    new Chart(document.getElementById("orderStatusChart"), {
+        type: 'pie',
+        data: {
+            labels: orderStatusLabels,
+            datasets: [{
+                data: orderStatusData,
+                backgroundColor: ['#0d6efd', '#198754', '#fd7e14', '#dc3545']
+            }]
+        },
+        options: { responsive: true }
+    });
+
+        // Top khách hàng
+        const topCustomerLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                ((IEnumerable<dynamic>)ViewBag.TopCustomers).Select(m => m.TenKhachHang)
+        ));
+    const topCustomerData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                ((IEnumerable<dynamic>)ViewBag.TopCustomers).Select(m => m.TongTien)
+        ));
+
+    new Chart(document.getElementById("topCustomersChart"), {
+        type: 'bar',
+        data: {
+            labels: topCustomerLabels,
+            datasets: [{
+                label: 'Tổng chi tiêu (₫)',
+                data: topCustomerData,
+                backgroundColor: 'rgba(255, 159, 64, 0.6)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: { responsive: true }
+    });
+</script>
 }

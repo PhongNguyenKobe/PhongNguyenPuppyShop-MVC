@@ -1,0 +1,222 @@
+﻿@{
+    ViewData["Title"] = "Báo cáo thống kê";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+<style>
+    .stat-card {
+        border-left: 6px solid;
+        border-radius: 8px;
+        transition: 0.3s ease;
+    }
+
+        .stat-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+    .border-blue {
+        border-color: #0d6efd;
+    }
+
+    .border-green {
+        border-color: #198754;
+    }
+
+    .border-orange {
+        border-color: #fd7e14;
+    }
+
+    .border-red {
+        border-color: #dc3545;
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+</style>
+<h2 class="mb-4">Báo cáo thống kê</h2>
+
+<div class="mb-4">
+    <form method="get" asp-action="Index">
+        <label for="year">Chọn năm:</label>
+        <select name="year" onchange="this.form.submit()" class="form-select d-inline-block w-auto ms-2">
+            @for (int y = DateTime.Now.Year - 5; y <= DateTime.Now.Year; y++)
+            {
+                <option value="@y" @(y == ViewBag.CurrentYear ? "selected" : "")>@y</option>
+            }
+        </select>
+    </form>
+</div>
+
+
+<!-- Thống kê tổng quan -->
+
+<div class="row mb-4">
+    <div class="col-lg-3 col-sm-6 mb-3">
+        <div class="card stat-card border-blue bg-light text-dark text-center shadow-sm">
+            <div class="card-body">
+                <div class="stat-icon">📦</div>
+                <h6 class="card-title">Tổng sản phẩm</h6>
+                <p class="display-6 fw-bold">@ViewBag.TotalProducts</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-sm-6 mb-3">
+        <div class="card stat-card border-green bg-light text-dark text-center shadow-sm">
+            <div class="card-body">
+                <div class="stat-icon">🛒</div>
+                <h6 class="card-title">Đã bán năm @ViewBag.CurrentYear</h6>
+                <p class="display-6 fw-bold">@ViewBag.TotalSoldProducts</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-sm-6 mb-3">
+        <div class="card stat-card border-orange bg-light text-dark text-center shadow-sm">
+            <div class="card-body">
+                <div class="stat-icon">📑</div>
+                <h6 class="card-title">Tổng đơn hàng</h6>
+                <p class="display-6 fw-bold">@ViewBag.TotalOrders</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-sm-6 mb-3">
+        <div class="card stat-card border-red bg-light text-dark text-center shadow-sm">
+            <div class="card-body">
+                <div class="stat-icon">💰</div>
+                <h6 class="card-title">Tổng doanh thu</h6>
+                <p class="display-6 fw-bold">@String.Format("{0:N0} ₫", ViewBag.TotalRevenue)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<hr />
+
+<!-- Biểu đồ -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <h5 class="text-center">Sản phẩm bán chạy nhất</h5>
+        <canvas id="bestSellingChart"></canvas>
+    </div>
+    <div class="col-md-6 mb-4">
+        <h5 class="text-center">Doanh thu theo tháng năm @ViewBag.CurrentYear</h5>
+        <canvas id="monthlyRevenueChart"></canvas>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <h5 class="text-center">Đơn hàng theo trạng thái</h5>
+        <canvas id="orderStatusChart"></canvas>
+    </div>
+    <div class="col-md-6 mb-4">
+        <h5 class="text-center">Top khách hàng mua nhiều nhất</h5>
+        <canvas id="topCustomersChart"></canvas>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // 1. Top sản phẩm
+        const bestSellingLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                    ((IEnumerable<dynamic>)ViewBag.BestSelling).Select(m => m.TenHh)
+            ));
+    const bestSellingData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                ((IEnumerable<dynamic>)ViewBag.BestSelling).Select(m => m.SoLuongBan)
+        ));
+
+    new Chart(document.getElementById("bestSellingChart"), {
+        type: 'bar',
+        data: {
+            labels: bestSellingLabels,
+            datasets: [{
+                label: 'Số lượng bán',
+                data: bestSellingData,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: { responsive: true }
+    });
+
+        // 2. Doanh thu theo tháng
+                const monthlyRevenueLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                ((IEnumerable<dynamic>)ViewBag.MonthlyRevenue).Select(m => "Tháng " + m.Thang)
+        ));
+
+    const monthlyRevenueData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                ((IEnumerable<dynamic>)ViewBag.MonthlyRevenue).Select(m => m.TongTien)
+        ));
+
+    new Chart(document.getElementById("monthlyRevenueChart"), {
+        type: 'line',
+        data: {
+            labels: monthlyRevenueLabels,
+            datasets: [{
+                label: 'Doanh thu (₫)',
+                data: monthlyRevenueData,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                borderWidth: 2,
+                fill: true
+            }]
+        },
+        options: { responsive: true }
+    });
+
+        // 3. Đơn hàng theo trạng thái
+        const orderStatusLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                ((IEnumerable<dynamic>)ViewBag.OrderStatus).Select(m => m.TrangThai)
+        ));
+    const orderStatusData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                ((IEnumerable<dynamic>)ViewBag.OrderStatus).Select(m => m.SoLuong)
+        ));
+
+    new Chart(document.getElementById("orderStatusChart"), {
+        type: 'pie',
+        data: {
+            labels: orderStatusLabels,
+            datasets: [{
+                data: orderStatusData,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(255, 206, 86, 0.6)'
+                ]
+            }]
+        },
+        options: { responsive: true }
+    });
+
+        // 4. Top khách hàng mua nhiều nhất
+        const topCustomerLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                ((IEnumerable<dynamic>)ViewBag.TopCustomers).Select(m => m.TenKhachHang)
+        ));
+    const topCustomerData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                ((IEnumerable<dynamic>)ViewBag.TopCustomers).Select(m => m.TongTien)
+        ));
+
+    new Chart(document.getElementById("topCustomersChart"), {
+        type: 'bar',
+        data: {
+            labels: topCustomerLabels,
+            datasets: [{
+                label: 'Tổng chi tiêu (₫)',
+                data: topCustomerData,
+                backgroundColor: 'rgba(255, 159, 64, 0.6)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: { responsive: true }
+    });
+</script>
+}

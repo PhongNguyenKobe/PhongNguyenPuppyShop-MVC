@@ -22,8 +22,8 @@ builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddScoped<IKhachHangRepository, KhachHangRepository>();
 builder.Services.AddScoped<IDichVuGuiEmail, DichVuGuiEmail>();
-builder.Services.AddScoped<IDichVuThongKe, DichVuThongKe>();
 builder.Services.AddScoped<KhachHangService>();
+builder.Services.AddScoped<IDichVuThongKe, DichVuThongKe>();
 
 
 // Thêm dịch vụ Session
