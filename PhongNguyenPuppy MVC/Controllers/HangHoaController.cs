@@ -44,30 +44,10 @@ namespace PhongNguyenPuppy_MVC.Controllers
                         break;
                     case "Sale":
                     case "Discount":
-                        hangHoas = hangHoas.Where(p => p.GiamGia > 0); // cần trường GiamGia
+                        hangHoas = hangHoas.Where(p => p.GiamGia > 0); 
                         break;
                     
                 }
-            }
-
-            // Sắp xếp
-            switch (sortOrder)
-            {
-                case "price_asc":
-                    hangHoas = hangHoas.OrderBy(p => p.DonGia);
-                    break;
-                case "price_desc":
-                    hangHoas = hangHoas.OrderByDescending(p => p.DonGia);
-                    break;
-                case "Fresh":
-                    hangHoas = hangHoas.OrderByDescending(p => p.MaHh);
-                    break;
-                case "discount":
-                    hangHoas = hangHoas.Where(p => p.GiamGia > 0);
-                    break;
-                default:
-                    hangHoas = hangHoas.OrderBy(p => p.TenHh);
-                    break;
             }
 
             var totalItems = hangHoas.Count();
