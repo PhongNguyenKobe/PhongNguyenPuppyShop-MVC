@@ -13,35 +13,90 @@ namespace PhongNguyenPuppy_MVC.Controllers
         {
             db = context;
         }
-        public IActionResult Index(int? loai, int page = 1)
+        public IActionResult Index(int? loai, int page = 1, string sortOrder = "", int? minPrice = null, int? maxPrice = null, string category = "")
         {
             int pageSize = 12;
             IQueryable<HangHoa> hangHoas = db.HangHoas.Include(p => p.MaLoaiNavigation);
 
+            // Lọc theo loại sản phẩm
             if (loai.HasValue)
             {
                 hangHoas = hangHoas.Where(p => p.MaLoai == loai.Value);
             }
-            var totalItems = hangHoas.Count();
-            var result = hangHoas
-                               .OrderBy(p => p.TenHh)
-                               .Skip((page - 1) * pageSize)
-                               .Take(pageSize)
-                               .Select(p => new HangHoaVM
+
+            // Lọc theo khoảng giá
+            if (minPrice.HasValue)
             {
-           MaHh = p.MaHh,
-                TenHh = p.TenHh,
-                DonGia = p.DonGia ?? 0,
-                Hinh = p.Hinh ?? "",
-                MoTaNgan = p.MoTaDonVi ?? "",
-                TenLoai = p.MaLoaiNavigation.TenLoai
-            });
+                hangHoas = hangHoas.Where(p => p.DonGia >= minPrice.Value);
+            }
+            if (maxPrice.HasValue)
+            {
+                hangHoas = hangHoas.Where(p => p.DonGia <= maxPrice.Value);
+            }
+
+            // Lọc theo danh mục đặc biệt
+            if (!string.IsNullOrEmpty(category))
+            {
+                switch (category)
+                {
+                    case "Fresh":
+                        hangHoas = hangHoas.OrderByDescending(p => p.MaHh);
+                        break;
+                    case "Sale":
+                    case "Discount":
+                        hangHoas = hangHoas.Where(p => p.GiamGia > 0); // cần trường GiamGia
+                        break;
+                    
+                }
+            }
+
+            // Sắp xếp
+            switch (sortOrder)
+            {
+                case "price_asc":
+                    hangHoas = hangHoas.OrderBy(p => p.DonGia);
+                    break;
+                case "price_desc":
+                    hangHoas = hangHoas.OrderByDescending(p => p.DonGia);
+                    break;
+                case "Fresh":
+                    hangHoas = hangHoas.OrderByDescending(p => p.MaHh);
+                    break;
+                case "discount":
+                    hangHoas = hangHoas.Where(p => p.GiamGia > 0);
+                    break;
+                default:
+                    hangHoas = hangHoas.OrderBy(p => p.TenHh);
+                    break;
+            }
+
+            var totalItems = hangHoas.Count();
+
+            var result = hangHoas
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new HangHoaVM
+                {
+                    MaHh = p.MaHh,
+                    TenHh = p.TenHh,
+                    DonGia = p.DonGia ?? 0,
+                    Hinh = p.Hinh ?? "",
+                    MoTaNgan = p.MoTaDonVi ?? "",
+                    TenLoai = p.MaLoaiNavigation.TenLoai
+                });
+
+            // Truyền dữ liệu sang View
             ViewBag.PageNumber = page;
             ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
             ViewBag.Loai = loai;
+            ViewBag.SortOrder = sortOrder;
+            ViewBag.MinPrice = minPrice;
+            ViewBag.MaxPrice = maxPrice;
+            ViewBag.Category = category;
 
             return View(result);
         }
+
 
         public IActionResult Search(string? query, int page = 1)
         {

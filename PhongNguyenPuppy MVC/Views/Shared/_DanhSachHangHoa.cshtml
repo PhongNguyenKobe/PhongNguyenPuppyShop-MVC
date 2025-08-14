@@ -13,54 +13,67 @@
         <h1 class="mb-4">PhongNguyen Puppy - Đồ dùng và thức ăn cho chó</h1>
         <div class="row g-4">
             <div class="col-lg-12">
-                <div class="row g-4">
-                    <div class="col-xl-3">
-                        <div class="input-group w-100 mx-auto d-flex">
+                <form method="get" asp-action="Index">
+                    <input type="hidden" name="loai" value="@ViewBag.Loai" />
+                    <div class="row g-3 align-items-end">
+
+                        <!-- Tìm kiếm -->
+                        <div class="col-md-3">
                             @await Html.PartialAsync("_TimKiemPanel")
                         </div>
-                    </div>
-                    <div class="col-6"></div>
-                    <div class="col-xl-3">
-                        <div class="bg-light ps-3 py-3 rounded d-flex justify-content-between mb-4">
-                            <label for="sorting">Sắp xếp theo:</label>
-                            <select id="sorting" name="sorting" class="border-0 form-select-sm bg-light me-3">
-                                <option value="default">Mặc định</option>
-                                <option value="popularity">Phổ biến</option>
-                                <option value="quality">Chất lượng cao</option>
+
+                        <!-- Sắp xếp -->
+                        <div class="col-md-3">
+                            <label class="form-label">Sắp xếp theo</label>
+                            <select name="sortOrder" class="form-select form-select-sm">
+                                <option value="" selected="@(ViewBag.SortOrder == null || ViewBag.SortOrder == "")">Mặc định</option>
+                                <option value="price_asc" selected="@(ViewBag.SortOrder == "price_asc")">Giá thấp → cao</option>
+                                <option value="price_desc" selected="@(ViewBag.SortOrder == "price_desc")">Giá cao → thấp</option>
+                                <option value="Fresh" selected="@(ViewBag.SortOrder == "Fresh")">Sản phẩm mới</option>
+                                <option value="Sale" selected="@(ViewBag.SortOrder == "Sale")">Đang giảm giá</option>
                             </select>
                         </div>
+
+                        <!-- Khoảng giá -->
+                        <div class="col-md-3">
+                            <label class="form-label">Khoảng giá</label>
+                            <select name="maxPrice" class="form-select form-select-sm">
+                                <option value="">Tất cả</option>
+                                <option value="100000" selected="@(ViewBag.MaxPrice == 100000)">Dưới 100.000 VNĐ</option>
+                                <option value="300000" selected="@(ViewBag.MaxPrice == 300000)">Dưới 300.000 VNĐ</option>
+                                <option value="500000" selected="@(ViewBag.MaxPrice == 500000)">Dưới 500.000 VNĐ</option>
+                                <option value="900000" selected="@(ViewBag.MaxPrice == 900000)">Dưới 900.000 VNĐ</option>
+                            </select>
+                        </div>
+
+                        <!-- Danh mục đặc biệt -->
+                        <div class="col-md-3">
+                            <label class="form-label">Danh mục</label>
+                            <select name="category" class="form-select form-select-sm">
+                                <option value="">Tất cả</option>
+                                <option value="Fresh" selected="@(ViewBag.Category == "Fresh")">Sản phẩm mới</option>
+                                <option value="Sale" selected="@(ViewBag.Category == "Sale")">Đang giảm giá</option>
+                                <option value="Discount" selected="@(ViewBag.Category == "Discount")">Có khuyến mãi</option>
+                            </select>
+                        </div>
+
+                        <!-- Nút lọc nằm ngang -->
+                        <!-- Nút lọc nằm bên phải -->
+                        <div class="col-md-3 offset-md-9 text-end">
+                            <button type="submit" class="btn btn-primary btn-sm px-4 py-2">Lọc sản phẩm</button>
+                        </div>
+
+
                     </div>
-                </div>
+                </form>
+
+
                 <div class="row g-4">
                     <div class="col-lg-3">
                         <div class="row g-4">
                             @await Component.InvokeAsync("MenuLoai")
 
-                            <div class="col-lg-12">
-                                <div class="mb-3">
-                                    <h4 class="mb-2">Giá sản phẩm</h4>
-                                    <input type="range" class="form-range w-100" id="rangeInput" name="rangeInput" min="0" max="500" value="0" oninput="amount.value=rangeInput.value">
-                                    <output id="amount" name="amount">0</output>
-                                </div>
-                            </div>
-                            <div class="col-lg-12">
-                                <div class="mb-3">
-                                    <h4>Danh mục</h4>
-                                    
-                                    <div class="mb-2">
-                                        <input type="radio" class="me-2" id="Fresh" name="Category">
-                                        <label for="Fresh"> Sản phẩm mới</label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="me-2" id="Sale" name="Category">
-                                        <label for="Sale"> Đang giảm giá</label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="me-2" id="Discount" name="Category">
-                                        <label for="Discount"> Có khuyến mãi</label>
-                                    </div>
-                                </div>
-                            </div>
+                            
                             <div class="col-lg-12">
                                 <h4 class="mb-3">Sản phẩm nổi bật</h4>
                                 @foreach (var item in Model)
