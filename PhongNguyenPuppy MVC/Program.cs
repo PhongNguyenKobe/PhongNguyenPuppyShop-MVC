@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using PhongNguyenPuppy_MVC.Areas.Admin.Services;
 using PhongNguyenPuppy_MVC.Data;
 using PhongNguyenPuppy_MVC.Helpers;
 using PhongNguyenPuppy_MVC.Services;
@@ -18,6 +19,12 @@ builder.Services.AddDbContext<PhongNguyenPuppyContext>(options =>
 });
 
 builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddScoped<IKhachHangRepository, KhachHangRepository>();
+builder.Services.AddScoped<IDichVuGuiEmail, DichVuGuiEmail>();
+builder.Services.AddScoped<IDichVuThongKe, DichVuThongKe>();
+builder.Services.AddScoped<KhachHangService>();
+
 
 // Thêm dịch vụ Session
 builder.Services.AddSession(options =>

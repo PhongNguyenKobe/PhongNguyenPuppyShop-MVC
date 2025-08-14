@@ -1,0 +1,86 @@
+﻿@model PhongNguyenPuppy_MVC.Areas.Admin.ViewModels.SuaKhachHangVM
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    Layout = "_LayoutAdmin";
+    ViewBag.Title = "Chi tiết khách hàng";
+}
+
+<h2 class="mb-4">🔍 Chi tiết & chỉnh sửa khách hàng</h2>
+
+@if (TempData["ThongBao"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>@TempData["ThongBao"]</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- 🔧 Form chỉnh sửa thông tin khách hàng -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        ✏️ Chỉnh sửa thông tin
+    </div>
+    <div class="card-body">
+        <form asp-action="ChiTiet" method="post" class="row g-3">
+            <input type="hidden" asp-for="MaKh" />
+
+            <div class="col-md-6">
+                <label asp-for="HoTen" class="form-label">👤 Họ tên</label>
+                <input asp-for="HoTen" class="form-control" placeholder="Nhập họ tên..." />
+                <span asp-validation-for="HoTen" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="Email" class="form-label">📧 Email</label>
+                <input asp-for="Email" class="form-control" placeholder="Nhập email..." />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="DienThoai" class="form-label">📱 Điện thoại</label>
+                <input asp-for="DienThoai" class="form-control" placeholder="Nhập số điện thoại..." />
+                <span asp-validation-for="DienThoai" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 d-flex align-items-center">
+                <div class="form-check mt-4">
+                    <input asp-for="HieuLuc" class="form-check-input" />
+                    <label asp-for="HieuLuc" class="form-check-label">
+                        ✅ Khách hàng đang hoạt động
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-12 mt-3">
+                <button type="submit" class="btn btn-success me-2">💾 Lưu thay đổi</button>
+                <a asp-action="DanhSach" class="btn btn-secondary">⬅️ Quay lại</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 📧 Form gửi email cá nhân -->
+<div class="card">
+    <div class="card-header bg-info text-white">
+        📧 Gửi email riêng cho khách hàng
+    </div>
+    <div class="card-body">
+        <form method="post" asp-action="GuiEmailCaNhan">
+            <input type="hidden" name="Email" value="@Model.Email" />
+            <input type="hidden" name="MaKh" value="@Model.MaKh" />
+
+            <div class="mb-3">
+                <label class="form-label">Tiêu đề email</label>
+                <input type="text" name="TieuDeEmail" class="form-control" placeholder="Nhập tiêu đề..." />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Nội dung email</label>
+                <textarea name="NoiDungEmail" class="form-control" rows="4" placeholder="Nhập nội dung..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">📤 Gửi email</button>
+        </form>
+    </div>
+</div>
