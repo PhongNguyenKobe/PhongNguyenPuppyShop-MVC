@@ -1,21 +1,38 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using PhongNguyenPuppy_MVC.Models;
+using PhongNguyenPuppy_MVC.ViewModels;
+using Microsoft.EntityFrameworkCore;
+using PhongNguyenPuppy_MVC.Data; 
 
 namespace PhongNguyenPuppy_MVC.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly PhongNguyenPuppyContext _context; 
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, PhongNguyenPuppyContext context)
         {
             _logger = logger;
+            _context = context;
         }
 
         public IActionResult Index()
         {
-            return View();
+            var model = _context.HangHoas
+                .Include(h => h.MaLoaiNavigation)
+                .Select(h => new ChiTietHangHoaVM
+                {
+                    MaHh = h.MaHh,
+                    TenHh = h.TenHh,
+                    DonGia = h.DonGia ?? 0,
+                    Hinh = h.Hinh ?? "",
+                    MoTaNgan = h.MoTaDonVi ?? "",
+                    TenLoai = h.MaLoaiNavigation.TenLoai
+                })
+                .ToList();
+            return View(model);
         }
 
         [Route("/404")]
