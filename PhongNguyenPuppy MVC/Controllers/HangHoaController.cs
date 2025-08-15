@@ -116,11 +116,13 @@ namespace PhongNguyenPuppy_MVC.Controllers
             var data = db.HangHoas
                 .Include(p => p.MaLoaiNavigation)
                 .SingleOrDefault(p => p.MaHh == id);
+
             if (data == null)
             {
                 TempData["Message"] = $"Không tìm thấy sản phẩm {id}";
-                return Redirect("/404)");
+                return Redirect("/404");
             }
+
             var result = new ChiTietHangHoaVM
             {
                 MaHh = data.MaHh,
@@ -130,10 +132,28 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 Hinh = data.Hinh ?? "",
                 MoTaNgan = data.MoTaDonVi ?? "",
                 TenLoai = data.MaLoaiNavigation.TenLoai,
-                SoLuongTon = 10, //tinh sau
-                DiemDanhGia = 5, //check sau
+                SoLuongTon = 10, // Giá trị mặc định, chưa tính
+                DiemDanhGia = 5, // Giá trị mặc định, chưa check
 
+                // Thêm RelatedProducts (sản phẩm cùng danh mục)
+                RelatedProducts = db.HangHoas
+                    .Where(r => r.MaLoai == data.MaLoai && r.MaHh != data.MaHh)
+                    .Take(6) // Giới hạn 6 sản phẩm liên quan
+                    .Select(r => new ChiTietHangHoaVM
+                    {
+                        MaHh = r.MaHh,
+                        TenHh = r.TenHh,
+                        DonGia = r.DonGia ?? 0,
+                        ChiTiet = r.MoTa ?? "",
+                        Hinh = r.Hinh ?? "",
+                        MoTaNgan = r.MoTaDonVi ?? "",
+                        TenLoai = r.MaLoaiNavigation.TenLoai,
+                        SoLuongTon = 10, // Giá trị mặc định
+                        DiemDanhGia = 5 // Giá trị mặc định
+                    })
+                    .ToList()
             };
+
             return View(result);
         }
     }

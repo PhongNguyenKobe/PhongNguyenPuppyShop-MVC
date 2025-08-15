@@ -4,18 +4,16 @@
     ViewData["Title"] = "Detail";
 }
 
-<!-- Single Page Header start -->
+<!-- Single Page Header Start -->
 <div class="container-fluid page-header py-5">
     <h1 class="text-center text-white display-6">Chi tiết sản phẩm</h1>
     <ol class="breadcrumb justify-content-center mb-0">
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-
         <li class="breadcrumb-item"><a asp-controller="HangHoa" asp-action="Index">Sản phẩm</a></li>
         <li class="breadcrumb-item active text-white">@Model.TenHh</li>
     </ol>
 </div>
 <!-- Single Page Header End -->
-
 <!-- Single Product Start -->
 <div class="container-fluid py-5 mt-5">
     <div class="container py-5">
@@ -55,7 +53,9 @@
                                     </button>
                                 </div>
                             </div>
-                        <button href="#" class="btn border border-secondary rounded-pill px-4 py-2 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Cho vào giỏ</button>
+                            <button type="submit" class="btn border border-secondary rounded-pill px-4 py-2 mb-4 text-primary">
+                                <i class="fa fa-shopping-bag me-2 text-primary"></i> Cho vào giỏ
+                            </button>
                         </form>
                     </div>
                     <div class="col-lg-12">
@@ -119,68 +119,58 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="tab-pane" id="nav-vision" role="tabpanel">
-                                <p class="text-dark">
-                                    Tempor erat elitr rebum at clita. Diam dolor diam ipsum et tempor sit. Aliqu diam
-                                    amet diam et eos labore. 3
-                                </p>
-                                <p class="mb-0">
-                                    Diam dolor diam ipsum et tempor sit. Aliqu diam amet diam et eos labore.
-                                    Clita erat ipsum et lorem et sit
-                                </p>
-                            </div>
                         </div>
-                    </div>
-                    <form action="#">
-                        <h4 class="mb-5 fw-bold">Leave a Reply</h4>
-                        <div class="row g-4">
-                            <div class="col-lg-6">
-                                <div class="border-bottom rounded">
-                                    <input type="text" class="form-control border-0 me-4" placeholder="Your Name *">
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="border-bottom rounded">
-                                    <input type="email" class="form-control border-0" placeholder="Your Email *">
-                                </div>
-                            </div>
-                            <div class="col-lg-12">
-                                <div class="border-bottom rounded my-4">
-                                    <textarea name="" id="" class="form-control border-0" cols="30" rows="8" placeholder="Your Review *" spellcheck="false"></textarea>
-                                </div>
-                            </div>
-                            <div class="col-lg-12">
-                                <div class="d-flex justify-content-between py-3 mb-5">
-                                    <div class="d-flex align-items-center">
-                                        <p class="mb-0 me-3">Please rate:</p>
-                                        <div class="d-flex align-items-center" style="font-size: 12px;">
-                                            <i class="fa fa-star text-muted"></i>
-                                            <i class="fa fa-star"></i>
-                                            <i class="fa fa-star"></i>
-                                            <i class="fa fa-star"></i>
-                                            <i class="fa fa-star"></i>
-                                        </div>
+                        <form asp-action="AddReview" asp-controller="HangHoa" asp-route-id="@Model.MaHh" method="post">
+                            <h4 class="mb-5 fw-bold">Leave a Reply</h4>
+                            <div class="row g-4">
+                                <div class="col-lg-6">
+                                    <div class="border-bottom rounded">
+                                        <input type="text" class="form-control border-0 me-4" name="Name" placeholder="Your Name *" required>
                                     </div>
-                                    <a href="#" class="btn border border-secondary text-primary rounded-pill px-4 py-3"> Post Comment</a>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="border-bottom rounded">
+                                        <input type="email" class="form-control border-0" name="Email" placeholder="Your Email *" required>
+                                    </div>
+                                </div>
+                                <div class="col-lg-12">
+                                    <div class="border-bottom rounded my-4">
+                                        <textarea name="ReviewText" class="form-control border-0" cols="30" rows="8" placeholder="Your Review *" spellcheck="false" required></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-lg-12">
+                                    <div class="d-flex justify-content-between py-3 mb-5">
+                                        <div class="d-flex align-items-center">
+                                            <p class="mb-0 me-3">Please rate:</p>
+                                            <div class="d-flex align-items-center" style="font-size: 12px;">
+                                                <input type="radio" name="Rating" value="5" id="rating5" required><label for="rating5" class="fa fa-star text-secondary mx-1"></label>
+                                                <input type="radio" name="Rating" value="4" id="rating4"><label for="rating4" class="fa fa-star mx-1"></label>
+                                                <input type="radio" name="Rating" value="3" id="rating3"><label for="rating3" class="fa fa-star mx-1"></label>
+                                                <input type="radio" name="Rating" value="2" id="rating2"><label for="rating2" class="fa fa-star mx-1"></label>
+                                                <input type="radio" name="Rating" value="1" id="rating1"><label for="rating1" class="fa fa-star mx-1"></label>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn border border-secondary text-primary rounded-pill px-4 py-3">Post Comment</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
             <div class="col-lg-4 col-xl-3">
                 <div class="row g-4 fruite">
                     <div class="col-lg-12">
-						@await Html.PartialAsync("_TimKiemPanel")
-                       @await Component.InvokeAsync("MenuLoai")
+                        @await Html.PartialAsync("_TimKiemPanel")
+                        @await Component.InvokeAsync("MenuLoai")
                     </div>
                     <div class="col-lg-12">
-                        <h4 class="mb-4">Featured products</h4>
-                        <div class="d-flex align-items-center justify-content-start">
-                            <div class="rounded" style="width: 100px; height: 100px;">
+                        <h4 class="mb-4">Sản phẩm nổi bật</h4>
+                        <div class="d-flex align-items-center justify-content-start mb-3">
+                            <div class="rounded" style="width: 80px; height: 80px;">
                                 <img src="~/Hinh/HangHoa/@Model.Hinh" class="img-fluid rounded" alt="@Model.TenHh">
                             </div>
-                            <div>
+                            <div class="ms-3">
                                 <h6 class="mb-2">@Model.TenHh</h6>
                                 <div class="d-flex mb-2">
                                     <i class="fa fa-star text-secondary"></i>
@@ -190,162 +180,44 @@
                                     <i class="fa fa-star"></i>
                                 </div>
                                 <div class="d-flex mb-2">
-                                    <h5 class="fw-bold me-2">@Model.DonGia.ToString("N0") VNĐ</h5>
-                                    <h5 class="text-danger text-decoration-line-through">@Model.DonGia.ToString("N0") VNĐ</h5>
+                                    <h6 class="fw-bold me-2">@Model.DonGia.ToString("N0") VNĐ</h6>
                                 </div>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center justify-content-start">
-                            <div class="rounded" style="width: 100px; height: 100px;">
-                                <img src="~/Hinh/HangHoa/@Model.Hinh" class="img-fluid rounded" alt="@Model.TenHh">
-                            </div>
-                            <div>
-                                <h6 class="mb-2">@Model.TenHh</h6>
-                                <div class="d-flex mb-2">
-                                    <i class="fa fa-star text-secondary"></i>
-                                    <i class="fa fa-star text-secondary"></i>
-                                    <i class="fa fa-star text-secondary"></i>
-                                    <i class="fa fa-star text-secondary"></i>
-                                    <i class="fa fa-star"></i>
-                                </div>
-                                <div class="d-flex mb-2">
-                                    <h5 class="fw-bold me-2">@Model.DonGia.ToString("N0") VNĐ</h5>
-                                    <h5 class="text-danger text-decoration-line-through">@Model.DonGia.ToString("N0") VNĐ</h5>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        
-                        <div class="d-flex justify-content-center my-4">
-                            <a href="#" class="btn border border-secondary px-4 py-3 rounded-pill text-primary w-100">View More</a>
-                        </div>
+                        <!-- Thêm thêm sản phẩm Featured khác nếu có từ controller -->
                     </div>
-                    <div class="col-lg-12">
+                    <div class="col-lg-12 mt-4">
                         <div class="position-relative">
                             <img src="~/Hinh/HangHoa/@Model.Hinh" class="img-fluid w-100 rounded" alt="@Model.TenHh">
-                            <div class="position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);">
-                                @* <h3 class="text-secondary fw-bold">Thức ăn <br> Chất lương <br> Dành cho chó</h3> *@
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <h1 class="fw-bold mb-0">Related products</h1>
+        <h1 class="fw-bold mb-4">Các sản phẩm liên quan</h1>
         <div class="vesitable">
             <div class="owl-carousel vegetable-carousel justify-content-center">
-                <div class="border border-primary rounded position-relative vesitable-item">
-                    <div class="vesitable-img">
-                        <img src="~/Hinh/HangHoa/@Model.Hinh" class="img-fluid w-100 rounded-top" alt="@Model.TenHh">
-                    </div>
-                    <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Thức ăn</div>
-                    <div class="p-4 pb-0 rounded-bottom">
-                        <h4>Parsely</h4>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                        <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
+                @foreach (var relatedProduct in Model.RelatedProducts)
+                {
+                    <div class="border border-primary rounded position-relative vesitable-item">
+                        <div class="vesitable-img">
+                            <a asp-action="Detail" asp-route-id="@relatedProduct.MaHh">
+                                <img src="~/Hinh/HangHoa/@relatedProduct.Hinh" class="img-fluid w-100 rounded-top" alt="@relatedProduct.TenHh">
+                            </a>
+                        </div>
+                        <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Thức ăn</div>
+                        <div class="p-4 pb-0 rounded-bottom">
+                            <h6>@relatedProduct.TenHh</h6>
+                            <p class="text-muted mb-2">Danh mục: @relatedProduct.TenLoai</p>
+                            <div class="d-flex justify-content-between flex-lg-wrap">
+                                <p class="text-dark fs-5 fw-bold">@relatedProduct.DonGia.ToString("N0") VNĐ</p>
+                                <a asp-action="AddToCart" asp-controller="Cart" asp-route-id="@relatedProduct.MaHh" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary">
+                                    <i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="border border-primary rounded position-relative vesitable-item">
-                    <div class="vesitable-img">
-                        <img src="~/Hinh/HangHoa/@Model.Hinh" class="img-fluid w-100 rounded-top" alt="@Model.TenHh">
-                    </div>
-                    <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Thức ăn</div>
-                    <div class="p-4 pb-0 rounded-bottom">
-                        <h4>Parsely</h4>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                        <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="border border-primary rounded position-relative vesitable-item">
-                    <div class="vesitable-img">
-                        <img src="~/Hinh/HangHoa/@Model.Hinh" class="img-fluid w-100 rounded-top" alt="@Model.TenHh">
-                    </div>
-                    <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Thức ăn</div>
-                    <div class="p-4 pb-0 rounded-bottom">
-                        <h4>Parsely</h4>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                        <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="border border-primary rounded position-relative vesitable-item">
-                    <div class="vesitable-img">
-                        <img src="~/Hinh/HangHoa/@Model.Hinh" class="img-fluid w-100 rounded-top" alt="@Model.TenHh">
-                    </div>
-                    <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Thức ăn</div>
-                    <div class="p-4 pb-0 rounded-bottom">
-                        <h4>Parsely</h4>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                        <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="border border-primary rounded position-relative vesitable-item">
-                    <div class="vesitable-img">
-                        <img src="~/Hinh/HangHoa/@Model.Hinh" class="img-fluid w-100 rounded-top" alt="@Model.TenHh">
-                    </div>
-                    <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Thức ăn</div>
-                    <div class="p-4 pb-0 rounded-bottom">
-                        <h4>Parsely</h4>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                        <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="border border-primary rounded position-relative vesitable-item">
-                    <div class="vesitable-img">
-                        <img src="~/Hinh/HangHoa/@Model.Hinh" class="img-fluid w-100 rounded-top" alt="@Model.TenHh">
-                    </div>
-                    <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Thức ăn</div>
-                    <div class="p-4 pb-0 rounded-bottom">
-                        <h4>Parsely</h4>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                        <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="border border-primary rounded position-relative vesitable-item">
-                    <div class="vesitable-img">
-                        <img src="~/Hinh/HangHoa/@Model.Hinh" class="img-fluid w-100 rounded-top" alt="@Model.TenHh">
-                    </div>
-                    <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Thức ăn</div>
-                    <div class="p-4 pb-0 rounded-bottom">
-                        <h4>Parsely</h4>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                        <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="border border-primary rounded position-relative vesitable-item">
-                    <div class="vesitable-img">
-                        <img src="~/Hinh/HangHoa/@Model.Hinh" class="img-fluid w-100 rounded-top" alt="@Model.TenHh">
-                    </div>
-                    <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Thức ăn</div>
-                    <div class="p-4 pb-0 rounded-bottom">
-                        <h4>Parsely</h4>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                        <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold">@Model.DonGia.ToString("N0") VNĐ / kg</p>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
+                }
             </div>
         </div>
     </div>

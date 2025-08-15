@@ -30,6 +30,7 @@
         public string ChiTiet { get; set; }
         public int DiemDanhGia { get; set; }
         public int SoLuongTon { get; set; }
+        public List<ChiTietHangHoaVM> RelatedProducts { get; set; } // Danh sách sản phẩm liên quan
 
     }
 }
