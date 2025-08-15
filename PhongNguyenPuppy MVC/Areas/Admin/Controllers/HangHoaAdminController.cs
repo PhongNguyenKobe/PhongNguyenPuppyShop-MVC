@@ -278,5 +278,51 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
             return RedirectToAction("Index");
         }
 
+        [HttpPost]
+        public JsonResult CreateAjax([FromBody] LoaiViewModel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.TenLoai))
+                return Json(new { success = false, message = "Tên loại không được để trống." });
+
+            try
+            {
+                var loai = new Loai
+                {
+                    TenLoai = model.TenLoai.Trim(),
+                    TenLoaiAlias = model.TenLoaiAlias?.Trim(),
+                    MoTa = model.MoTa?.Trim()
+                };
+
+                _db.Loais.Add(loai);
+                _db.SaveChanges();
+
+                return Json(new { success = true, maLoai = loai.MaLoai, tenLoai = loai.TenLoai });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi khi thêm loại: " + ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        public JsonResult DeleteAjax(int id)
+        {
+            var loai = _db.Loais.Find(id);
+            if (loai == null)
+                return Json(new { success = false, message = "Không tìm thấy loại." });
+
+            // Kiểm tra nếu loại đang được dùng
+            bool isUsed = _db.HangHoas.Any(h => h.MaLoai == id);
+            if (isUsed)
+                return Json(new { success = false, message = "Loại đang được sử dụng, không thể xóa." });
+
+            _db.Loais.Remove(loai);
+            _db.SaveChanges();
+
+            return Json(new { success = true });
+        }
+
+
+
     }
 }

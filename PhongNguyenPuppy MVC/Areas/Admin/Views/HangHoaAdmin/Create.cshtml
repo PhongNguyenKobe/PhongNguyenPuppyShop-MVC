@@ -13,6 +13,18 @@
 {
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
+<style>
+    #modalMessage {
+        display: none;
+        transition: opacity 0.5s ease;
+    }
+
+        #modalMessage.visible {
+            display: block;
+            opacity: 1;
+        }
+</style>
+<div id="pageMessage" class="mb-3"></div>
 
 <h2>@ViewData["Title"]</h2>
 
@@ -25,12 +37,38 @@
         <span asp-validation-for="TenHh" class="text-danger"></span>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="MaLoai" class="form-label">Loại sản phẩm</label>
-        <select asp-for="MaLoai" asp-items="@(new SelectList(ViewBag.LoaiList, "MaLoai", "TenLoai"))" class="form-control">
+    <div class="input-group">
+        <select asp-for="MaLoai" asp-items="@(new SelectList(ViewBag.LoaiList, "MaLoai", "TenLoai"))" class="form-select" id="loaiSelect">
             <option value="">-- Chọn loại sản phẩm --</option>
         </select>
-        <span asp-validation-for="MaLoai" class="text-danger"></span>
+        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addLoaiModal">+</button>
+        <button type="button" class="btn btn-outline-danger" onclick="deleteLoai()">🗑️</button>
+    </div>
+
+
+    <!-- Modal thêm loại sản phẩm -->
+    <div class="modal fade" id="addLoaiModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm loại sản phẩm</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Thông báo -->
+                    <div id="modalMessage" class="mb-2"></div>
+
+                    <!-- Form nhập loại -->
+                    <input type="text" id="newLoaiTen" class="form-control mb-2" placeholder="Tên loại" required />
+                    <input type="text" id="newLoaiAlias" class="form-control mb-2" placeholder="(tùy chọn)" />
+                    <textarea id="newLoaiMoTa" class="form-control" placeholder="Mô tả (tùy chọn)"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" onclick="addLoai()">Thêm</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="mb-3">
@@ -67,4 +105,114 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+                function showModalMessage(message, isError = true) {
+            const msgBox = document.getElementById("modalMessage");
+            msgBox.className = (isError ? "text-danger" : "text-success") + " mb-2 visible";
+            msgBox.textContent = message;
+
+            setTimeout(() => {
+                msgBox.classList.remove("visible");
+                msgBox.textContent = "";
+            }, 3000);
+        }
+
+                function showPageMessage(message, isError = true) {
+            const msgBox = document.getElementById("pageMessage");
+            msgBox.className = isError ? "alert alert-danger" : "alert alert-success";
+            msgBox.textContent = message;
+            msgBox.style.display = "block";
+
+            setTimeout(() => {
+                msgBox.style.display = "none";
+                msgBox.textContent = "";
+            }, 3000);
+        }
+
+
+        function addLoai() {
+            const tenLoai = document.getElementById("newLoaiTen").value.trim();
+            const alias = document.getElementById("newLoaiAlias").value.trim();
+            const moTa = document.getElementById("newLoaiMoTa").value.trim();
+
+            if (!tenLoai) {
+                showModalMessage("Vui lòng nhập tên loại.");
+                return;
+            }
+
+            fetch("/Admin/HangHoaAdmin/CreateAjax", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ TenLoai: tenLoai, TenLoaiAlias: alias, MoTa: moTa })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("HTTP error " + res.status);
+                return res.json();
+            })
+            .then(data => {
+                console.log("Kết quả trả về:", data);
+                if (data.success) {
+                    const select = document.getElementById("loaiSelect");
+                    const option = document.createElement("option");
+                    option.value = data.maLoai;
+                    option.text = data.tenLoai;
+                    option.selected = true;
+                    select.appendChild(option);
+
+                    showModalMessage("✅ Thêm loại thành công!", false);
+                    document.getElementById("newLoaiTen").value = "";
+                    document.getElementById("newLoaiAlias").value = "";
+                    document.getElementById("newLoaiMoTa").value = "";
+
+                            setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById("addLoaiModal")).hide();
+        }, 1500);
+                } else {
+                    showModalMessage(data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showModalMessage("Lỗi khi gửi dữ liệu.");
+            });
+        }
+
+        function deleteLoai() {
+            const select = document.getElementById("loaiSelect");
+            const selectedValue = select.value;
+            if (!selectedValue) {
+                showModalMessage("Vui lòng chọn loại cần xóa.");
+                return;
+            }
+
+            if (!confirm("Bạn có chắc muốn xóa loại này?")) return;
+
+            fetch("/Admin/HangHoaAdmin/DeleteAjax/" + selectedValue, {
+                method: "DELETE"
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("HTTP error " + res.status);
+                return res.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    select.querySelector(`option[value='${selectedValue}']`).remove();
+                    select.value = "";
+        showPageMessage("🗑️ Đã xóa loại thành công!", false);
+                        } else {
+                    showModalMessage(data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showModalMessage("Lỗi khi xóa loại.");
+            });
+        }
+
+        document.getElementById("addLoaiModal").addEventListener("hidden.bs.modal", function () {
+            document.getElementById("modalMessage").textContent = "";
+            document.getElementById("modalMessage").classList.remove("visible");
+        });
+    </script>
+
 }
