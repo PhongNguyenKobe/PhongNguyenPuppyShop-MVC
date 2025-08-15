@@ -251,7 +251,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     HoTen = h.HoTen,
                     NgayDat = h.NgayDat,
                     TrangThai = h.MaTrangThaiNavigation.TenTrangThai,
-                    TongTien = h.ChiTietHds.Sum(ct => (ct.DonGia * ct.SoLuong) * (1 - ct.GiamGia / 100)) - h.GiamGia + h.PhiVanChuyen,
+                    TongTien = h.ChiTietHds.Sum(ct => ct.DonGia * ct.SoLuong) - (h.GiamGia ) + (h.PhiVanChuyen), // Tính lại chính xác
                     GiamGia = h.GiamGia
                 });
 
@@ -308,7 +308,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     PhiVanChuyen = h.PhiVanChuyen,
                     GhiChu = h.GhiChu,
                     GiamGia = h.GiamGia,
-                    TongTien = (float)h.ChiTietHds.Sum(ct => (ct.DonGia * ct.SoLuong) * (1 - ct.GiamGia / 100)) - h.GiamGia + h.PhiVanChuyen,
+                    TongTien = (float)(h.ChiTietHds.Sum(ct => ct.DonGia * ct.SoLuong) - (h.GiamGia ) + (h.PhiVanChuyen)), // Tính lại chính xác
                     DienThoai = h.MaKhNavigation.DienThoai,
                     Email = h.MaKhNavigation.Email,
                     ChiTietHds = h.ChiTietHds.Select(ct => new ChiTietHdViewModel

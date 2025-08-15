@@ -49,7 +49,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             if (item == null)
             {
                 var hanghoa = db.HangHoas.SingleOrDefault(p => p.MaHh == id);
-                if (hanghoa == null) // Fix: Check if hanghoa is null before accessing its properties  
+                if (hanghoa == null) 
                 {
                     TempData["Message"] = "Không tìm thấy hàng hóa mà bạn tìm";
                     return RedirectToAction("/404");
@@ -94,10 +94,36 @@ namespace PhongNguyenPuppy_MVC.Controllers
             }
             ViewBag.PaypalClientId = _paypalClient.ClientId;
 
-            // Lấy địa chỉ khách hàng từ database
             var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
             var khachHang = db.KhachHangs.SingleOrDefault(p => p.MaKh == customerId);
-            ViewBag.CustomerAddress = khachHang?.DiaChi ?? ""; // Truyền địa chỉ từ database vào ViewBag
+            ViewBag.CustomerAddress = khachHang?.DiaChi ?? "";
+
+            int tongTienHang = (int)Cart.Sum(p => p.ThanhTien);
+            int phiVanChuyen = 30000;
+            string finalAddress = khachHang?.DiaChi ?? "";
+            if (finalAddress.ToLower().Contains("hồ chí minh") || finalAddress.ToLower().Contains("tp. hcm") || tongTienHang >= 500000)
+            {
+                phiVanChuyen = 0;
+            }
+            double giamGia = 0;
+            var maGiamGia = HttpContext.Session.GetString("MaGiamGia"); // Lấy từ session
+            if (!string.IsNullOrEmpty(maGiamGia))
+            {
+                var coupon = db.MaGiamGias
+                    .SingleOrDefault(c => c.Code == maGiamGia
+                                       && c.TrangThai
+                                       && (c.HanSuDung == null || c.HanSuDung > DateTime.Now)
+                                       && (c.SoLuongToiDa == null || c.SoLuongDaDung < c.SoLuongToiDa));
+                if (coupon != null)
+                {
+                    giamGia = coupon.LoaiGiam ? coupon.GiaTri : (tongTienHang * (coupon.GiaTri / 100));
+                    giamGia = Math.Min(giamGia, tongTienHang);
+                }
+            }
+
+            // Lưu vào session
+            HttpContext.Session.SetInt32("PhiVanChuyen", phiVanChuyen);
+            HttpContext.Session.SetString("GiamGia", giamGia.ToString("F2")); // Sử dụng SetString
 
             return View(Cart);
         }
@@ -110,13 +136,12 @@ namespace PhongNguyenPuppy_MVC.Controllers
             int tongTienHang = (int)gioHang.Sum(p => p.ThanhTien);
             int phiVanChuyen = 30000;
 
-            // Lấy địa chỉ khách hàng từ database nếu chọn "Giống khách hàng"
             string finalAddress = model.DiaChi;
             if (model.GiongKhachHang)
             {
                 var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID).Value;
                 var khachHang = db.KhachHangs.SingleOrDefault(p => p.MaKh == customerId);
-                finalAddress = khachHang?.DiaChi ?? model.DiaChi; // Sử dụng địa chỉ khách hàng nếu có
+                finalAddress = khachHang?.DiaChi ?? model.DiaChi;
             }
 
             if (finalAddress.ToLower().Contains("hồ chí minh") || finalAddress.ToLower().Contains("tp. hcm") || tongTienHang >= 500000)
@@ -135,7 +160,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 if (coupon != null)
                 {
                     giamGia = coupon.LoaiGiam ? coupon.GiaTri : (tongTienHang * (coupon.GiaTri / 100));
-                    giamGia = Math.Min(giamGia, tongTienHang); // Đảm bảo giảm giá không vượt tổng tiền hàng
+                    giamGia = Math.Min(giamGia, tongTienHang); // Đảm bảo không vượt tổng tiền hàng
                 }
                 else
                 {
@@ -151,7 +176,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             {
                 var vnpayModel = new VnPaymentRequestModel
                 {
-                    Amount = tongCong, // Cập nhật amount với tổng sau khi giảm giá
+                    Amount = tongCong, // Sửa: Amount = tongCong (đã trừ giamGia)
                     CreatedDate = DateTime.Now,
                     Description = $"{model.HoTen} {model.DienThoai}",
                     FullName = model.HoTen,
@@ -159,7 +184,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 };
 
                 var paymentUrl = _vnPayService.CreatePaymentUrl(HttpContext, vnpayModel);
-                return Redirect(paymentUrl); // Redirect trực tiếp đến VNPay
+                return Redirect(paymentUrl);
             }
 
             if (ModelState.IsValid)
@@ -216,9 +241,8 @@ namespace PhongNguyenPuppy_MVC.Controllers
                         db.SaveChanges();
                     }
 
-                    transaction.Commit(); // Commit sau khi tất cả thao tác DB thành công
+                    transaction.Commit();
                     HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
-                    // Truyền mã đơn hàng vào ViewBag
                     ViewBag.PaymentMethod = "COD";
                     ViewBag.MaHd = hoadon.MaHd;
                     return View("Success");
@@ -248,7 +272,9 @@ namespace PhongNguyenPuppy_MVC.Controllers
             if (coupon != null)
             {
                 double giamGia = coupon.LoaiGiam ? coupon.GiaTri : (tongTienHang * (coupon.GiaTri / 100));
-                giamGia = Math.Min(giamGia, tongTienHang); // Đảm bảo không vượt tổng tiền hàng
+                giamGia = Math.Min(giamGia, tongTienHang);
+                HttpContext.Session.SetString("GiamGia", giamGia.ToString("F2")); // Sử dụng SetString
+                HttpContext.Session.SetString("MaGiamGia", maGiamGia);
                 return Ok(new { success = true, giamGia = giamGia, moTa = coupon.MoTa });
             }
             return Ok(new { success = false, message = "Mã giảm giá không hợp lệ hoặc hết hạn." });
@@ -268,7 +294,11 @@ namespace PhongNguyenPuppy_MVC.Controllers
         [HttpPost("/Cart/create-paypal-order")]
         public async Task<IActionResult> CreatePaypalOrder(CancellationToken cancellationToken)
         {
-            var tongTienVND = Cart.Sum(p => p.ThanhTien);
+            var tongTienHang = Cart.Sum(p => p.ThanhTien);
+            var phiVanChuyen = HttpContext.Session.GetInt32("PhiVanChuyen") ?? 30000;
+            var giamGiaStr = HttpContext.Session.GetString("GiamGia");
+            var giamGia = string.IsNullOrEmpty(giamGiaStr) ? 0 : double.Parse(giamGiaStr);
+            var tongTienVND = (int)(tongTienHang - giamGia + phiVanChuyen);
             var donViTienTe = "USD";
             var maDonHangThamChieu = "DH" + DateTime.Now.Ticks.ToString();
 
@@ -291,7 +321,6 @@ namespace PhongNguyenPuppy_MVC.Controllers
             }
         }
 
-
         [Authorize]
         [HttpPost("/Cart/capture-paypal-order")]
         public async Task<IActionResult> CapturePaypalOrder(string orderID, CancellationToken cancellationToken)
@@ -300,11 +329,15 @@ namespace PhongNguyenPuppy_MVC.Controllers
             {
                 var response = await _paypalClient.CaptureOrder(orderID);
 
-                // 1. Lấy mã khách hàng từ Claims
                 var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID).Value;
                 var khachHang = db.KhachHangs.SingleOrDefault(p => p.MaKh == customerId);
 
-                // 2. Tạo hóa đơn
+                var gioHang = Cart;
+                int tongTienHang = (int)gioHang.Sum(p => p.ThanhTien);
+                var phiVanChuyen = HttpContext.Session.GetInt32("PhiVanChuyen") ?? 30000;
+                var giamGiaStr = HttpContext.Session.GetString("GiamGia");
+                var giamGia = string.IsNullOrEmpty(giamGiaStr) ? 0 : double.Parse(giamGiaStr);
+
                 var hoadon = new HoaDon
                 {
                     MaKh = customerId,
@@ -315,7 +348,9 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     CachThanhToan = "Thanh toán qua Paypal",
                     CachVanChuyen = "Giao hàng tận nơi",
                     MaTrangThai = 0,
-                    GhiChu = "Thanh toán thành công qua Paypal"
+                    GhiChu = "Thanh toán thành công qua Paypal",
+                    PhiVanChuyen = phiVanChuyen,
+                    GiamGia = (float)giamGia
                 };
 
                 using var transaction = db.Database.BeginTransaction();
@@ -339,10 +374,8 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 db.SaveChanges();
                 transaction.Commit();
 
-                // Xóa giỏ hàng
                 HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
 
-                // 3. Trả về JSON chứa mã đơn hàng để redirect phía client
                 return Ok(new
                 {
                     status = "success",
@@ -366,6 +399,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
         }
 
         [Authorize]
+        [Authorize]
         public IActionResult PaymentCallBack()
         {
             var response = _vnPayService.PaymentExecute(Request.Query);
@@ -376,19 +410,31 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 return RedirectToAction("PaymentFail");
             }
 
-            // ✅ Lưu đơn hàng vào cơ sở dữ liệu
+            // Lấy thông tin từ giỏ hàng và session
+            var gioHang = Cart;
+            int tongTienHang = (int)gioHang.Sum(p => p.ThanhTien);
+            var phiVanChuyen = HttpContext.Session.GetInt32("PhiVanChuyen") ?? 30000; // Lấy từ session
+            var giamGiaStr = HttpContext.Session.GetString("GiamGia");
+            var giamGia = string.IsNullOrEmpty(giamGiaStr) ? 0 : double.Parse(giamGiaStr); // Lấy từ session
+
+            // Lấy thông tin khách hàng
             var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
+            var khachHang = db.KhachHangs.SingleOrDefault(p => p.MaKh == customerId);
+
+            // Tạo hóa đơn (không dùng TongTien)
             var hoadon = new HoaDon
             {
                 MaKh = customerId,
-                DiaChi = "Địa chỉ mặc định", // Bạn có thể lấy từ session hoặc lưu tạm trước đó
-                DienThoai = "SĐT mặc định",
-                HoTen = "Tên KH mặc định",
+                DiaChi = khachHang?.DiaChi ?? "Địa chỉ mặc định",
+                DienThoai = khachHang?.DienThoai ?? "SĐT mặc định",
+                HoTen = khachHang?.HoTen ?? "Tên KH mặc định",
                 NgayDat = DateTime.Now,
                 CachThanhToan = "Thanh toán VNPay",
                 CachVanChuyen = "Giao hàng tận nơi",
                 MaTrangThai = 0,
-                GhiChu = "Đơn hàng thanh toán qua VNPay"
+                GhiChu = "Đơn hàng thanh toán qua VNPay",
+                PhiVanChuyen = phiVanChuyen, // Lưu phí vận chuyển từ session
+                GiamGia = giamGia // Lưu giảm giá từ session
             };
 
             using var transaction = db.Database.BeginTransaction();
@@ -406,7 +452,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                         SoLuong = item.SoLuong,
                         DonGia = item.DonGia,
                         MaHh = item.MaHh,
-                        GiamGia = 0,
+                        GiamGia = 0, // Giảm giá chi tiết vẫn là 0
                     });
                 }
 
