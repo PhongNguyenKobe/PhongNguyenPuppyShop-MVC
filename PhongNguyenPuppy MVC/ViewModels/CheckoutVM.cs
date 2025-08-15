@@ -9,7 +9,7 @@
         public string? GhiChu { get; set; }
         public int PhiVanChuyen { get; set; }
 
-        public string MaGiamGia { get; set; } // Mã giảm giá người dùng nhập
+        public string? MaGiamGia { get; set; } // Mã giảm giá người dùng nhập
         public double GiamGiaApDung { get; set; } = 0; // Giá trị giảm sau khi áp dụng
 
     }
