@@ -59,7 +59,7 @@
                     <div id="modalMessage" class="mb-2"></div>
 
                     <!-- Form nhập loại -->
-                    <input type="text" id="newLoaiTen" class="form-control mb-2" placeholder="Tên loại" required />
+                    <input type="text" id="newLoaiTen" class="form-control mb-2" placeholder="Tên loại" />
                     <input type="text" id="newLoaiAlias" class="form-control mb-2" placeholder="(tùy chọn)" />
                     <textarea id="newLoaiMoTa" class="form-control" placeholder="Mô tả (tùy chọn)"></textarea>
                 </div>
@@ -106,7 +106,13 @@
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
     <script>
-                function showModalMessage(message, isError = true) {
+        // Thêm log khi nút Lưu được click
+        document.querySelector('button[type="submit"]').addEventListener('click', function (e) {
+            console.log("Nút Lưu được click!");
+        });
+
+        // Các hàm hiện tại
+        function showModalMessage(message, isError = true) {
             const msgBox = document.getElementById("modalMessage");
             msgBox.className = (isError ? "text-danger" : "text-success") + " mb-2 visible";
             msgBox.textContent = message;
@@ -117,7 +123,7 @@
             }, 3000);
         }
 
-                function showPageMessage(message, isError = true) {
+        function showPageMessage(message, isError = true) {
             const msgBox = document.getElementById("pageMessage");
             msgBox.className = isError ? "alert alert-danger" : "alert alert-success";
             msgBox.textContent = message;
@@ -128,7 +134,6 @@
                 msgBox.textContent = "";
             }, 3000);
         }
-
 
         function addLoai() {
             const tenLoai = document.getElementById("newLoaiTen").value.trim();
@@ -164,9 +169,9 @@
                     document.getElementById("newLoaiAlias").value = "";
                     document.getElementById("newLoaiMoTa").value = "";
 
-                            setTimeout(() => {
-            bootstrap.Modal.getInstance(document.getElementById("addLoaiModal")).hide();
-        }, 1500);
+                    setTimeout(() => {
+                        bootstrap.Modal.getInstance(document.getElementById("addLoaiModal")).hide();
+                    }, 1500);
                 } else {
                     showModalMessage(data.message);
                 }
@@ -198,8 +203,8 @@
                 if (data.success) {
                     select.querySelector(`option[value='${selectedValue}']`).remove();
                     select.value = "";
-        showPageMessage("🗑️ Đã xóa loại thành công!", false);
-                        } else {
+                    showPageMessage("🗑️ Đã xóa loại thành công!", false);
+                } else {
                     showModalMessage(data.message);
                 }
             })

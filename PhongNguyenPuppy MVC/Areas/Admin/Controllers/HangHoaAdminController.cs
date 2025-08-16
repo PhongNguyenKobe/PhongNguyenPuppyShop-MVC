@@ -102,16 +102,16 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
+                Console.WriteLine("ModelState is valid. Processing...");
                 var hangHoa = new HangHoa
                 {
                     TenHh = model.TenHh,
-                    MaLoai = model.MaLoai ?? 0, // MaLoai nullable nên lấy giá trị có hoặc mặc định 0
-                    MaNcc = model.MaNCC,
+                    MaLoai = model.MaLoai ?? 0,
+                    MaNcc = model.MaNCC ?? string.Empty,
                     DonGia = (double)(model.DonGia ?? 0),
                     MoTa = model.MoTa
                 };
 
-                // Upload hình nếu có
                 if (model.Hinh != null && model.Hinh.Length > 0)
                 {
                     var fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.Hinh.FileName);
@@ -125,26 +125,37 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
                     {
                         await model.Hinh.CopyToAsync(stream);
                     }
-
                     hangHoa.Hinh = fileName;
                 }
+                else
+                {
+                    ModelState.AddModelError("Hinh", "Vui lòng chọn hình ảnh.");
+                }
 
-                _db.HangHoas.Add(hangHoa);
-                await _db.SaveChangesAsync();
+                if (!_db.Loais.Any(l => l.MaLoai == hangHoa.MaLoai))
+                {
+                    ModelState.AddModelError("MaLoai", "Loại sản phẩm không tồn tại.");
+                }
+                if (!_db.NhaCungCaps.Any(n => n.MaNcc == hangHoa.MaNcc))
+                {
+                    ModelState.AddModelError("MaNCC", "Nhà cung cấp không tồn tại.");
+                }
 
-                TempData["Success"] = "Thêm sản phẩm thành công!";
-                return RedirectToAction("Index");
+                if (ModelState.IsValid)
+                {
+                    _db.HangHoas.Add(hangHoa);
+                    await _db.SaveChangesAsync();
+                    TempData["Success"] = "Thêm sản phẩm thành công!";
+                    return RedirectToAction("Index");
+                }
             }
 
-            // Hiển thị lỗi chi tiết ra TempData để View show
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
             TempData["Error"] = string.Join("; ", errors);
-
-            ViewBag.LoaiList = _db.Loais.ToList();
-            ViewBag.NccList = _db.NhaCungCaps
-    .Where(n => n.MaNcc != null && n.TenCongTy != null)
-    .ToList();
-
+            ViewBag.LoaiList = await _db.Loais.ToListAsync();
+            ViewBag.NccList = await _db.NhaCungCaps
+                .Where(n => n.MaNcc != null && n.TenCongTy != null)
+                .ToListAsync();
             return View(model);
         }
 
@@ -160,14 +171,14 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
                 MaHh = hangHoa.MaHh,
                 TenHh = hangHoa.TenHh,
                 MaLoai = hangHoa.MaLoai,
-                MaNCC = hangHoa.MaNcc, // ✅ thêm MaNCC để binding
+                MaNCC = hangHoa.MaNcc, // Gán trực tiếp vì cả hai đều là string
                 DonGia = (decimal?)hangHoa.DonGia,
                 ExistingHinh = hangHoa.Hinh,
                 MoTa = hangHoa.MoTa
             };
 
             ViewBag.LoaiList = _db.Loais.ToList();
-            ViewBag.NccList = _db.NhaCungCaps.ToList(); // ✅ thêm danh sách NCC
+            ViewBag.NccList = _db.NhaCungCaps.ToList();
 
             return View(model);
         }
@@ -184,7 +195,7 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
 
                 hangHoa.TenHh = model.TenHh;
                 hangHoa.MaLoai = model.MaLoai ?? 0;
-                hangHoa.MaNcc = model.MaNCC; // ✅ cập nhật nhà cung cấp
+                hangHoa.MaNcc = model.MaNCC ?? string.Empty; // Sửa thành string
                 hangHoa.DonGia = (double)(model.DonGia ?? 0);
                 hangHoa.MoTa = model.MoTa;
 
@@ -220,7 +231,7 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
 
             // Nếu ModelState không hợp lệ
             ViewBag.LoaiList = _db.Loais.ToList();
-            ViewBag.NccList = _db.NhaCungCaps.ToList(); // ✅ cần truyền lại khi có lỗi
+            ViewBag.NccList = _db.NhaCungCaps.ToList();
 
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
             TempData["Error"] = string.Join("; ", errors);

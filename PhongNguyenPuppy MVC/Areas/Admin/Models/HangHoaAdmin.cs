@@ -15,13 +15,13 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.ViewModels
 
         [Display(Name = "Nhà cung cấp")]
         [Required(ErrorMessage = "Nhà cung cấp không được để trống")]
-        public string MaNCC { get; set; } //  dùng mã NCC để binding
+        public string? MaNCC { get; set; } // Khôi phục thành string?
 
         [Display(Name = "Tên Công Ty")]
         public string? TenCongTy { get; set; } // nullable, không bị validate
 
         [Display(Name = "Mô tả")]
-        public string? MoTa { get; set; } //  optional
+        public string? MoTa { get; set; } // optional
 
         [Display(Name = "Đơn giá")]
         [Required(ErrorMessage = "Đơn giá không được để trống")]
