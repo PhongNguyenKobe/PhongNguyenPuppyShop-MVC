@@ -1,5 +1,7 @@
 # 🐾 PhongNguyenPuppy - Website thương mại điện tử bán phụ kiện và sản phẩm cho cún
 
+> ⚠️ *Dự án này hiện vẫn đang trong quá trình phát triển và sẽ tiếp tục được hoàn thiện trong tương lai.*
+
 ## 📌 Giới thiệu
 **PhongNguyenPuppy** là một Website thương mại điện tử được phát triển bằng **ASP.NET Core MVC**, phục vụ cho việc quản lý sản phẩm (hàng hóa) tại cửa hàng cún. Dự án bao gồm các chức năng như thêm, sửa, xóa sản phẩm, quản lý loại sản phẩm và nhà cung cấp. Đây là một dự án học tập, được cá nhân hóa từ khóa học trên YouTube để phù hợp với nhu cầu thực hành.
 
@@ -16,7 +18,7 @@
 - **Tìm kiếm, lọc theo loại/nhà cung cấp, sắp xếp theo giá hoặc ngày thêm**.
 - **Giao diện thân thiện sử dụng Bootstrap**.
 
-### Khu vực User (Đang phát triển)
+### Khu vực User
 - **Giỏ hàng**: Thêm, xóa, áp dụng mã giảm giá và quản lý sản phẩm trong giỏ hàng.
 - **Thanh toán**:
   - Thanh toán khi nhận hàng (COD).
