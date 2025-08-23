@@ -19,10 +19,21 @@
 | Thành phần         | Yêu cầu tối thiểu                     |
 |--------------------|---------------------------------------|
 | .NET SDK           | 9.0 trở lên                           |
-| Cơ sở dữ liệu      | SQL Server (hoặc SQLite/LocalDB)     |
+| Cơ sở dữ liệu      | SQL Server                            |
 | IDE                | Visual Studio 2022 / VS Code          |
 | Thư viện frontend  | Bootstrap, jQuery (đã tích hợp sẵn)  |
 
 ## 📬 Liên hệ
 - Tác giả: PhongNguyen
 - Cập nhật lần cuối: 24/08/2025
+---
+
+## 🖼️ Hình ảnh giao diện ứng dụng
+
+Dưới đây là một số hình ảnh minh họa cho giao diện ứng dụng ASP.NET Core MVC tương tự với dự án **PhongNguyenPuppy**:
+
+- Trang chủ
+*<img width="980" height="477" alt="image" src="https://github.com/user-attachments/assets/32086a91-a4c9-4647-848e-099aefe486aa" />*
+- Admin
+*<img width="980" height="477" alt="image" src="https://github.com/user-attachments/assets/053d3f32-d34a-4608-90b1-bfd527baa22f" />*
+
