@@ -49,6 +49,25 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     
                 }
             }
+            // Xử lý sắp xếp
+            switch (sortOrder)
+            {
+                case "price_asc":
+                    hangHoas = hangHoas.OrderBy(p => p.DonGia);
+                    break;
+                case "price_desc":
+                    hangHoas = hangHoas.OrderByDescending(p => p.DonGia);
+                    break;
+                case "Fresh":
+                    hangHoas = hangHoas.OrderByDescending(p => p.MaHh);
+                    break;
+                case "Sale":
+                    hangHoas = hangHoas.Where(p => p.GiamGia > 0).OrderByDescending(p => p.GiamGia);
+                    break;
+                default:
+                    hangHoas = hangHoas.OrderBy(p => p.MaHh);
+                    break;
+            }
 
             var totalItems = hangHoas.Count();
 
