@@ -1,35 +1,32 @@
-﻿<form asp-action="Search" asp-controller="HangHoa">
-    <div class="input-group" style="max-width: 600px; margin: 0 auto; display: flex; align-items: center;">
-        <input type="search" class="form-control p-3" placeholder="keywords" name="query"
-               style="flex: 1; border-radius: 25px 0 0 25px; border: 1px solid #ccc; padding: 15px; font-size: 16px;">
-        <button style="border-radius: 0 25px 25px 0; background-color: #007BFF; border: none; padding: 15px; color: #fff; font-size: 16px; cursor: pointer;">
-            <i class="fa fa-search"></i>
-        </button>
-    </div>
-</form>
+﻿<div class="input-group" style="max-width: 600px; margin: 0 auto; display: flex; align-items: center;">
+	<input type="search" class="form-control p-3" placeholder="keywords" name="search" value="@ViewBag.Search" style="flex: 1; border-radius: 25px 0 0 25px; border: 1px solid #ccc; padding: 15px; font-size: 16px;">
+	<button type="submit" style="border-radius: 0 25px 25px 0; background-color: #007BFF; border: none; padding: 15px; color: #fff; font-size: 16px; cursor: pointer;">
+		<i class="fa fa-search"></i>
+	</button>
+</div>
 <style>
-.input-group {
-    max-width: 600px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-}
+	.input-group {
+		max-width: 600px;
+		margin: 0 auto;
+		display: flex;
+		align-items: center;
+	}
 
-.input-group input {
-    flex: 1;
-    border-radius: 25px 0 0 25px;
-    border: 1px solid #ccc;
-    padding: 15px;
-    font-size: 16px;
-}
+		.input-group input {
+			flex: 1;
+			border-radius: 25px 0 0 25px;
+			border: 1px solid #ccc;
+			padding: 15px;
+			font-size: 16px;
+		}
 
-.input-group button {
-    border-radius: 0 25px 25px 0;
-    background-color: #007BFF;
-    border: none;
-    padding: 15px;
-    color: #fff;
-    font-size: 16px;
-    cursor: pointer;
-}
+		.input-group button {
+			border-radius: 0 25px 25px 0;
+			background-color: #007BFF;
+			border: none;
+			padding: 15px;
+			color: #fff;
+			font-size: 16px;
+			cursor: pointer;
+		}
 </style>

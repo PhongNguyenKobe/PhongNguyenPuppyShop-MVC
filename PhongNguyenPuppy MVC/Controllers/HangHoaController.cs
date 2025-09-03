@@ -13,11 +13,15 @@ namespace PhongNguyenPuppy_MVC.Controllers
         {
             db = context;
         }
-        public IActionResult Index(int? loai, int page = 1, string sortOrder = "", int? minPrice = null, int? maxPrice = null, string category = "")
+        public IActionResult Index(int? loai, int page = 1, string sortOrder = "", int? minPrice = null, int? maxPrice = null, string category = "", string search = "")
         {
             int pageSize = 12;
             IQueryable<HangHoa> hangHoas = db.HangHoas.Include(p => p.MaLoaiNavigation);
 
+            if (!string.IsNullOrEmpty(search))
+            {
+                hangHoas = hangHoas.Where(p => p.TenHh.Contains(search));
+            }
             // Lọc theo loại sản phẩm
             if (loai.HasValue)
             {
@@ -85,6 +89,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 });
 
             // Truyền dữ liệu sang View
+            ViewBag.Search = search;
             ViewBag.PageNumber = page;
             ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
             ViewBag.Loai = loai;
