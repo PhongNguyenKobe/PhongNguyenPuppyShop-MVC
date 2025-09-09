@@ -1,0 +1,47 @@
+version: '3.8'
+
+networks:
+  phongnguyenpuppymvc_network:
+    driver: bridge    
+
+services:
+  phongnguyenpuppymvcdb:
+    container_name: phongnguyenpuppymvcdb
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=PhongNguyen123!
+    networks:
+      - phongnguyenpuppymvc_network
+    volumes:
+      - sql_data:/var/opt/mssql
+    hostname: phongnguyenpuppymvcdb
+    healthcheck:
+      test: ["CMD-SHELL", "echo ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+
+  phongnguyenpuppymvc:
+    container_name: phongnguyenpuppymvc
+    image: ${DOCKER_REGISTRY-}phongnguyenpuppymvc
+    build:
+      context: ./PhongNguyenPuppy MVC
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__PhongNguyenPuppy=Server=phongnguyenpuppymvcdb,1433;Database=PhongNguyenPuppy;User Id=sa;Password=PhongNguyen123!;TrustServerCertificate=True;
+    depends_on:
+      phongnguyenpuppymvcdb:
+        condition: service_healthy
+    networks:
+      - phongnguyenpuppymvc_network
+
+volumes:
+  sql_data:
