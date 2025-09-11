@@ -27,4 +27,5 @@ RUN dotnet publish "./PhongNguyenPuppy MVC.csproj" -c $BUILD_CONFIGURATION -o /a
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+ENV ASPNETCORE_URLS=http://+:8081
 ENTRYPOINT ["dotnet", "PhongNguyenPuppy MVC.dll"]
