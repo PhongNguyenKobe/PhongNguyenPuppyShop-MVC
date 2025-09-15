@@ -13,7 +13,6 @@ services:
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
-
     networks:
       - phongnguyenpuppymvc_network
     volumes:
@@ -46,5 +45,7 @@ services:
       - phongnguyenpuppymvc_network
     env_file:
       - .env
+    volumes:
+      - ./PhongNguyenPuppy\ MVC/wwwroot/Hinh/HangHoa:/app/wwwroot/Hinh/HangHoa
 volumes:
   sql_data:
