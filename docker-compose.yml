@@ -13,8 +13,9 @@ services:
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+
     networks:
-      - phongnguyenpuppymvc_network
+      - phongnguyenpuppymvc_network 
     volumes:
       - sql_data:/var/opt/mssql
     hostname: phongnguyenpuppymvcdb
@@ -38,6 +39,8 @@ services:
     environment:
      - ASPNETCORE_ENVIRONMENT=Development
      - ConnectionStrings__PhongNguyenPuppy=${ConnectionStrings__PhongNguyenPuppy}
+    volumes:
+      - ./PhongNguyenPuppy\ MVC/wwwroot/Hinh/HangHoa:/app/wwwroot/Hinh/HangHoa
     depends_on:
       phongnguyenpuppymvcdb:
         condition: service_healthy
@@ -45,7 +48,5 @@ services:
       - phongnguyenpuppymvc_network
     env_file:
       - .env
-    volumes:
-      - ./PhongNguyenPuppy\ MVC/wwwroot/Hinh/HangHoa:/app/wwwroot/Hinh/HangHoa
 volumes:
   sql_data:
