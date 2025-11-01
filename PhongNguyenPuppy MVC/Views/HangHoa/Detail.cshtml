@@ -1,4 +1,5 @@
-﻿@model PhongNguyenPuppy_MVC.ViewModels.ChiTietHangHoaVM
+﻿@using PhongNguyenPuppy_MVC.Helpers
+@model PhongNguyenPuppy_MVC.ViewModels.ChiTietHangHoaVM
 
 @{
     ViewData["Title"] = "Detail";
@@ -223,3 +224,21 @@
     </div>
 </div>
 <!-- Single Product End -->
+@section Scripts {
+    <script type="application/ld+json">
+        {
+          "@@context": "https://schema.org/",
+          "@@type": "Product",
+          "name": "@Model.TenHh",
+          "image": "@($"{Context.Request.Scheme}://{Context.Request.Host}/Hinh/HangHoa/{Model.Hinh}")",
+          "description": "@Model.MoTaNgan",
+          "offers": {
+            "@@type": "Offer",
+            "url": "@($"{Context.Request.Scheme}://{Context.Request.Host}/san-pham/{SeoHelper.GenerateSlug(Model.TenHh)}/{Model.MaHh}")",
+            "priceCurrency": "VND",
+            "price": "@Model.DonGia",
+            "availability": "https://schema.org/InStock"
+          }
+        }
+    </script>
+}

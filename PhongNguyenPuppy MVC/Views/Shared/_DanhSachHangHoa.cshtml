@@ -1,124 +1,164 @@
 ﻿@{
-    Layout = "_LayoutCustomer";
+	Layout = "_LayoutCustomer";
 }
 
 <!-- Single Page Header start -->
-
-@RenderSection("BreadCum", required: false) 
-<!-- Single Page Header End --> 
-
+@RenderSection("BreadCum", required: false)
+<!-- Single Page Header End -->
 <!-- Fruits Shop Start-->
 <div class="container-fluid fruite py-5">
-    <div class="container py-5">
-        <h1 class="mb-4">PhongNguyen Puppy - Đồ dùng và thức ăn cho chó</h1>
-        <div class="row g-4">
-            <div class="col-lg-12">
-                <form method="get" asp-action="Index">
-                    <input type="hidden" name="loai" value="@ViewBag.Loai" />
-                    <div class="row g-3 align-items-end">
+	<div class="container py-5">
+		<h1 class="mb-4">
+			@(ViewBag.H1Heading ?? "PhongNguyen Puppy - Thức Ăn & Đồ Dùng Cho Chó")
+		</h1>
+		<div class="row g-4">
+			<div class="col-lg-12">
+				<form method="get" asp-action="Index" id="filterForm">
+					<input type="hidden" name="loai" value="@ViewBag.Loai" />
+					<div class="row g-3 align-items-end">
 
-                        <!-- Tìm kiếm -->
-                        <div class="col-md-3">
-                            @await Html.PartialAsync("_TimKiemPanel")
-                        </div>
+						<!-- Tìm kiếm -->
+						<div class="col-md-3">
+							@await Html.PartialAsync("_TimKiemPanel")
+						</div>
 
-                        <!-- Sắp xếp -->
-                        <div class="col-md-3">
-                            <label class="form-label">Sắp xếp theo</label>
-                            <select name="sortOrder" class="form-select form-select-sm">
-                                <option value="" selected="@(ViewBag.SortOrder == null || ViewBag.SortOrder == "")">Mặc định</option>
-                                <option value="price_asc" selected="@(ViewBag.SortOrder == "price_asc")">Giá thấp → cao</option>
-                                <option value="price_desc" selected="@(ViewBag.SortOrder == "price_desc")">Giá cao → thấp</option>
-                                <option value="Fresh" selected="@(ViewBag.SortOrder == "Fresh")">Sản phẩm mới</option>
-                                <option value="Sale" selected="@(ViewBag.SortOrder == "Sale")">Đang giảm giá</option>
-                            </select>
-                        </div>
+						<!-- Sắp xếp -->
+						<div class="col-md-3">
+							<label class="form-label">Sắp xếp theo</label>
+							<select name="sortOrder" class="form-select form-select-sm">
+								<option value="" selected="@(ViewBag.SortOrder == null || ViewBag.SortOrder == "")">Mặc định</option>
+								<option value="price_asc" selected="@(ViewBag.SortOrder == "price_asc")">Giá thấp → cao</option>
+								<option value="price_desc" selected="@(ViewBag.SortOrder == "price_desc")">Giá cao → thấp</option>
+								<option value="Fresh" selected="@(ViewBag.SortOrder == "Fresh")">Sản phẩm mới</option>
+								<option value="Sale" selected="@(ViewBag.SortOrder == "Sale")">Đang giảm giá</option>
+							</select>
+						</div>
 
-                        <!-- Khoảng giá -->
-                        <div class="col-md-3">
-                            <label class="form-label">Khoảng giá</label>
-                            <select name="maxPrice" class="form-select form-select-sm">
-                                <option value="">Tất cả</option>
-                                <option value="100000" selected="@(ViewBag.MaxPrice == 100000)">Dưới 100.000 VNĐ</option>
-                                <option value="300000" selected="@(ViewBag.MaxPrice == 300000)">Dưới 300.000 VNĐ</option>
-                                <option value="500000" selected="@(ViewBag.MaxPrice == 500000)">Dưới 500.000 VNĐ</option>
-                                <option value="900000" selected="@(ViewBag.MaxPrice == 900000)">Dưới 900.000 VNĐ</option>
-                            </select>
-                        </div>
+						<!-- Khoảng giá -->
+						<div class="col-md-3">
+							<label class="form-label">Khoảng giá</label>
+							<select name="maxPrice" class="form-select form-select-sm">
+								<option value="">Tất cả</option>
+								<option value="100000" selected="@(ViewBag.MaxPrice == 100000)">Dưới 100.000 VNĐ</option>
+								<option value="300000" selected="@(ViewBag.MaxPrice == 300000)">Dưới 300.000 VNĐ</option>
+								<option value="500000" selected="@(ViewBag.MaxPrice == 500000)">Dưới 500.000 VNĐ</option>
+								<option value="900000" selected="@(ViewBag.MaxPrice == 900000)">Dưới 900.000 VNĐ</option>
+							</select>
+						</div>
 
-                        <!-- Danh mục đặc biệt -->
-                        <div class="col-md-3">
-                            <label class="form-label">Danh mục</label>
-                            <select name="category" class="form-select form-select-sm">
-                                <option value="">Tất cả</option>
-                                <option value="Fresh" selected="@(ViewBag.Category == "Fresh")">Sản phẩm mới</option>
-                                <option value="Sale" selected="@(ViewBag.Category == "Sale")">Đang giảm giá</option>
-                                <option value="Discount" selected="@(ViewBag.Category == "Discount")">Có khuyến mãi</option>
-                            </select>
-                        </div>
+						<!-- Danh mục đặc biệt -->
+						<div class="col-md-3">
+							<label class="form-label">Danh mục</label>
+							<select name="category" class="form-select form-select-sm">
+								<option value="">Tất cả</option>
+								<option value="Fresh" selected="@(ViewBag.Category == "Fresh")">Sản phẩm mới</option>
+								<option value="Sale" selected="@(ViewBag.Category == "Sale")">Đang giảm giá</option>
+								<option value="Discount" selected="@(ViewBag.Category == "Discount")">Có khuyến mãi</option>
+							</select>
+						</div>
 
-                        <!-- Nút lọc nằm ngang -->
-                        <!-- Nút lọc nằm bên phải -->
-                        <div class="col-md-3 offset-md-9 text-end">
-                            <button type="submit" class="btn btn-primary btn-sm px-4 py-2">Lọc sản phẩm</button>
-                        </div>
-
-
-                    </div>
-                </form>
+						<!-- Nút lọc nằm ngang -->
+						<!-- Nút lọc nằm bên phải -->
+						<div class="col-md-3 offset-md-9 text-end">
+							<button type="submit" class="btn btn-primary btn-sm px-4 py-2">Lọc sản phẩm</button>
+						</div>
 
 
-                <div class="row g-4">
-                    <div class="col-lg-3">
-                        <div class="row g-4">
-                            @await Component.InvokeAsync("MenuLoai")
+					</div>
+				</form>
+				@if (ViewBag.MaxPrice != null || !string.IsNullOrEmpty(ViewBag.SortOrder) || ViewBag.MinPrice != null)
+				{
+					<div class="alert alert-info d-flex justify-content-between align-items-center mb-3 mt-2">
+						<div>
+							<strong>Bộ lọc đang áp dụng:</strong>
+							@if (!string.IsNullOrEmpty(ViewBag.SortOrder))
+							{
+								<span class="badge bg-primary me-2">
+									@(ViewBag.SortOrder == "price_asc" ? "Giá: Thấp → Cao" :
+																ViewBag.SortOrder == "price_desc" ? "Giá: Cao → Thấp" :
+																ViewBag.SortOrder)
+						</span>
+												}
+							@if (ViewBag.MaxPrice != null)
+							{
+								<span class="badge bg-success me-2">Giá ≤ @(((int)ViewBag.MaxPrice).ToString("N0")) VNĐ</span>
+							}
+							@if (ViewBag.MinPrice != null)
+							{
+								<span class="badge bg-warning me-2">Giá ≥ @(((int)ViewBag.MinPrice).ToString("N0")) VNĐ</span>
+							}
+						</div>
+						<a asp-action="Index" asp-route-loai="@ViewBag.Loai" class="btn btn-sm btn-outline-secondary">
+							<i class="fa fa-times"></i> Xóa bộ lọc
+						</a>
+					</div>
+				}
 
-                            
-                            <div class="col-lg-12">
-                                <h4 class="mb-3">Sản phẩm nổi bật</h4>
-                                @foreach (var item in Model)
-                                {
-                                    <div class="d-flex align-items-center justify-content-start">
-                                        <div class="rounded me-4" style="width: 100px; height: 100px;">
-                                            <img src="~/Hinh/HangHoa/@item.Hinh" class="img-fluid rounded" alt="@item.TenHh">
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-2">@item.TenHh</h6>
-                                            <div class="d-flex mb-2">
-                                                <i class="fa fa-star text-secondary"></i>
-                                                <i class="fa fa-star text-secondary"></i>
-                                                <i class="fa fa-star text-secondary"></i>
-                                                <i class="fa fa-star text-secondary"></i>
-                                                <i class="fa fa-star"></i>
-                                            </div>
-                                            <div class="d-flex mb-2">
-                                                <h5 class="fw-bold me-2">@item.DonGia.ToString("N0") VNĐ</h5>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                                <div class="d-flex justify-content-center my-4">
-                                    <a href="#" class="btn border border-secondary px-4 py-3 rounded-pill text-primary w-100">Xem thêm</a>
-                                </div>
-                            </div>
-                            <div class="col-lg-12">
-                                <div class="position-relative">
-                                    <img src="img/banner_r.png" class="img-fluid w-100 rounded" alt="Banner đồ ăn cho chó">
-                                    <div class="position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);">
-                                        <h3 class="text-secondary fw-bold">Thức ăn <br> cho chó <br> tốt nhất</h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-9">
-                        <div class="row g-4 justify-content-center">
-                            @RenderBody()
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+				<div class="row g-4">
+					<div class="col-lg-3">
+						<div class="row g-4">
+							@await Component.InvokeAsync("MenuLoai")
+
+
+							<div class="col-lg-12">
+								<h4 class="mb-3">Sản phẩm nổi bật</h4>
+								@foreach (var item in Model)
+								{
+									<div class="d-flex align-items-center justify-content-start">
+										<div class="rounded me-4" style="width: 100px; height: 100px;">
+											<img src="~/Hinh/HangHoa/@item.Hinh" class="img-fluid rounded" alt="@item.TenHh">
+										</div>
+										<div>
+											<h6 class="mb-2">@item.TenHh</h6>
+											<div class="d-flex mb-2">
+												<i class="fa fa-star text-secondary"></i>
+												<i class="fa fa-star text-secondary"></i>
+												<i class="fa fa-star text-secondary"></i>
+												<i class="fa fa-star text-secondary"></i>
+												<i class="fa fa-star"></i>
+											</div>
+											<div class="d-flex mb-2">
+												<h5 class="fw-bold me-2">@item.DonGia.ToString("N0") VNĐ</h5>
+											</div>
+										</div>
+									</div>
+								}
+								<div class="d-flex justify-content-center my-4">
+									<a href="#" class="btn border border-secondary px-4 py-3 rounded-pill text-primary w-100">Xem thêm</a>
+								</div>
+							</div>
+							<div class="col-lg-12">
+								<div class="position-relative">
+									<img src="~/img/banner_r.png" class="img-fluid w-100 rounded" alt="Banner đồ ăn cho chó">
+									<div class="position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);">
+										<h3 class="text-secondary fw-bold">Thức ăn <br> cho chó <br> tốt nhất</h3>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-lg-9">
+						<div class="row g-4 justify-content-center">
+							@RenderBody()
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 <!-- Fruits Shop End -->
+@section Scripts {
+	<script>
+		// Clean URL - Loại bỏ tham số rỗng
+		document.getElementById('filterForm').addEventListener('submit', function(e) {
+			const inputs = this.querySelectorAll('input, select');
+			inputs.forEach(input => {
+				// Xóa input nếu giá trị rỗng hoặc là giá trị mặc định
+				if (!input.value || input.value === '' || input.value === 'null') {
+					input.removeAttribute('name');
+				}
+			});
+		});
+	</script>
+}

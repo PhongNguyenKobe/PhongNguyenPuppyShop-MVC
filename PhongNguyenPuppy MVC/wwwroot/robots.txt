@@ -1,0 +1,9 @@
+﻿User-agent: *
+Allow: /
+
+# Disallow admin area
+Disallow: /Admin/
+Disallow: /api/
+
+# Sitemap (sẽ tự động lấy domain hiện tại)
+Sitemap: https://yourdomain.com/sitemap.xml

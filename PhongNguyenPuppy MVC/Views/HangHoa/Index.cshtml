@@ -1,21 +1,20 @@
 ﻿@model IEnumerable<PhongNguyenPuppy_MVC.ViewModels.HangHoaVM>
 @{
     ViewData["Title"] = "Index";
-	Layout = "_DanhSachHangHoa"; 
+    Layout = "_DanhSachHangHoa";
     var pageNumber = (int)(ViewBag.PageNumber ?? 1);
     var totalPages = (int)(ViewBag.TotalPages ?? 1);
     var loai = ViewBag.Loai;
 }
 
 <!-- Single Page Header start -->
-@section BreadCum{
+@section BreadCum {
     <div class="container-fluid page-header py-5">
         <h1 class="text-center text-white display-6">Shop</h1>
         <ol class="breadcrumb justify-content-center mb-0">
             <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-
             <li class="breadcrumb-item"><a asp-controller="HangHoa" asp-action="Index">Sản phẩm</a></li>
-            <li class="breadcrumb-item active text-white">Shop</li>
+            <li class="breadcrumb-item active text-white">Shop @(pageNumber > 1 ? $"- Trang {pageNumber}" : "")</li>
         </ol>
     </div>
 }
@@ -26,17 +25,36 @@
 {
     <div class="col-12">
         <div class="pagination d-flex justify-content-center mt-5">
-            <a class="rounded @(pageNumber == 1 ? "disabled" : "")"
-               href="@Url.Action("Index", new { page = pageNumber - 1, loai = loai })">&laquo;</a>
+            <!-- Previous button -->
+            @if (pageNumber > 1)
+            {
+                <a class="rounded"
+                   href="@Url.Action("Index", new { page = pageNumber - 1, loai = loai })"
+                   rel="prev">&laquo;</a>
+            }
+            else
+            {
+                <span class="rounded disabled">&laquo;</span>
+            }
 
+            @* Hiển thị các trang *@
             @for (int i = 1; i <= totalPages; i++)
             {
                 <a class="rounded @(i == pageNumber ? "active" : "")"
                    href="@Url.Action("Index", new { page = i, loai = loai })">@i</a>
             }
 
-            <a class="rounded @(pageNumber == totalPages ? "disabled" : "")"
-               href="@Url.Action("Index", new { page = pageNumber + 1, loai = loai })">&raquo;</a>
+            <!-- Next button -->
+            @if (pageNumber < totalPages)
+            {
+                <a class="rounded"
+                   href="@Url.Action("Index", new { page = pageNumber + 1, loai = loai })"
+                   rel="next">&raquo;</a>
+            }
+            else
+            {
+                <span class="rounded disabled">&raquo;</span>
+            }
         </div>
     </div>
 }

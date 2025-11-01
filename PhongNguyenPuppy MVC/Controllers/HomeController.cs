@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using PhongNguyenPuppy_MVC.Models;
 using PhongNguyenPuppy_MVC.ViewModels;
@@ -32,6 +32,17 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     TenLoai = h.MaLoaiNavigation.TenLoai
                 })
                 .ToList();
+            // THÊM PHẦN SEO Data
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            ViewData["SeoData"] = new PhongNguyenPuppy_MVC.Helpers.SeoData
+            {
+                Title = "PhongNguyen Puppy - Chuyên Thức Ăn & Đồ Dùng Cho Chó Chất Lượng",
+                Description = "PhongNguyen Puppy Shop cung cấp thức ăn, đồ chơi, phụ kiện cho chó chất lượng cao. Giao hàng toàn quốc, giá tốt nhất. Mua ngay!",
+                Keywords = "thức ăn chó, đồ dùng chó, phụ kiện chó, puppy shop, royal canin, pedigree",
+                ImageUrl = "/img/hero_1.png", // Hình đại diện cho trang chủ
+                CanonicalUrl = $"{baseUrl}/",
+                Type = "website"
+            };
             return View(model);
         }
 

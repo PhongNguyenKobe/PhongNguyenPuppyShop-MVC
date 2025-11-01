@@ -5,10 +5,49 @@
 <head>
     <meta name="viewport" content="width=device-width" />
     <meta charset="utf-8">
-    <title>PhongNguyen - Puppy Shop</title>
-    <meta content="" name="keywords">
-    <meta content="" name="description">
+    @* Favicon - Thêm các định dạng khác nhau cho trình duyệt *@
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="~/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="~/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="~/apple-touch-icon.png" />
 
+
+    @* Lấy SeoData từ ViewData *@
+    @{
+        var seoData = ViewData["SeoData"] as PhongNguyenPuppy_MVC.Helpers.SeoData;
+        var pageTitle = seoData?.Title ?? "PhongNguyen Puppy - Thức Ăn & Đồ Dùng Cho Chó";
+
+        // ✅ CẢI THIỆN: Description dài 140-160 ký tự
+        var description = seoData?.Description ??
+        "PhongNguyen Puppy Shop - Chuyên cung cấp thức ăn, đồ dùng chất lượng cao cho chó cưng. Giao hàng toàn quốc, giá tốt nhất. Mua ngay!"; // 148 ký tự
+
+        var keywords = seoData?.Keywords ?? "thức ăn chó, đồ dùng chó, phụ kiện chó, puppy shop, royal canin";
+        var canonicalUrl = seoData?.CanonicalUrl;
+
+        // Fallback nếu không có SeoData
+        if (string.IsNullOrEmpty(canonicalUrl))
+        {
+            canonicalUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
+        }
+
+        // ✅ THÊM: Giới hạn description không quá 160 ký tự
+        if (description.Length > 160)
+        {
+            description = description.Substring(0, 157) + "...";
+        }
+    }
+    <title>@pageTitle</title>
+    <meta content="@keywords" name="keywords">
+    <meta content="@description" name="description">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@pageTitle" />
+    <meta name="twitter:description" content="@description" />
+    <meta name="twitter:image" content="@($"{Context.Request.Scheme}://{Context.Request.Host}{seoData?.ImageUrl ?? "/img/hero_1.png"}")" />
+
+    @* CANONICAL TAG - Quan trọng cho SEO *@
+    <link rel="canonical" href="@canonicalUrl" />
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -164,31 +203,73 @@
 
     <!-- Template Javascript -->
     <script src="~/js/main.js"></script>
-	@RenderSection("Scripts", required: false)
+    @RenderSection("Scripts", required: false)
 
     <script>
         $(document).ready(function () {
-            $("#searchButton").click(function(){
-                let url = `/HangHoa/Search?query=` + $("#searchText").val();
+            // ===== HÀM TÌM KIẾM =====
+            function performSearch() {
+                var searchQuery = $("#searchText").val().trim();
+
+                if (searchQuery === "") {
+                    alert("⚠️ Vui lòng nhập từ khóa tìm kiếm");
+                    $("#searchText").focus();
+                    return;
+                }
+
+                // Encode URL để xử lý ký tự đặc biệt
+                var encodedQuery = encodeURIComponent(searchQuery);
+                var url = `/HangHoa/Search?query=${encodedQuery}`;
+
+                // Đóng modal và chuyển trang
+                $("#searchModal").modal('hide');
                 window.location.href = url;
+            }
+
+            // Click nút search
+            $("#searchButton").click(function(e) {
+                e.preventDefault();
+                performSearch();
+            });
+
+            // Nhấn Enter để tìm
+            $("#searchText").keypress(function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    performSearch();
+                }
+            });
+
+            // Auto-focus khi mở modal
+            $('#searchModal').on('shown.bs.modal', function () {
+                $('#searchText').focus();
+            });
+
+            // Clear input khi đóng
+            $('#searchModal').on('hidden.bs.modal', function () {
+                $('#searchText').val('');
             });
         });
     </script>
+
     <script>
+        // ===== USER DROPDOWN =====
         document.addEventListener("DOMContentLoaded", function () {
             const toggleBtn = document.querySelector(".toggle-user-dropdown");
             const dropdown = document.querySelector(".custom-dropdown");
 
-            toggleBtn.addEventListener("click", function (e) {
-                e.stopPropagation();
-                dropdown.classList.toggle("show");
-            });
+            if (toggleBtn && dropdown) {
+                toggleBtn.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    dropdown.classList.toggle("show");
+                });
 
-            document.addEventListener("click", function (e) {
-                if (!dropdown.contains(e.target) && !toggleBtn.contains(e.target)) {
-                    dropdown.classList.remove("show");
-                }
-            });
+                document.addEventListener("click", function (e) {
+                    if (!dropdown.contains(e.target) && !toggleBtn.contains(e.target)) {
+                        dropdown.classList.remove("show");
+                    }
+                });
+            }
         });
     </script>
 
