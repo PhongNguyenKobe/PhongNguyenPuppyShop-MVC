@@ -16,6 +16,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
         }
 
         [Route("sitemap.xml")]
+        [ResponseCache(Duration = 86400)] // Cache 24h
         public IActionResult Index()
         {
             var baseUrl = $"{Request.Scheme}://{Request.Host}";

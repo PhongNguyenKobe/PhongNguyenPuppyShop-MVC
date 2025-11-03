@@ -1,9 +1,14 @@
-﻿User-agent: *
+﻿ongNguyenPuppy MVC\wwwroot\robots.txt
+User-agent: *
 Allow: /
 
-# Disallow admin area
+# Chặn các trang admin
+Disallow: /admin/
 Disallow: /Admin/
-Disallow: /api/
 
-# Sitemap (sẽ tự động lấy domain hiện tại)
-Sitemap: https://yourdomain.com/sitemap.xml
+# Chặn các trang nội bộ
+Disallow: /khachhang/dangxuat
+Disallow: /cart/checkout
+
+# Cho phép sitemap
+Sitemap: https://localhost:7112/sitemap.xml

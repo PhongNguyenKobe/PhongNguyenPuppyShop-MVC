@@ -12,33 +12,49 @@
     <link rel="apple-touch-icon" sizes="180x180" href="~/apple-touch-icon.png" />
 
 
-    @* Lấy SeoData từ ViewData *@
     @{
         var seoData = ViewData["SeoData"] as PhongNguyenPuppy_MVC.Helpers.SeoData;
         var pageTitle = seoData?.Title ?? "PhongNguyen Puppy - Thức Ăn & Đồ Dùng Cho Chó";
-
-        // ✅ CẢI THIỆN: Description dài 140-160 ký tự
-        var description = seoData?.Description ??
-        "PhongNguyen Puppy Shop - Chuyên cung cấp thức ăn, đồ dùng chất lượng cao cho chó cưng. Giao hàng toàn quốc, giá tốt nhất. Mua ngay!"; // 148 ký tự
-
+        var description = seoData?.Description ?? "PhongNguyen Puppy Shop - Chuyên cung cấp thức ăn, đồ dùng chất lượng cao cho chó cưng. Giao hàng toàn quốc, giá tốt nhất. Mua ngay!";
         var keywords = seoData?.Keywords ?? "thức ăn chó, đồ dùng chó, phụ kiện chó, puppy shop, royal canin";
         var canonicalUrl = seoData?.CanonicalUrl;
+        var imageUrl = seoData?.ImageUrl ?? "/img/hero_1.png";
 
-        // Fallback nếu không có SeoData
         if (string.IsNullOrEmpty(canonicalUrl))
         {
             canonicalUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
         }
-
-        // ✅ THÊM: Giới hạn description không quá 160 ký tự
+		// thêm giới hạn độ dài mô tả cho SEO
         if (description.Length > 160)
         {
             description = description.Substring(0, 157) + "...";
         }
+
+        var fullImageUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{imageUrl}";
     }
     <title>@pageTitle</title>
     <meta content="@keywords" name="keywords">
     <meta content="@description" name="description">
+
+    @* QUAN TRỌNG: CHỈ cho phép index khi ở production *@
+    @if (Context.Request.Host.Host.Contains("ngrok") || Context.Request.Host.Host.Contains("localhost"))
+    {
+        <meta name="robots" content="noindex, nofollow">
+    }
+    else
+    {
+        <meta name="robots" content="index, follow">
+        <meta name="googlebot" content="index, follow">
+    }
+
+    @* Open Graph Meta Tags (Facebook, LinkedIn) *@
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="@pageTitle" />
+    <meta property="og:description" content="@description" />
+    <meta property="og:image" content="@fullImageUrl" />
+    <meta property="og:url" content="@canonicalUrl" />
+    <meta property="og:site_name" content="PhongNguyen Puppy Shop" />
+    <meta property="og:locale" content="vi_VN" />
 
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -48,6 +64,7 @@
 
     @* CANONICAL TAG - Quan trọng cho SEO *@
     <link rel="canonical" href="@canonicalUrl" />
+
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -68,6 +85,30 @@
     <!-- Template Stylesheet -->
     <link href="~/css/style.css" rel="stylesheet">
     @RenderSection("Styles", required: false)
+
+    @* ✅ Schema.org Structured Data *@
+    <script type="application/ld+json">
+        {
+            "@@context": "https://schema.org",
+            "@@type": "PetStore",
+            "name": "PhongNguyen Puppy Shop",
+            "description": "@description",
+            "url": "@canonicalUrl",
+            "logo": "@fullImageUrl",
+            "telephone": "+84-123-456-789",
+            "email": "phongnguyenfe@@gmail.com",
+            "address": {
+                "@@type": "PostalAddress",
+                "streetAddress": "Đường 123",
+                "addressLocality": "Tp. Hồ Chí Minh",
+                "addressCountry": "VN"
+            },
+            "sameAs": [
+                "https://facebook.com/phongnguyen",
+                "https://instagram.com/phongnguyen"
+            ]
+        }
+    </script>
 
 </head>
 <body>
