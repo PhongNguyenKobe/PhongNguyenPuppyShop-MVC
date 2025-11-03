@@ -8,10 +8,15 @@ using PhongNguyenPuppy_MVC.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Đọc thêm từ appsettings.Secret.json
 builder.Configuration.AddJsonFile("appsettings.Secret.json", optional: true, reloadOnChange: true);
 
-// Add services to the container.
+// Cấu hình lowercase URLs cho toàn bộ ứng dụng
+builder.Services.AddRouting(options =>
+{
+    options.LowercaseUrls = true;
+    options.LowercaseQueryStrings = false; // Giữ query string case-sensitive
+});
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<PhongNguyenPuppyContext>(options =>
 {
@@ -25,8 +30,6 @@ builder.Services.AddScoped<IDichVuGuiEmail, DichVuGuiEmail>();
 builder.Services.AddScoped<KhachHangService>();
 builder.Services.AddScoped<IDichVuThongKe, DichVuThongKe>();
 
-
-// Thêm dịch vụ Session
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromSeconds(60);
@@ -34,14 +37,10 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Thêm dịch vụ Email
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<MyEmailHelper>();
 
-
-// Thêm dịch vụ Cookie
-// Thêm dịch vụ Cookie cho 2 scheme riêng biệt
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = "CustomerScheme";
@@ -49,54 +48,45 @@ builder.Services.AddAuthentication(options =>
 })
 .AddCookie("CustomerScheme", options =>
 {
-    options.LoginPath = "/KhachHang/DangNhap";
-    options.AccessDeniedPath = "/KhachHang/AccessDenied";
+    options.LoginPath = "/khachhang/dangnhap";
+    options.AccessDeniedPath = "/khachhang/accessdenied";
     options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     options.SlidingExpiration = true;
 })
 .AddCookie("AdminScheme", options =>
 {
-    options.LoginPath = "/Admin/Admin/Login";
-    options.AccessDeniedPath = "/Admin/Admin/AccessDenied";
+    options.LoginPath = "/admin/admin/login";
+    options.AccessDeniedPath = "/admin/admin/accessdenied";
     options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     options.SlidingExpiration = true;
 });
 
-
-
-
-// Thêm dịch vụ PayPal dạng Singleton() - chỉ có một instances duy nhất trong toàn bộ ứng dụng
 builder.Services.AddSingleton(x => new PaypalClient(
     builder.Configuration["PaypalOptions:AppId"] ?? throw new ArgumentNullException("ClientId is not configured"),
     builder.Configuration["PaypalOptions:AppSecret"] ?? throw new ArgumentNullException("ClientSecret is not configured"),
     builder.Configuration["PaypalOptions:Mode"] ?? throw new ArgumentNullException("Mode is not configured")
 ));
 
-// Thêm dịch vụ VnPay
 builder.Services.AddSingleton<IVnPayService, VnPayService>();
-
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
-
 app.UseHttpsRedirection();
-app.UseStaticFiles(); //  thêm dòng này để phục vụ các tệp tĩnh từ wwwroot
+app.UseStaticFiles();
 
-// Thêm trước app.UseRouting()
+// Chỉ redirect GET requests
 app.Use(async (context, next) =>
 {
     var url = context.Request.Path.Value;
+    var method = context.Request.Method;
 
-    // Kiểm tra nếu URL có chữ hoa
-    if (!string.IsNullOrEmpty(url) && url != url.ToLower())
+    if (method == "GET" && !string.IsNullOrEmpty(url) && url != url.ToLower())
     {
         context.Response.Redirect(url.ToLower() + context.Request.QueryString, permanent: true);
         return;
@@ -104,17 +94,16 @@ app.Use(async (context, next) =>
 
     await next();
 });
+
 app.UseRouting();
-
-app.UseSession(); // Thêm dòng này để sử dụng Session
-
-app.UseAuthentication(); // Thêm dòng này để sử dụng Authentication
+app.UseSession();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
-// Thêm các route SEO-friendly cho sản phẩm
+
 app.MapControllerRoute(
     name: "product-detail",
     pattern: "san-pham/{slug}/{id:int}",
@@ -128,10 +117,5 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-app.MapControllerRoute(
-        name: "default",
-        pattern: "{controller=Home}/{action=Index}/{id?}");
-
 
 app.Run();
