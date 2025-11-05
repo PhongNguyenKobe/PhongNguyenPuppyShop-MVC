@@ -1,0 +1,151 @@
+﻿@using Microsoft.Extensions.Options
+@inject IOptions<PhongNguyenPuppy_MVC.Helpers.FacebookChatSettings> FacebookSettings
+
+@{
+    var settings = FacebookSettings.Value;
+}
+
+@if (settings.Enabled && !string.IsNullOrEmpty(settings.PageId))
+{
+    <!-- Facebook Messenger Custom Button -->
+    <div class="fb-messenger-container">
+        <button onclick="openMessenger()" class="fb-messenger-btn" title="Chat với chúng tôi qua Facebook Messenger">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="40" height="40">
+                <defs>
+                    <linearGradient id="messengerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#0099FF;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#A033FF;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <circle cx="25" cy="25" r="25" fill="url(#messengerGradient)" />
+                <path fill="#FFF" d="M25,10c-8.284,0-15,6.268-15,14c0,4.411,2.206,8.344,5.657,10.951V40l4.909-2.692c1.303,0.361,2.687,0.692,4.434,0.692c8.284,0,15-6.268,15-14S33.284,10,25,10z M27.5,27.5l-3.75-4-7.5,4l8.25-8.75l3.75,4l7.5-4L27.5,27.5z" />
+            </svg>
+            <span class="pulse-ring"></span>
+        </button>
+
+        <!-- Notification Badge (Optional) -->
+        <span class="notification-badge" style="display: none;">1</span>
+    </div>
+
+    <style>
+        .fb-messenger-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .fb-messenger-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #0099FF, #A033FF);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 153, 255, 0.4);
+            position: relative;
+            transition: transform 0.3s;
+            padding: 0;
+        }
+
+            .fb-messenger-btn:hover {
+                transform: scale(1.1);
+            }
+
+        .pulse-ring {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 3px solid #0099FF;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-out infinite;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        @@keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #FF3B30;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+        }
+
+        /* Mobile responsive */
+        @@media (max-width: 768px) {
+            .fb-messenger-container {
+                bottom: 80px;
+                right: 15px;
+            }
+
+            .fb-messenger-btn {
+                width: 50px;
+                height: 50px;
+            }
+
+                .fb-messenger-btn svg {
+                    width: 30px;
+                    height: 30px;
+                }
+        }
+    </style>
+
+    <script>
+        function openMessenger() {
+            console.log('🖱️ Opening Facebook Messenger...');
+
+            // Detect if mobile
+            var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                // On mobile, open in new tab
+                window.open('https://m.me/@settings.PageId', '_blank');
+            } else {
+                // On desktop, open in popup window
+                var width = 450;
+                var height = 700;
+                var left = (screen.width / 2) - (width / 2);
+                var top = (screen.height / 2) - (height / 2);
+
+                window.open(
+                    'https://m.me/@settings.PageId',
+                    'messenger_popup',
+                    'width=' + width + ',height=' + height + ',top=' + top + ',left=' + left + ',resizable=yes,scrollbars=yes'
+                );
+            }
+        }
+
+        console.log('🔵 Facebook Messenger initialized');
+        console.log('📄 Page ID:', '@settings.PageId');
+    </script>
+}
+else
+{
+    <script>
+        console.log('❌ Facebook Messenger disabled or PageId missing');
+        console.log('Enabled:', @settings.Enabled.ToString().ToLower());
+        console.log('PageId:', '@settings.PageId');
+    </script>
+}

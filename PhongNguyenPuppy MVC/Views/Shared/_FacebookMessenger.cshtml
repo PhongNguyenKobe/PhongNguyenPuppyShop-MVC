@@ -1,0 +1,56 @@
+@using Microsoft.Extensions.Options
+@inject IOptions<PhongNguyenPuppy_MVC.Helpers.FacebookChatSettings> FacebookSettings
+
+@{
+    var settings = FacebookSettings.Value;
+}
+
+@if (settings.Enabled && !string.IsNullOrEmpty(settings.PageId))
+{
+    //Facebook Messenger Chat Partial View
+
+    <!-- Facebook Messenger Chat Plugin -->
+    <div id="fb-root"></div>
+
+    <!-- Your Chat Plugin code -->
+    <div id="fb-customer-chat" class="fb-customerchat"></div>
+
+    <script>
+        var chatbox = document.getElementById('fb-customer-chat');
+        chatbox.setAttribute("page_id", "@settings.PageId");
+        chatbox.setAttribute("attribution", "biz_inbox");
+        chatbox.setAttribute("theme_color", "@(settings.Theme == "blue" ? "#0084ff" : "#ffffff")");
+        chatbox.setAttribute("logged_in_greeting", "@settings.LoggedInGreeting");
+        chatbox.setAttribute("logged_out_greeting", "@settings.LoggedOutGreeting");
+
+        window.fbAsyncInit = function() {
+            FB.init({
+                xfbml: true,
+                version: 'v18.0'
+            });
+        };
+
+        (function(d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s);
+            js.id = id;
+            js.src = 'https://connect.facebook.net/@settings.Language/sdk/xfbml.customerchat.js';
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+    </script>
+
+    <style>
+        /* Custom styling for Facebook Messenger */
+        .fb-customerchat {
+            z-index: 9999 !important;
+        }
+
+        /* Responsive adjustments */
+        @@media (max-width: 768px) {
+            .fb-customerchat iframe {
+                max-width: 100% !important;
+            }
+        }
+    </style>
+}

@@ -69,6 +69,8 @@ builder.Services.AddSingleton(x => new PaypalClient(
 
 builder.Services.AddSingleton<IVnPayService, VnPayService>();
 
+builder.Services.Configure<FacebookChatSettings>(builder.Configuration.GetSection("FacebookChatSettings"));
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
