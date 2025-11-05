@@ -1,35 +1,31 @@
-/* ===== SEO CONTENT SECTIONS ===== */
-.seo-content-section {
-    background-color: #f8f9fa;
-    padding: 30px;
-    border-radius: 10px;
-}
-
-    .seo-content-section .card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-        .seo-content-section .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
-        }
-
-.seo-faq-section {
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-    .seo-faq-section .accordion-button:not(.collapsed) {
-        background-color: #81c408;
-        color: white;
-    }
-
+/* ===== BOOTSTRAP UTILITIES ===== */
 .lead {
     font-size: 1.1rem;
     line-height: 1.7;
 }
+
+/* Blog Section */
+.blog-item {
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+    .blog-item:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+    }
+
+/* Brand Section */
+.brand-item {
+    transition: transform 0.3s;
+}
+
+    .brand-item:hover {
+        transform: scale(1.05);
+    }
+
+    .brand-item img:hover {
+        filter: grayscale(0%) !important;
+    }
 /* Ẩn dropdown mặc định */
 .custom-dropdown {
     display: none;
@@ -109,15 +105,31 @@
 
 .back-to-top {
     position: fixed;
-    right: 30px;
-    bottom: 30px;
+    right: 20px;
+    bottom: 100px !important; /* Dịch lên cao hơn Messenger icon */
     display: flex;
-    width: 45px;
-    height: 45px;
+    width: 50px;
+    height: 50px;
     align-items: center;
     justify-content: center;
-    transition: 0.5s;
-    z-index: 99;
+    transition: all 0.3s;
+    z-index: 9998; /* Cao hơn z-index cũ (99) nhưng thấp hơn Messenger (9999) */
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+.back-to-top:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0, 123, 255, 0.6);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .back-to-top {
+        bottom: 140px !important; /* Cao hơn trên mobile vì Messenger cũng cao hơn */
+        right: 15px;
+        width: 45px;
+        height: 45px;
+    }
 }
 /*** Spinner End ***/
 
