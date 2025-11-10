@@ -9,6 +9,7 @@ using PhongNguyenPuppy_MVC.Areas.Admin.ViewModels;
 using PhongNguyenPuppy_MVC.Data;
 using PhongNguyenPuppy_MVC.Helpers;
 using PhongNguyenPuppy_MVC.Models; // nếu có entity KhachHang
+using PhongNguyenPuppy_MVC.Services;
 using PhongNguyenPuppy_MVC.ViewModels;
 
 namespace PhongNguyenPuppy_MVC.Controllers
@@ -19,12 +20,14 @@ namespace PhongNguyenPuppy_MVC.Controllers
         private readonly PhongNguyenPuppyContext db;
         private readonly IWebHostEnvironment _env;
         private readonly MyEmailHelper _emailHelper;
+        private readonly IGHNService _ghnService;
         private const int PageSize = 10;
-        public KhachHangController(PhongNguyenPuppyContext context, IWebHostEnvironment env, MyEmailHelper emailHelper)
+        public KhachHangController(PhongNguyenPuppyContext context, IWebHostEnvironment env, MyEmailHelper emailHelper, IGHNService ghnService)
         {
             db = context;
             _env = env;
             _emailHelper = emailHelper;
+            _ghnService = ghnService;
         }
 
         #region Register in
@@ -230,7 +233,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             await db.SaveChangesAsync();
 
             // Chuyển đến view xác nhận, truyền username
-            return View("DatLaiMatKhauThanhCong", kh.MaKh); 
+            return View("DatLaiMatKhauThanhCong", kh.MaKh);
         }
 
         #endregion
@@ -251,7 +254,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     HoTen = h.HoTen,
                     NgayDat = h.NgayDat,
                     TrangThai = h.MaTrangThaiNavigation.TenTrangThai,
-                    TongTien = h.ChiTietHds.Sum(ct => ct.DonGia * ct.SoLuong) - (h.GiamGia ) + (h.PhiVanChuyen), // Tính lại chính xác
+                    TongTien = h.ChiTietHds.Sum(ct => ct.DonGia * ct.SoLuong) - (h.GiamGia) + (h.PhiVanChuyen), // Tính lại chính xác
                     GiamGia = h.GiamGia
                 });
 
@@ -308,7 +311,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     PhiVanChuyen = h.PhiVanChuyen,
                     GhiChu = h.GhiChu,
                     GiamGia = h.GiamGia,
-                    TongTien = (float)(h.ChiTietHds.Sum(ct => ct.DonGia * ct.SoLuong) - (h.GiamGia ) + (h.PhiVanChuyen)), // Tính lại chính xác
+                    TongTien = (float)(h.ChiTietHds.Sum(ct => ct.DonGia * ct.SoLuong) - (h.GiamGia) + (h.PhiVanChuyen)),
                     DienThoai = h.MaKhNavigation.DienThoai,
                     Email = h.MaKhNavigation.Email,
                     ChiTietHds = h.ChiTietHds.Select(ct => new ChiTietHdViewModel
@@ -324,10 +327,139 @@ namespace PhongNguyenPuppy_MVC.Controllers
             if (hoaDonVM == null)
                 return NotFound();
 
+            //LẤY CẢ HOADON VÀ KHACHHANG
+            var hoaDon = await db.HoaDons
+                .Include(h => h.MaKhNavigation)
+                .FirstOrDefaultAsync(h => h.MaHd == id);
+
+            if (hoaDon != null)
+            {
+                // FALLBACK: Ưu tiên HoaDon, nếu không có thì lấy từ KhachHang
+                // (Phòng trường hợp SQL UPDATE bị lỗi hoặc khách hàng chưa có địa chỉ)
+                int? provinceId = hoaDon.ProvinceId ?? hoaDon.MaKhNavigation?.ProvinceId;
+                int? districtId = hoaDon.DistrictId ?? hoaDon.MaKhNavigation?.DistrictId;
+                string? wardCode = hoaDon.WardCode ?? hoaDon.MaKhNavigation?.WardCode;
+
+                // Chỉ gọi API nếu có dữ liệu hợp lệ
+                if (provinceId.HasValue && provinceId.Value > 0)
+                {
+                    try
+                    {
+                        var provinces = await _ghnService.GetProvincesAsync();
+                        hoaDonVM.ProvinceName = provinces?.FirstOrDefault(p => p.ProvinceID == provinceId)?.ProvinceName;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log lỗi nhưng không crash ứng dụng
+                        Console.WriteLine($"Lỗi lấy tên tỉnh: {ex.Message}");
+                    }
+                }
+
+                if (districtId.HasValue && districtId.Value > 0 && provinceId.HasValue)
+                {
+                    try
+                    {
+                        var districts = await _ghnService.GetDistrictsAsync(provinceId.Value);
+                        hoaDonVM.DistrictName = districts?.FirstOrDefault(d => d.DistrictID == districtId)?.DistrictName;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Lỗi lấy tên quận: {ex.Message}");
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(wardCode) && districtId.HasValue)
+                {
+                    try
+                    {
+                        var wards = await _ghnService.GetWardsAsync(districtId.Value);
+                        hoaDonVM.WardName = wards?.FirstOrDefault(w => w.WardCode == wardCode)?.WardName;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Lỗi lấy tên phường: {ex.Message}");
+                    }
+                }
+            }
+
             return View(hoaDonVM);
         }
 
+        #region Cập nhật địa chỉ GHN
+        [Authorize(AuthenticationSchemes = "CustomerScheme")]
+        [HttpGet]
+        public async Task<IActionResult> UpdateAddress()
+        {
+            var maKh = User.FindFirstValue("CustomerID");
+            if (string.IsNullOrEmpty(maKh)) return RedirectToAction("DangNhap");
 
+            var kh = await db.KhachHangs.FindAsync(maKh);
+            if (kh == null) return NotFound();
+
+            // Lấy danh sách tỉnh từ GHN
+            var provinces = await _ghnService.GetProvincesAsync();
+            ViewBag.Provinces = provinces;
+
+            var model = new UpdateAddressVM
+            {
+                HoTen = kh.HoTen,
+                DiaChi = kh.DiaChi,
+                DienThoai = kh.DienThoai,
+                ProvinceId = kh.ProvinceId,
+                DistrictId = kh.DistrictId,
+                WardCode = kh.WardCode
+            };
+
+            return View(model);
+        }
+
+        [Authorize(AuthenticationSchemes = "CustomerScheme")]
+        [HttpPost]
+        public async Task<IActionResult> UpdateAddress(UpdateAddressVM model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var provinces = await _ghnService.GetProvincesAsync();
+                ViewBag.Provinces = provinces;
+                return View(model);
+            }
+
+            var maKh = User.FindFirstValue("CustomerID");
+            if (string.IsNullOrEmpty(maKh)) return RedirectToAction("DangNhap");
+
+            var kh = await db.KhachHangs.FindAsync(maKh);
+            if (kh == null) return NotFound();
+
+            // Cập nhật thông tin
+            kh.HoTen = model.HoTen;
+            kh.DiaChi = model.DiaChi;
+            kh.DienThoai = model.DienThoai;
+            kh.ProvinceId = model.ProvinceId;
+            kh.DistrictId = model.DistrictId;
+            kh.WardCode = model.WardCode;
+
+            await db.SaveChangesAsync();
+
+            TempData["Success"] = "Cập nhật địa chỉ thành công!";
+            return RedirectToAction("Profile");
+        }
+
+        // API để lấy danh sách quận/huyện
+        [HttpGet]
+        public async Task<IActionResult> GetDistricts(int provinceId)
+        {
+            var districts = await _ghnService.GetDistrictsAsync(provinceId);
+            return Json(districts);
+        }
+
+        // API để lấy danh sách phường/xã
+        [HttpGet]
+        public async Task<IActionResult> GetWards(int districtId)
+        {
+            var wards = await _ghnService.GetWardsAsync(districtId);
+            return Json(wards);
+        }
+        #endregion
 
         [Authorize(AuthenticationSchemes = "CustomerScheme")]
         public async Task<IActionResult> DangXuat()

@@ -18,6 +18,9 @@
         public DateTime NgayDat { get; set; }
         public string TrangThai { get; set; }
         public string DiaChi { get; set; }
+        public string? ProvinceName { get; set; }  // SỬA: Đổi từ Province -> ProvinceName
+        public string? DistrictName { get; set; }  // SỬA: Đổi từ District -> DistrictName
+        public string? WardName { get; set; }    // THÊM: Phường/Xã
         public double PhiVanChuyen { get; set; }
         public string? GhiChu { get; set; }
         public string DienThoai { get; set; }

@@ -15,6 +15,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             db = context;
         }
 
+        // GET: HangHoa
         public IActionResult Index(int? loai, int page = 1, string sortOrder = "", int? minPrice = null, int? maxPrice = null, string category = "", string search = "")
         {
             int pageSize = 12;
@@ -169,7 +170,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             return View(result);
         }
 
-
+        // GET: HangHoa/Search
         public IActionResult Search(string query, int page = 1)
         {
             if (string.IsNullOrWhiteSpace(query))

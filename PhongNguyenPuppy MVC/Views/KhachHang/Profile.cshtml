@@ -50,8 +50,11 @@
             </div>
         </div>
 
-        <div class="mt-4 d-flex justify-content-end">
-            <a asp-action="QuenMatKhau" asp-controller="KhachHang" asp-route-email="@User.FindFirstValue(ClaimTypes.Email)" class="btn btn-outline-primary me-2">
+        <div class="mt-4 d-flex justify-content-end flex-wrap gap-2">
+            <a asp-action="UpdateAddress" asp-controller="KhachHang" class="btn btn-outline-success">
+                📍 Cập nhật địa chỉ
+            </a>
+            <a asp-action="QuenMatKhau" asp-controller="KhachHang" asp-route-email="@User.FindFirstValue(ClaimTypes.Email)" class="btn btn-outline-primary">
                 🔒 Đổi mật khẩu
             </a>
             <a asp-action="DangXuat" asp-controller="KhachHang" class="btn btn-danger">

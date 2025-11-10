@@ -25,11 +25,42 @@
         </div>
         <div class="col-md-6">
             <h5>Thông tin đơn hàng</h5>
-            <p><strong>Ngày đặt:</strong> @Model.NgayDat.ToString("dd/MM/yyyy")</p>
+            <p><strong>Ngày đặt:</strong> @Model.NgayDat.ToString("dd/MM/yyyy HH:mm")</p>
             <p><strong>Trạng thái:</strong> <span class="badge @GetBadgeClass(Model.TrangThai)">@Model.TrangThai</span></p>
-            <p><strong>Địa chỉ giao hàng:</strong> @Model.DiaChi</p>
+
+            <!-- Hiển thị địa chỉ chi tiết mới -->
+            <p><strong>Địa chỉ giao hàng:</strong></p>
+            @if (!string.IsNullOrEmpty(Model.ProvinceName) || !string.IsNullOrEmpty(Model.DistrictName) || !string.IsNullOrEmpty(Model.WardName))
+            {
+                <div class="ms-3 mb-2">
+                    @if (!string.IsNullOrEmpty(Model.DiaChi))
+                    {
+                        <p class="mb-1"><small class="text-muted">Địa chỉ cụ thể:</small> <strong>@Model.DiaChi</strong></p>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.WardName))
+                    {
+                        <p class="mb-1"><small class="text-muted">Phường/Xã:</small> @Model.WardName</p>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.DistrictName))
+                    {
+                        <p class="mb-1"><small class="text-muted">Quận/Huyện:</small> @Model.DistrictName</p>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ProvinceName))
+                    {
+                        <p class="mb-1"><small class="text-muted">Tỉnh/Thành phố:</small> @Model.ProvinceName</p>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="ms-3 text-muted">@Model.DiaChi</p>
+            }
+
             <p><strong>Phí vận chuyển:</strong> @Model.PhiVanChuyen.ToString("N0") VNĐ</p>
-            <p><strong>Ghi chú:</strong> @Model.GhiChu</p>
+            @if (!string.IsNullOrEmpty(Model.GhiChu))
+            {
+                <p><strong>Ghi chú:</strong> <em>@Model.GhiChu</em></p>
+            }
         </div>
     </div>
 

@@ -18,6 +18,11 @@ public partial class HoaDon
     public string? HoTen { get; set; }
 
     public string DiaChi { get; set; } = null!;
+    public int? ProvinceId { get; set; }  // THÊM: Mã tỉnh/thành phố
+
+    public int? DistrictId { get; set; }  // THÊM: Mã quận/huyện
+
+    public string? WardCode { get; set; }  // THÊM: Mã phường/xã
 
     public string? DienThoai { get; set; }
 

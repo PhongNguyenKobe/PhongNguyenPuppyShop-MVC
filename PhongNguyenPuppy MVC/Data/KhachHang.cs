@@ -33,6 +33,10 @@ public partial class KhachHang
 
     public string? RandomKey { get; set; }
 
+    // Thêm các trường GHN
+    public int? ProvinceId { get; set; }
+    public int? DistrictId { get; set; }
+    public string? WardCode { get; set; }
     public virtual ICollection<BanBe> BanBes { get; set; } = new List<BanBe>();
 
     public virtual ICollection<HoaDon> HoaDons { get; set; } = new List<HoaDon>();

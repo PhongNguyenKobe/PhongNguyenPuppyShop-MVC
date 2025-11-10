@@ -30,9 +30,12 @@ builder.Services.AddScoped<IDichVuGuiEmail, DichVuGuiEmail>();
 builder.Services.AddScoped<KhachHangService>();
 builder.Services.AddScoped<IDichVuThongKe, DichVuThongKe>();
 
+// Đăng ký HttpClient và GHNService
+builder.Services.AddHttpClient<IGHNService, GHNService>();
+
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromSeconds(60);
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });

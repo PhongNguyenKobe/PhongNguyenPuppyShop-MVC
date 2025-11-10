@@ -13,14 +13,108 @@ namespace PhongNguyenPuppy_MVC.Controllers
         private readonly PhongNguyenPuppyContext db;
         private readonly PaypalClient _paypalClient;
         private readonly IVnPayService _vnPayService;
+        private readonly IGHNService _ghnService;
 
-        public CartController(PhongNguyenPuppyContext Context, PaypalClient paypalClient, IVnPayService vnPayService)
+        public CartController(PhongNguyenPuppyContext Context, PaypalClient paypalClient, IVnPayService vnPayService, IGHNService ghnService)
         {
-            // Constructor logic can be added here if needed
             db = Context;
             _paypalClient = paypalClient;
             _vnPayService = vnPayService;
+            _ghnService = ghnService;
         }
+
+        // Thêm API endpoint để tính phí vận chuyển động
+        [HttpPost]
+        public async Task<IActionResult> CalculateShippingFee(int districtId, string wardCode)
+        {
+            try
+            {
+                var tongTienHang = Cart.Sum(p => p.ThanhTien);
+
+                // Nếu đơn hàng >= 500K → FREE SHIP (bất kể địa chỉ)
+                if (tongTienHang >= 500000)
+                {
+                    HttpContext.Session.SetInt32("PhiVanChuyen", 0);
+                    return Ok(new { success = true, shippingFee = 0, freeShip = true });
+                }
+
+                // Danh sách District ID của các quận nội thành TP.HCM
+                var noiThanhHCM = new List<int>
+        {
+            1442, // Quận 1
+            1443, // Quận 2
+            1444, // Quận 3
+            1445, // Quận 4
+            1446, // Quận 5
+            1447, // Quận 6
+            1448, // Quận 8
+            1449, // Quận 7
+            1450, // Quận 9
+            1451, // Quận 10
+            1452, // Quận 11
+            1453, // Quận 12
+            1454, // Quận Bình Thạnh
+            1455, // Quận Gò Vấp
+            1456, // Quận Phú Nhuận
+            1457, // Quận Tân Bình
+            1458, // Quận Tân Phú
+            1459, // Quận Bình Tân
+            1460, // Thủ Đức (cũ)
+            1463  // TP Thủ Đức (mới)
+        };
+
+                int shippingFee;
+
+                if (noiThanhHCM.Contains(districtId))
+                {
+                    // ===== NỘI THÀNH TP.HCM: PHÍ CỐ ĐỊNH 20K =====
+                    shippingFee = 20000;
+                    Console.WriteLine($"[SHIPPING] Nội thành TP.HCM → Phí cố định: 20,000 VNĐ");
+                }
+                else
+                {
+                    // ===== NGOẠI THÀNH / TỈNH KHÁC: TÍNH THEO GHN =====
+                    var totalWeight = Cart.Sum(p => p.SoLuong * 500); // gram
+                    shippingFee = await _ghnService.CalculateShippingFeeAsync(districtId, wardCode, totalWeight);
+                    Console.WriteLine($"[SHIPPING] Ngoại thành/tỉnh khác → Phí GHN: {shippingFee:N0} VNĐ");
+                }
+
+                // Lưu phí vận chuyển vào Session
+                HttpContext.Session.SetInt32("PhiVanChuyen", shippingFee);
+
+                return Ok(new { success = true, shippingFee = shippingFee, freeShip = false });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] CalculateShippingFee: {ex.Message}");
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        // API để lấy danh sách tỉnh/thành phố
+        [HttpGet]
+        public async Task<IActionResult> GetProvinces()
+        {
+            var provinces = await _ghnService.GetProvincesAsync();
+            return Ok(provinces);
+        }
+
+        // API để lấy danh sách quận/huyện
+        [HttpGet]
+        public async Task<IActionResult> GetDistricts(int provinceId)
+        {
+            var districts = await _ghnService.GetDistrictsAsync(provinceId);
+            return Ok(districts);
+        }
+
+        // API để lấy danh sách phường/xã
+        [HttpGet]
+        public async Task<IActionResult> GetWards(int districtId)
+        {
+            var wards = await _ghnService.GetWardsAsync(districtId);
+            return Ok(wards);
+        }
+
 
         [HttpPost]
         public IActionResult UpdateQuantity(int id, int quantity)
@@ -86,7 +180,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
         [Authorize]
         [HttpGet]
-        public IActionResult Checkout()
+        public async Task<IActionResult> Checkout()
         {
             if (Cart.Count == 0)
             {
@@ -96,17 +190,24 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
             var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
             var khachHang = db.KhachHangs.SingleOrDefault(p => p.MaKh == customerId);
+
+            // Truyền thông tin khách hàng vào ViewBag
+            ViewBag.CustomerName = khachHang?.HoTen ?? "";
+            ViewBag.CustomerPhone = khachHang?.DienThoai ?? "";
             ViewBag.CustomerAddress = khachHang?.DiaChi ?? "";
 
+            // **THÊM MỚI: Truyền thông tin GHN**
+            ViewBag.CustomerProvinceId = khachHang?.ProvinceId ?? 0;
+            ViewBag.CustomerDistrictId = khachHang?.DistrictId ?? 0;
+            ViewBag.CustomerWardCode = khachHang?.WardCode ?? "";
+
             int tongTienHang = (int)Cart.Sum(p => p.ThanhTien);
-            int phiVanChuyen = 30000;
-            string finalAddress = khachHang?.DiaChi ?? "";
-            if (finalAddress.ToLower().Contains("hồ chí minh") || finalAddress.ToLower().Contains("tp. hcm") || tongTienHang >= 500000)
-            {
-                phiVanChuyen = 0;
-            }
+            int phiVanChuyen = 0;
+            bool freeShip = tongTienHang >= 500000;
+            ViewBag.FreeShip = freeShip;
+
             double giamGia = 0;
-            var maGiamGia = HttpContext.Session.GetString("MaGiamGia"); // Lấy từ session
+            var maGiamGia = HttpContext.Session.GetString("MaGiamGia");
             if (!string.IsNullOrEmpty(maGiamGia))
             {
                 var coupon = db.MaGiamGias
@@ -121,35 +222,66 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 }
             }
 
-            // Lưu vào session
             HttpContext.Session.SetInt32("PhiVanChuyen", phiVanChuyen);
-            HttpContext.Session.SetString("GiamGia", giamGia.ToString("F2")); // Sử dụng SetString
+            HttpContext.Session.SetString("GiamGia", giamGia.ToString("F2"));
+
+            ViewBag.Provinces = await _ghnService.GetProvincesAsync();
 
             return View(Cart);
         }
 
         [Authorize]
         [HttpPost]
-        public IActionResult Checkout(CheckoutVM model, string payment = "COD")
+        public async Task<IActionResult> Checkout(CheckoutVM model, string payment = "COD")
         {
             var gioHang = Cart;
             int tongTienHang = (int)gioHang.Sum(p => p.ThanhTien);
-            int phiVanChuyen = 30000;
 
-            string finalAddress = model.DiaChi;
-            if (model.GiongKhachHang)
-            {
-                var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID).Value;
-                var khachHang = db.KhachHangs.SingleOrDefault(p => p.MaKh == customerId);
-                finalAddress = khachHang?.DiaChi ?? model.DiaChi;
-            }
+            // Lấy phí vận chuyển từ Session (đã được tính bởi JavaScript)
+            int phiVanChuyen = HttpContext.Session.GetInt32("PhiVanChuyen") ?? 0;
 
-            if (finalAddress.ToLower().Contains("hồ chí minh") || finalAddress.ToLower().Contains("tp. hcm") || tongTienHang >= 500000)
+            // Nếu đơn hàng >= 500K thì miễn phí ship
+            if (tongTienHang >= 500000)
             {
                 phiVanChuyen = 0;
             }
+            // Nếu không có phí trong session và có thông tin địa chỉ, tính lại
+            else if (phiVanChuyen == 0 && model.DistrictId > 0 && !string.IsNullOrEmpty(model.WardCode))
+            {
+                try
+                {
+                    // Danh sách nội thành TP.HCM
+                    var noiThanhHCM = new List<int>
+            {
+                1442, 1443, 1444, 1445, 1446, 1447, 1448, 1449, 1450, 1451,
+                1452, 1453, 1454, 1455, 1456, 1457, 1458, 1459, 1460, 1463
+            };
 
-            double giamGia = 0; // Giá trị giảm từ mã
+                    if (noiThanhHCM.Contains(model.DistrictId))
+                    {
+                        // Nội thành: 20K cố định
+                        phiVanChuyen = 20000;
+                    }
+                    else
+                    {
+                        // Ngoại thành: tính theo GHN
+                        var totalWeight = gioHang.Sum(p => p.SoLuong * 500);
+                        phiVanChuyen = await _ghnService.CalculateShippingFeeAsync(model.DistrictId, model.WardCode, totalWeight);
+                    }
+
+                    HttpContext.Session.SetInt32("PhiVanChuyen", phiVanChuyen);
+                }
+                catch
+                {
+                    ModelState.AddModelError("", "Không thể tính phí vận chuyển. Vui lòng chọn lại địa chỉ.");
+                    ViewBag.PaypalClientId = _paypalClient.ClientId;
+                    ViewBag.Provinces = await _ghnService.GetProvincesAsync();
+                    return View(Cart);
+                }
+            }
+
+            // Phần còn lại giữ nguyên...
+            double giamGia = 0;
             if (!string.IsNullOrEmpty(model.MaGiamGia))
             {
                 var coupon = db.MaGiamGias
@@ -160,12 +292,13 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 if (coupon != null)
                 {
                     giamGia = coupon.LoaiGiam ? coupon.GiaTri : (tongTienHang * (coupon.GiaTri / 100));
-                    giamGia = Math.Min(giamGia, tongTienHang); // Đảm bảo không vượt tổng tiền hàng
+                    giamGia = Math.Min(giamGia, tongTienHang);
                 }
                 else
                 {
                     ModelState.AddModelError("MaGiamGia", "Mã giảm giá không hợp lệ hoặc hết hạn.");
                     ViewBag.PaypalClientId = _paypalClient.ClientId;
+                    ViewBag.Provinces = await _ghnService.GetProvincesAsync();
                     return View(Cart);
                 }
             }
@@ -176,7 +309,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             {
                 var vnpayModel = new VnPaymentRequestModel
                 {
-                    Amount = tongCong, // Sửa: Amount = tongCong (đã trừ giamGia)
+                    Amount = tongCong,
                     CreatedDate = DateTime.Now,
                     Description = $"{model.HoTen} {model.DienThoai}",
                     FullName = model.HoTen,
@@ -196,10 +329,16 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 {
                     khachHang = db.KhachHangs.SingleOrDefault(p => p.MaKh == customerId);
                 }
+
+                string diaChiDayDu = model.DiaChi ?? khachHang?.DiaChi ?? "";
+
                 var hoadon = new HoaDon
                 {
                     MaKh = customerId,
-                    DiaChi = model.DiaChi ?? khachHang?.DiaChi,
+                    DiaChi = diaChiDayDu,
+                    ProvinceId = model.ProvinceId,     // Lưu từ form checkout
+                    DistrictId = model.DistrictId,     // Lưu từ form checkout
+                    WardCode = model.WardCode,
                     DienThoai = model.DienThoai ?? khachHang?.DienThoai,
                     HoTen = model.HoTen ?? khachHang?.HoTen,
                     NgayDat = DateTime.Now,
@@ -208,7 +347,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     MaTrangThai = 0,
                     GhiChu = model.GhiChu,
                     PhiVanChuyen = phiVanChuyen,
-                    GiamGia = (float)giamGia // Lưu giá trị giảm giá vào hóa đơn
+                    GiamGia = (float)giamGia
                 };
 
                 using var transaction = db.Database.BeginTransaction();
@@ -226,13 +365,12 @@ namespace PhongNguyenPuppy_MVC.Controllers
                             SoLuong = item.SoLuong,
                             DonGia = item.DonGia,
                             MaHh = item.MaHh,
-                            GiamGia = 0, // Giảm giá chi tiết để 0, vì đã tính ở hóa đơn
+                            GiamGia = 0,
                         });
                     }
                     db.AddRange(cthds);
                     db.SaveChanges();
 
-                    // Cập nhật số lượng đã dùng của mã giảm giá
                     if (giamGia > 0)
                     {
                         var coupon = db.MaGiamGias.Single(c => c.Code == model.MaGiamGia);
@@ -243,6 +381,8 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
                     transaction.Commit();
                     HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
+                    HttpContext.Session.Remove("PhiVanChuyen");
+
                     ViewBag.PaymentMethod = "COD";
                     ViewBag.MaHd = hoadon.MaHd;
                     return View("Success");
@@ -252,11 +392,13 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     db.Database.RollbackTransaction();
                     ModelState.AddModelError("", "Đặt hàng không thành công. Vui lòng thử lại sau.");
                     ViewBag.PaypalClientId = _paypalClient.ClientId;
+                    ViewBag.Provinces = await _ghnService.GetProvincesAsync();
                     return View(Cart);
                 }
             }
 
             ViewBag.PaypalClientId = _paypalClient.ClientId;
+            ViewBag.Provinces = await _ghnService.GetProvincesAsync();
             return View(Cart);
         }
 
@@ -342,6 +484,9 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 {
                     MaKh = customerId,
                     DiaChi = khachHang?.DiaChi,
+                    ProvinceId = khachHang?.ProvinceId,     
+                    DistrictId = khachHang?.DistrictId,     
+                    WardCode = khachHang?.WardCode,
                     DienThoai = khachHang?.DienThoai,
                     HoTen = khachHang?.HoTen,
                     NgayDat = DateTime.Now,
@@ -426,6 +571,9 @@ namespace PhongNguyenPuppy_MVC.Controllers
             {
                 MaKh = customerId,
                 DiaChi = khachHang?.DiaChi ?? "Địa chỉ mặc định",
+                ProvinceId = khachHang?.ProvinceId,
+                DistrictId = khachHang?.DistrictId,
+                WardCode = khachHang?.WardCode,
                 DienThoai = khachHang?.DienThoai ?? "SĐT mặc định",
                 HoTen = khachHang?.HoTen ?? "Tên KH mặc định",
                 NgayDat = DateTime.Now,

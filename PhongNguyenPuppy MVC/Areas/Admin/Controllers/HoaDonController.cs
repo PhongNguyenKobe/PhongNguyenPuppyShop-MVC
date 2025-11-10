@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using PhongNguyenPuppy_MVC.Areas.Admin.ViewModels;
 using PhongNguyenPuppy_MVC.Data;
 using PhongNguyenPuppy_MVC.Helpers;
+using PhongNguyenPuppy_MVC.Services;
 
 namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
 {
@@ -13,10 +14,13 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
     public class HoaDonController : Controller
     {
         private readonly PhongNguyenPuppyContext _context;
+        private readonly IGHNService _ghnService; 
         private const int PageSize = 10;
-        public HoaDonController(PhongNguyenPuppyContext context)
+
+        public HoaDonController(PhongNguyenPuppyContext context, IGHNService ghnService) // PARAMETER
         {
             _context = context;
+            _ghnService = ghnService; 
         }
 
         // Danh sách hóa đơn
@@ -46,7 +50,7 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
 
             if (locThoiGian == "homnay")
             {
-                query = query.Where(h => h.NgayDat.Date == now.Date);//đảm bảo hóa đơn mới nhất (ngày đặt gần nhất) sẽ hiển thị đầu tiên.
+                query = query.Where(h => h.NgayDat.Date == now.Date);
             }
             else if (locThoiGian == "tuannay")
             {
@@ -85,7 +89,7 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
             return View(hoaDonList);
         }
 
-        // Chi tiết hóa đơn
+        //CẬP NHẬT: Chi tiết hóa đơn với địa chỉ đầy đủ
         public async Task<IActionResult> Details(int id)
         {
             var hoaDonVM = await _context.HoaDons
@@ -121,6 +125,61 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
             if (hoaDonVM == null)
                 return NotFound();
 
+            //LẤY THÔNG TIN ĐỊA CHỈ TỪ GHN API
+            var hoaDon = await _context.HoaDons
+                .Include(h => h.MaKhNavigation)
+                .FirstOrDefaultAsync(h => h.MaHd == id);
+
+            if (hoaDon != null)
+            {
+                // Fallback: Ưu tiên HoaDon, nếu không có thì lấy từ KhachHang
+                int? provinceId = hoaDon.ProvinceId ?? hoaDon.MaKhNavigation?.ProvinceId;
+                int? districtId = hoaDon.DistrictId ?? hoaDon.MaKhNavigation?.DistrictId;
+                string? wardCode = hoaDon.WardCode ?? hoaDon.MaKhNavigation?.WardCode;
+
+                // Lấy tên Province
+                if (provinceId.HasValue && provinceId.Value > 0)
+                {
+                    try
+                    {
+                        var provinces = await _ghnService.GetProvincesAsync();
+                        hoaDonVM.ProvinceName = provinces?.FirstOrDefault(p => p.ProvinceID == provinceId)?.ProvinceName;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Admin - Lỗi lấy tên tỉnh: {ex.Message}");
+                    }
+                }
+
+                // Lấy tên District
+                if (districtId.HasValue && districtId.Value > 0 && provinceId.HasValue)
+                {
+                    try
+                    {
+                        var districts = await _ghnService.GetDistrictsAsync(provinceId.Value);
+                        hoaDonVM.DistrictName = districts?.FirstOrDefault(d => d.DistrictID == districtId)?.DistrictName;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Admin - Lỗi lấy tên quận: {ex.Message}");
+                    }
+                }
+
+                // Lấy tên Ward
+                if (!string.IsNullOrEmpty(wardCode) && districtId.HasValue)
+                {
+                    try
+                    {
+                        var wards = await _ghnService.GetWardsAsync(districtId.Value);
+                        hoaDonVM.WardName = wards?.FirstOrDefault(w => w.WardCode == wardCode)?.WardName;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($" Admin - Lỗi lấy tên phường: {ex.Message}");
+                    }
+                }
+            }
+
             return View(hoaDonVM);
         }
 
@@ -135,8 +194,5 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
 
             return Ok();
         }
-
-
-
     }
 }

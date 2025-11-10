@@ -1,0 +1,154 @@
+﻿@model PhongNguyenPuppy_MVC.ViewModels.UpdateAddressVM
+
+@{
+    ViewData["Title"] = "Cập nhật địa chỉ";
+}
+
+<div class="container" style="padding-top: 180px; padding-bottom: 50px;">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm rounded-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">📍 Cập nhật thông tin địa chỉ</h4>
+                </div>
+                <div class="card-body p-4">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="UpdateAddress" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="HoTen" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                            <input asp-for="HoTen" class="form-control" />
+                            <span asp-validation-for="HoTen" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DienThoai" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                            <input asp-for="DienThoai" class="form-control" />
+                            <span asp-validation-for="DienThoai" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                            <select id="provinceSelect" name="ProvinceId" class="form-select" asp-for="ProvinceId">
+                                <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                                @if (ViewBag.Provinces != null)
+                                {
+                                    foreach (var province in ViewBag.Provinces)
+                                    {
+                                        <option value="@province.ProvinceID">@province.ProvinceName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Quận/Huyện <span class="text-danger">*</span></label>
+                            <select id="districtSelect" name="DistrictId" class="form-select" asp-for="DistrictId" disabled>
+                                <option value="">-- Chọn Quận/Huyện --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Phường/Xã <span class="text-danger">*</span></label>
+                            <select id="wardSelect" name="WardCode" class="form-select" asp-for="WardCode" disabled>
+                                <option value="">-- Chọn Phường/Xã --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DiaChi" class="form-label">Địa chỉ chi tiết (Số nhà, tên đường...)</label>
+                            <textarea asp-for="DiaChi" class="form-control" rows="3" placeholder="Ví dụ: 123 Nguyễn Văn A"></textarea>
+                            <span asp-validation-for="DiaChi" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Profile" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Lưu thông tin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            const savedProvinceId = @(Model.ProvinceId ?? 0);
+            const savedDistrictId = @(Model.DistrictId ?? 0);
+            const savedWardCode = @Html.Raw(Model.WardCode != null ? $"'{Model.WardCode}'" : "null");
+
+            // Load districts nếu đã có province
+            if (savedProvinceId > 0) {
+                loadDistricts(savedProvinceId, savedDistrictId);
+            }
+
+            // Khi thay đổi tỉnh/thành phố
+            $('#provinceSelect').change(function () {
+                const provinceId = $(this).val();
+                $('#districtSelect').prop('disabled', true).html('<option value="">-- Đang tải... --</option>');
+                $('#wardSelect').prop('disabled', true).html('<option value="">-- Chọn Phường/Xã --</option>');
+
+                if (provinceId) {
+                    loadDistricts(provinceId, null);
+                }
+            });
+
+            // Khi thay đổi quận/huyện
+            $('#districtSelect').change(function () {
+                const districtId = $(this).val();
+                $('#wardSelect').prop('disabled', true).html('<option value="">-- Đang tải... --</option>');
+
+                if (districtId) {
+                    loadWards(districtId, null);
+                }
+            });
+
+            // Hàm load districts
+            function loadDistricts(provinceId, selectedDistrictId) {
+                $.get('/KhachHang/GetDistricts', { provinceId: provinceId }, function (data) {
+                    let options = '<option value="">-- Chọn Quận/Huyện --</option>';
+                    data.forEach(d => {
+                        const selected = d.districtID == selectedDistrictId ? 'selected' : '';
+                        options += `<option value="${d.districtID}" ${selected}>${d.districtName}</option>`;
+                    });
+                    $('#districtSelect').html(options).prop('disabled', false);
+
+                    // Nếu có district được chọn, load wards
+                    if (selectedDistrictId > 0) {
+                        loadWards(selectedDistrictId, savedWardCode);
+                    }
+                });
+            }
+
+            // Hàm load wards
+            function loadWards(districtId, selectedWardCode) {
+                $.get('/KhachHang/GetWards', { districtId: districtId }, function (data) {
+                    let options = '<option value="">-- Chọn Phường/Xã --</option>';
+                    data.forEach(w => {
+                        const selected = w.wardCode == selectedWardCode ? 'selected' : '';
+                        options += `<option value="${w.wardCode}" ${selected}>${w.wardName}</option>`;
+                    });
+                    $('#wardSelect').html(options).prop('disabled', false);
+                });
+            }
+        });
+    </script>
+}

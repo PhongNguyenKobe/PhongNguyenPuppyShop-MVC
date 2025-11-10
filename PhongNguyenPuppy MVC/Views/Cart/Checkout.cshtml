@@ -1,270 +1,601 @@
 ﻿@model IEnumerable<PhongNguyenPuppy_MVC.ViewModels.CartItem>
 
 @{
-    ViewData["Title"] = "Thanh toán";
-    // Lấy địa chỉ khách hàng từ ViewBag (database)
-    var customerAddress = ViewBag.CustomerAddress ?? "";
+	ViewData["Title"] = "Thanh toán";
+	// Lấy địa chỉ khách hàng từ ViewBag (database)
+	var customerAddress = ViewBag.CustomerAddress ?? "";
 }
 
 <!-- Tiêu đề trang -->
 <div class="container-fluid page-header py-5">
-    <h1 class="text-center text-white display-6">Thanh toán</h1>
-    <ol class="breadcrumb justify-content-center mb-0">
-        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-        <li class="breadcrumb-item"><a asp-controller="HangHoa" asp-action="Index">Sản phẩm</a></li>
-        <li class="breadcrumb-item active text-white">Thanh toán</li>
-    </ol>
+	<h1 class="text-center text-white display-6">Thanh toán</h1>
+	<ol class="breadcrumb justify-content-center mb-0">
+		<li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+		<li class="breadcrumb-item"><a asp-controller="HangHoa" asp-action="Index">Sản phẩm</a></li>
+		<li class="breadcrumb-item active text-white">Thanh toán</li>
+	</ol>
 </div>
 
 <!-- Nội dung thanh toán -->
 <div class="container-fluid py-5">
-    <div class="container py-5">
-        <h1 class="mb-4">Chi tiết thanh toán</h1>
-        <form asp-action="Checkout" asp-controller="Cart">
-            @if (!ViewData.ModelState.IsValid)
-            {
-                <div class="alert alert-danger">
-                    @Html.ValidationSummary(true)
-                </div>
-            }
-            <div class="row g-5">
-                <div class="col-md-12 col-lg-6 col-xl-7">
-                    <div class="form-check my-3">
-                        <input type="checkbox" name="GiongKhachHang" class="form-check-input" id="GiongKhachHang" value="0">
-                        <label class="GiongKhachHang">Giống thông tin khách hàng?</label>
-                    </div>
-                    <div class="form-item delivery-info">
-                        <label class="form-label my-3">Người nhận hàng<sup>*</sup></label>
-                        <input type="text" name="HoTen" class="form-control">
-                    </div>
-                    <div class="form-item delivery-info">
-                        <label class="form-label my-3">Địa chỉ nhận hàng<sup>*</sup></label>
-                        <input type="text" name="DiaChi" class="form-control" placeholder="Số nhà, đường, phường...">
-                    </div>
-                    <div class="form-item delivery-info">
-                        <label class="form-label my-3">Số điện thoại<sup>*</sup></label>
-                        <input type="text" name="DienThoai" class="form-control">
-                    </div>
-                    <div class="form-item mt-2">
-                        <textarea name="GhiChu" class="form-control" spellcheck="false" cols="30" rows="11" placeholder="Ghi chú thêm..."></textarea>
-                    </div>
-                    
-                </div>
+	<div class="container py-5">
+		<h1 class="mb-4">Chi tiết thanh toán</h1>
+		<form asp-action="Checkout" asp-controller="Cart">
+			@if (!ViewData.ModelState.IsValid)
+			{
+				<div class="alert alert-danger">
+					@Html.ValidationSummary(true)
+				</div>
+			}
+			<div class="row g-5">
+				<div class="col-md-12 col-lg-6 col-xl-7">
+					<div class="form-check my-3">
+						<input type="checkbox" name="GiongKhachHang" class="form-check-input" id="GiongKhachHang" value="0">
+						<label class="GiongKhachHang">Giống thông tin khách hàng?</label>
+					</div>
+					<div class="form-item delivery-info">
+						<label class="form-label my-3">Người nhận hàng<sup>*</sup></label>
+						<input type="text" name="HoTen" class="form-control">
+					</div>
+					<div class="form-item delivery-info">
+						<label class="form-label my-3">Địa chỉ nhận hàng<sup>*</sup></label>
+						<!-- Thêm dropdowns cho GHN -->
+						<select id="provinceSelect" name="ProvinceId" class="form-control mb-2" required>
+							<option value="">-- Chọn Tỉnh/Thành phố --</option>
+							@if (ViewBag.Provinces != null)
+							{
+								foreach (var province in ViewBag.Provinces)
+								{
+									<option value="@province.ProvinceID">@province.ProvinceName</option>
+								}
+							}
+						</select>
 
-                <div class="col-md-12 col-lg-6 col-xl-5">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Ảnh</th>
-                                    <th scope="col">Tên sản phẩm</th>
-                                    <th scope="col">Giá</th>
-                                    <th scope="col">SL</th>
-                                    <th scope="col">Thành tiền</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in Model)
-                                {
-                                    <tr>
-                                        <td>
-                                            <img src="~/Hinh/HangHoa/@item.Hinh" class="img-fluid rounded-circle" style="width: 90px; height: 90px;" alt="@item.TenHH">
-                                        </td>
-                                        <td class="py-5">@item.TenHH</td>
-                                        <td class="py-5">@item.DonGia.ToString("N0") VNĐ</td>
-                                        <td class="py-5">@item.SoLuong</td>
-                                        <td class="py-5">@item.ThanhTien.ToString("N0") VNĐ</td>
-                                    </tr>
-                                }
-                                <tr>
-                                    <td colspan="4" class="text-end"><strong>Tổng tiền hàng:</strong></td>
-                                    <td>@Model.Sum(p => p.ThanhTien).ToString("N0") VNĐ</td>
-                                </tr>
+						<select id="districtSelect" name="DistrictId" class="form-control mb-2" required disabled>
+							<option value="">-- Chọn Quận/Huyện --</option>
+						</select>
 
-                                <input type="hidden" name="PhiVanChuyen" id="PhiVanChuyen" value="0" />
+						<select id="wardSelect" name="WardCode" class="form-control" required disabled>
+							<option value="">-- Chọn Phường/Xã --</option>
+						</select>
+						<input type="text" name="DiaChi" class="form-control mb-2" placeholder="Số nhà, tên đường...">
 
-                                <tr>
-                                    <td colspan="4" class="text-end"><strong>Phí vận chuyển:</strong></td>
-                                    <td id="shippingFee">Đang tính...</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="4" class="text-end"><strong>Giảm giá:</strong></td>
-                                    <td id="giamGia">0 VNĐ</td>
-                                </tr>
+					</div>
+					<div class="form-item delivery-info">
+						<label class="form-label my-3">Số điện thoại<sup>*</sup></label>
+						<input type="text" name="DienThoai" class="form-control">
+					</div>
+					<div class="form-item mt-2">
+						<textarea name="GhiChu" class="form-control" spellcheck="false" cols="30" rows="11" placeholder="Ghi chú thêm..."></textarea>
+					</div>
 
-                                <tr>
-                                    <td colspan="4" class="text-end"><strong>Tổng cộng:</strong></td>
-                                    <td><strong id="grandTotal">@Model.Sum(p => p.ThanhTien).ToString("N0") VNĐ</strong></td>
-                                </tr>
+				</div>
 
-                            </tbody>
-                        </table>
-                    </div>
+				<div class="col-md-12 col-lg-6 col-xl-5">
+					<!-- Thêm thông báo Free Ship ở đây -->
+					<div id="freeShipNotice" class="alert alert-success mb-3" style="display: none;">
+						<i class="fas fa-truck"></i> <strong>Miễn phí vận chuyển</strong> cho đơn hàng từ 500,000đ
+					</div>
 
-                    <!-- Ô nhập mã giảm giá -->
-                    <div class="form-item my-3">
-                        <label class="form-label">Mã giảm giá</label>
-                        <input type="text" id="MaGiamGia" name="MaGiamGia" class="form-control" placeholder="Nhập mã...">
-                        <button type="button" id="ApDungMa" class="btn btn-primary mt-2">Áp dụng</button>
-                        <span id="GiamGiaStatus" class="text-success mt-3"></span>
-                    </div>
+					<div class="table-responsive">
+						<table class="table">
+							<thead>
+								<tr>
+									<th scope="col">Ảnh</th>
+									<th scope="col">Tên sản phẩm</th>
+									<th scope="col">Giá</th>
+									<th scope="col">SL</th>
+									<th scope="col">Thành tiền</th>
+								</tr>
+							</thead>
+							<tbody>
+								@foreach (var item in Model)
+								{
+									<tr>
+										<td>
+											<img src="~/Hinh/HangHoa/@item.Hinh" class="img-fluid rounded-circle" style="width: 90px; height: 90px;" alt="@item.TenHH">
+										</td>
+										<td class="py-5">@item.TenHH</td>
+										<td class="py-5">@item.DonGia.ToString("N0") VNĐ</td>
+										<td class="py-5">@item.SoLuong</td>
+										<td class="py-5">@item.ThanhTien.ToString("N0") VNĐ</td>
+									</tr>
+								}
+								<tr>
+									<td colspan="4" class="text-end"><strong>Tổng tiền hàng:</strong></td>
+									<td>@Model.Sum(p => p.ThanhTien).ToString("N0") VNĐ</td>
+								</tr>
 
-                    <!-- Phương thức thanh toán -->
-                    <div class="form-check my-3">
-                        <input type="checkbox" id="Transfer-1" name="Transfer" class="form-check-input"> Chuyển khoản ngân hàng trực tiếp
-                        <p class="text-dark">Vui lòng dùng mã đơn hàng làm nội dung chuyển khoản.</p>
-                    </div>
-                    <div class="form-check my-3">
-                        <input type="checkbox" id="Payments-1" name="Payments" class="form-check-input"> Thanh toán bằng VNPay
-                    </div>
-                    <div class="form-check my-3">
-                        <input type="checkbox" id="Delivery-1" name="Delivery" class="form-check-input"> Thanh toán khi nhận hàng
-                    </div>
-                    <div class="form-check my-3">
-                        <input type="checkbox" id="Paypal-1" name="Paypal" class="form-check-input"> Thanh toán bằng PayPal
-                    </div>
+								<input type="hidden" name="PhiVanChuyen" id="PhiVanChuyen" value="0" />
 
-                    <div class="row g-4 text-center align-items-center justify-content-center pt-4">
-                        <input type="submit" name="payment" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary" value="Thanh toán COD" >
-                    </div>
+								<tr>
+									<td colspan="4" class="text-end"><strong>Phí vận chuyển:</strong></td>
+									<td id="shippingFeeText">0 VNĐ</td>
+								</tr>
+								<tr>
+									<td colspan="4" class="text-end"><strong>Giảm giá:</strong></td>
+									<td id="giamGia">0 VNĐ</td>
+								</tr>
 
-                    <div class="row g-4 text-center align-items-center justify-content-center pt-4">
-                        <input type="submit" name="payment" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary" value="Thanh toán VNPay">
-                    </div>
+								<tr>
+									<td colspan="4" class="text-end"><strong>Tổng cộng:</strong></td>
+									<td><strong id="grandTotal">@Model.Sum(p => p.ThanhTien).ToString("N0") VNĐ</strong></td>
+								</tr>
 
-                    <div id="paypal-button-container" style="max-width:1000px; margin-top:24px;"></div>
-                </div>
-            </div>
-        </form>
-    </div>
+							</tbody>
+						</table>
+					</div>
+
+					<!-- Ô nhập mã giảm giá -->
+					<div class="form-item my-3">
+						<label class="form-label">Mã giảm giá</label>
+						<input type="text" id="MaGiamGia" name="MaGiamGia" class="form-control" placeholder="Nhập mã...">
+						<button type="button" id="ApDungMa" class="btn btn-primary mt-2">Áp dụng</button>
+						<span id="GiamGiaStatus" class="text-success mt-3"></span>
+					</div>
+
+					<!-- Phương thức thanh toán -->
+					<div class="form-check my-3">
+						<input type="checkbox" id="Transfer-1" name="Transfer" class="form-check-input"> Chuyển khoản ngân hàng trực tiếp
+						<p class="text-dark">Vui lòng dùng mã đơn hàng làm nội dung chuyển khoản.</p>
+					</div>
+					<div class="form-check my-3">
+						<input type="checkbox" id="Payments-1" name="Payments" class="form-check-input"> Thanh toán bằng VNPay
+					</div>
+					<div class="form-check my-3">
+						<input type="checkbox" id="Delivery-1" name="Delivery" class="form-check-input"> Thanh toán khi nhận hàng
+					</div>
+					<div class="form-check my-3">
+						<input type="checkbox" id="Paypal-1" name="Paypal" class="form-check-input"> Thanh toán bằng PayPal
+					</div>
+
+					<div class="row g-4 text-center align-items-center justify-content-center pt-4">
+						<input type="submit" name="payment" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary" value="Thanh toán COD">
+					</div>
+
+					<div class="row g-4 text-center align-items-center justify-content-center pt-4">
+						<input type="submit" name="payment" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary" value="Thanh toán VNPay">
+					</div>
+
+					<div id="paypal-button-container" style="max-width:1000px; margin-top:24px;"></div>
+				</div>
+			</div>
+		</form>
+	</div>
 </div>
 
 <!-- Checkout Page End -->
 @section Scripts {
-    <!-- Thanh toán PayPal -->
-	<script src="https://www.paypal.com/sdk/js?client-id=@ViewBag.PaypalClientId "></script>
+	<!-- Thanh toán PayPal SDK -->
+	<script src="https://www.paypal.com/sdk/js?client-id=@ViewBag.PaypalClientId"></script>
 
 	<script>
-		
-            paypal.Buttons({
-              style: {
-                disableMaxWidth: true,
-              },
-
-              // Tạo đơn hàng
-             createOrder: (data, actions) => {
+		// ==================== PAYPAL PAYMENT ====================
+		paypal.Buttons({
+			style: {
+				disableMaxWidth: true,
+			},
+			createOrder: (data, actions) => {
 				return fetch("/Cart/create-paypal-order", {
-					method: "post",
-				}).then((response) => {
+					method: "POST",
+				})
+				.then((response) => {
 					if (!response.ok) {
 						return response.json().then(error => { throw error; });
 					}
-
 					return response.json();
-				}).then((order) => order.id)
-				.catch(error => alert(error.message));
+				})
+				.then((order) => order.id)
+				.catch(error => {
+					alert("Lỗi tạo đơn PayPal: " + error.message);
+					throw error;
+				});
 			},
-                    onApprove: (data, actions) => {
-            return fetch(`/Cart/capture-paypal-order?orderId=${data.orderID}`, {
-                method: "POST"
-            })
-            .then((response) => {
-                return response.json();
-            })
-            .then((data) => {
-                if (data.status === "success") {
-                    // Redirect tới trang success với mã đơn hàng
-                    window.location.href = `/Cart/PaymentSuccess?mahd=${data.mahd}`;
-                } else {
-                    alert("Có lỗi xảy ra khi thanh toán.");
-                }
-            })
-            .catch(error => alert(error.message));
-        }
-
+			onApprove: (data, actions) => {
+				return fetch(`/Cart/capture-paypal-order?orderId=${data.orderID}`, {
+					method: "POST"
+				})
+				.then((response) => response.json())
+				.then((data) => {
+					if (data.status === "success") {
+						window.location.href = `/Cart/PaymentSuccess?mahd=${data.mahd}`;
+					} else {
+						alert("Có lỗi xảy ra khi thanh toán PayPal.");
+					}
+				})
+				.catch(error => {
+					alert("Lỗi thanh toán PayPal: " + error.message);
+				});
+			}
 		}).render('#paypal-button-container');
+
+		// ==================== CHECKOUT MAIN LOGIC ====================
+		$(document).ready(function () {
+			// ===== VARIABLES =====
+			let shippingFee = 0;
+			let currentDiscount = 0;
+			const baseTotal = @Model.Sum(p => p.ThanhTien);
+			const FREE_SHIP_THRESHOLD = 500000;
+			const DEFAULT_SHIPPING_FEE = 30000;
+
+			// Thông tin khách hàng từ ViewBag
+			const customerInfo = {
+				name: @Json.Serialize(ViewBag.CustomerName ?? ""),
+				phone: @Json.Serialize(ViewBag.CustomerPhone ?? ""),
+				address: @Json.Serialize(ViewBag.CustomerAddress ?? ""),
+				provinceId: @(ViewBag.CustomerProvinceId ?? "null"),
+				districtId: @(ViewBag.CustomerDistrictId ?? "null"),
+				wardCode: @Html.Raw(ViewBag.CustomerWardCode != null ? $"'{ViewBag.CustomerWardCode}'" : "null")
+			};
+
+			// ===== UTILITY FUNCTIONS =====
+
+			// Kiểm tra điều kiện miễn phí ship
+			function checkFreeShip() {
+				if (baseTotal >= FREE_SHIP_THRESHOLD) {
+					shippingFee = 0;
+					$('#PhiVanChuyen').val(0);
+					$('#shippingFeeText').html('<span class="text-success">Miễn phí</span>');
+					$('#freeShipNotice').show();
+					return true;
+				}
+				$('#freeShipNotice').hide();
+				return false;
+			}
+
+			// Cập nhật tổng tiền
+			function updateTotalAmount() {
+				const total = baseTotal - currentDiscount + shippingFee;
+				$('#grandTotal').text(total.toLocaleString('vi-VN') + ' VNĐ');
+			}
+
+			// Áp dụng phí ship mặc định
+			function applyDefaultShipping() {
+				if (!checkFreeShip()) {
+					shippingFee = DEFAULT_SHIPPING_FEE;
+					$('#PhiVanChuyen').val(DEFAULT_SHIPPING_FEE);
+					$('#shippingFeeText').text(DEFAULT_SHIPPING_FEE.toLocaleString('vi-VN') + ' VNĐ (mặc định)');
+				}
+				updateTotalAmount();
+			}
+
+			// Tính phí vận chuyển qua API
+			function calculateShipping(districtId, wardCode, onSuccess, onError) {
+				if (checkFreeShip()) {
+					updateTotalAmount();
+					return;
+				}
+
+				$('#shippingFeeText').text('Đang tính phí...');
+
+				$.post('/Cart/CalculateShippingFee', {
+					districtId: districtId,
+					wardCode: wardCode
+				})
+				.done(function (response) {
+					if (response.success) {
+						shippingFee = response.shippingFee;
+						$('#PhiVanChuyen').val(shippingFee);
+
+						if (response.freeShip) {
+							$('#shippingFeeText').html('<span class="text-success">Miễn phí</span>');
+							$('#freeShipNotice').show();
+						} else {
+							$('#shippingFeeText').text(shippingFee.toLocaleString('vi-VN') + ' VNĐ');
+							$('#freeShipNotice').hide();
+						}
+						updateTotalAmount();
+
+						if (onSuccess) onSuccess(response);
+					} else {
+						$('#shippingFeeText').text('Không thể tính phí');
+						if (onError) onError(response.message);
+					}
+				})
+				.fail(function (xhr, status, error) {
+					console.error('Lỗi AJAX khi tính phí ship:', error);
+					if (onError) onError(error);
+				});
+			}
+
+			// Reset form về trạng thái nhập mới
+			function resetDeliveryForm() {
+				$('.delivery-info').removeClass('d-none');
+				$('input[name="HoTen"], input[name="DienThoai"], input[name="DiaChi"]')
+					.val('')
+					.prop('disabled', false);
+
+				$('#provinceSelect').val('').prop('disabled', false);
+				$('#districtSelect').html('<option value="">-- Chọn Quận/Huyện --</option>').prop('disabled', true);
+				$('#wardSelect').html('<option value="">-- Chọn Phường/Xã --</option>').prop('disabled', true);
+
+				shippingFee = 0;
+				$('#PhiVanChuyen').val(0);
+				$('#shippingFeeText').text('0 VNĐ');
+				checkFreeShip();
+				updateTotalAmount();
+			}
+
+			// Điền thông tin khách hàng vào form
+			function fillCustomerInfo() {
+				$('.delivery-info').addClass('d-none');
+				$('input[name="HoTen"]').val(customerInfo.name).prop('disabled', true);
+				$('input[name="DienThoai"]').val(customerInfo.phone).prop('disabled', true);
+				$('input[name="DiaChi"]').val(customerInfo.address).prop('disabled', true);
+				$('#provinceSelect, #districtSelect, #wardSelect').prop('disabled', true);
+			}
+
+			// ===== INITIALIZATION =====
+			checkFreeShip();
+			updateTotalAmount();
+
+			// ===== EVENT HANDLERS =====
+
+			// 1. Chọn Tỉnh/Thành phố
+			$('#provinceSelect').change(function () {
+				const provinceId = $(this).val();
+				const $districtSelect = $('#districtSelect');
+				const $wardSelect = $('#wardSelect');
+
+				$districtSelect.prop('disabled', true).html('<option value="">-- Đang tải... --</option>');
+				$wardSelect.prop('disabled', true).html('<option value="">-- Chọn Phường/Xã --</option>');
+
+				// Reset shipping
+				shippingFee = 0;
+				$('#PhiVanChuyen').val(0);
+				$('#shippingFeeText').text('0 VNĐ');
+				updateTotalAmount();
+
+				if (!provinceId) return;
+
+				$.get('/Cart/GetDistricts', { provinceId: provinceId })
+					.done(function (data) {
+						let options = '<option value="">-- Chọn Quận/Huyện --</option>';
+						data.forEach(d => {
+							options += `<option value="${d.districtID}">${d.districtName}</option>`;
+						});
+						$districtSelect.html(options).prop('disabled', false);
+					})
+					.fail(function () {
+						alert('Không thể tải danh sách Quận/Huyện. Vui lòng thử lại.');
+						$districtSelect.html('<option value="">-- Lỗi tải dữ liệu --</option>');
+					});
+			});
+
+			// 2. Chọn Quận/Huyện
+			$('#districtSelect').change(function () {
+				const districtId = $(this).val();
+				const $wardSelect = $('#wardSelect');
+
+				$wardSelect.prop('disabled', true).html('<option value="">-- Đang tải... --</option>');
+
+				// Reset shipping
+				shippingFee = 0;
+				$('#PhiVanChuyen').val(0);
+				$('#shippingFeeText').text('0 VNĐ');
+				updateTotalAmount();
+
+				if (!districtId) return;
+
+				$.get('/Cart/GetWards', { districtId: districtId })
+					.done(function (data) {
+						let options = '<option value="">-- Chọn Phường/Xã --</option>';
+						data.forEach(w => {
+							options += `<option value="${w.wardCode}">${w.wardName}</option>`;
+						});
+						$wardSelect.html(options).prop('disabled', false);
+					})
+					.fail(function () {
+						alert('Không thể tải danh sách Phường/Xã. Vui lòng thử lại.');
+						$wardSelect.html('<option value="">-- Lỗi tải dữ liệu --</option>');
+					});
+			});
+
+			// 3. Chọn Phường/Xã - Tính phí vận chuyển
+			$('#wardSelect').change(function () {
+				const districtId = $('#districtSelect').val();
+				const wardCode = $(this).val();
+
+				if (districtId && wardCode) {
+					calculateShipping(districtId, wardCode, null, function (error) {
+						alert('Lỗi tính phí vận chuyển: ' + error);
+					});
+				}
+			});
+
+			// 4. Checkbox "Giống thông tin khách hàng"
+			$('#GiongKhachHang').change(function () {
+				const isChecked = $(this).prop('checked');
+				$(this).val(isChecked ? 'true' : 'false');
+
+				if (isChecked) {
+					// Kiểm tra thông tin khách hàng có đầy đủ không
+					if (!customerInfo.districtId || customerInfo.districtId <= 0 || !customerInfo.wardCode) {
+						alert('Tài khoản của bạn chưa có thông tin địa chỉ chi tiết.\n\n' +
+							'Vui lòng:\n' +
+							'1. Cập nhật thông tin tại trang "Thông tin cá nhân", hoặc\n' +
+							'2. Bỏ chọn "Giống thông tin khách hàng" để nhập địa chỉ mới.');
+
+						$(this).prop('checked', false).val('false');
+						applyDefaultShipping();
+						return;
+					}
+
+					// Điền thông tin và tính phí ship
+					fillCustomerInfo();
+					console.log('Tự động tính phí ship cho:', customerInfo.districtId, customerInfo.wardCode);
+
+					calculateShipping(
+						customerInfo.districtId,
+						customerInfo.wardCode,
+						null,
+						function (error) {
+							console.warn('Không tính được phí ship, dùng mặc định:', error);
+							applyDefaultShipping();
+						}
+					);
+
+				} else {
+					// Reset form về trạng thái nhập mới
+					resetDeliveryForm();
+				}
+			});
+
+			// 5. Áp dụng mã giảm giá
+			$('#ApDungMa').click(function () {
+				const maGiamGia = $('#MaGiamGia').val().trim();
+
+				if (!maGiamGia) {
+					alert('Vui lòng nhập mã giảm giá!');
+					return;
+				}
+
+				$(this).prop('disabled', true).text('Đang kiểm tra...');
+
+				$.ajax({
+					url: '/Cart/KiemTraMaGiamGia',
+					type: 'POST',
+					data: { maGiamGia: maGiamGia },
+					success: function (response) {
+						if (response.success) {
+							currentDiscount = response.giamGia;
+							$('#giamGia').text(currentDiscount.toLocaleString('vi-VN') + ' VNĐ');
+							$('#GiamGiaStatus')
+								.removeClass('text-danger')
+								.addClass('text-success')
+								.text('✓ Áp dụng thành công: ' + response.moTa);
+							updateTotalAmount();
+						} else {
+							currentDiscount = 0;
+							$('#giamGia').text('0 VNĐ');
+							$('#GiamGiaStatus')
+								.removeClass('text-success')
+								.addClass('text-danger')
+								.text('✗ ' + response.message);
+							updateTotalAmount();
+						}
+					},
+					error: function () {
+						currentDiscount = 0;
+						$('#giamGia').text('0 VNĐ');
+						$('#GiamGiaStatus')
+							.removeClass('text-success')
+							.addClass('text-danger')
+							.text('✗ Lỗi khi kiểm tra mã giảm giá. Vui lòng thử lại.');
+						updateTotalAmount();
+					},
+					complete: function () {
+						$('#ApDungMa').prop('disabled', false).text('Áp dụng');
+					}
+				});
+			});
+
+			// 6. Validation khi submit form
+			$('form').on('submit', function (e) {
+				const isGiongKhachHang = $('#GiongKhachHang').prop('checked');
+
+				console.log('Submitting form - Use customer info:', isGiongKhachHang);
+
+				// Nếu dùng thông tin khách hàng → Không cần validate
+				if (isGiongKhachHang) {
+					// Kiểm tra lại thông tin có đầy đủ không
+					if (!customerInfo.districtId || !customerInfo.wardCode) {
+						e.preventDefault();
+						alert('Thông tin địa chỉ không đầy đủ. Vui lòng cập nhật thông tin tài khoản.');
+						$('#GiongKhachHang').prop('checked', false).trigger('change');
+						return false;
+					}
+					return true;
+				}
+
+				// Nếu KHÔNG dùng thông tin khách hàng → Validate đầy đủ
+				const hoTen = $('input[name="HoTen"]').val().trim();
+				const dienThoai = $('input[name="DienThoai"]').val().trim();
+				const diaChi = $('input[name="DiaChi"]').val().trim();
+				const provinceId = $('#provinceSelect').val();
+				const districtId = $('#districtSelect').val();
+				const wardCode = $('#wardSelect').val();
+
+				// Validate từng trường
+				if (!hoTen) {
+					e.preventDefault();
+					alert('Vui lòng nhập tên người nhận hàng!');
+					$('input[name="HoTen"]').focus();
+					return false;
+				}
+
+				if (!dienThoai) {
+					e.preventDefault();
+					alert('Vui lòng nhập số điện thoại!');
+					$('input[name="DienThoai"]').focus();
+					return false;
+				}
+
+				// Validate định dạng số điện thoại (10 số)
+				const phonePattern = /^0\d{9}$/;
+				if (!phonePattern.test(dienThoai)) {
+					e.preventDefault();
+					alert('Số điện thoại không hợp lệ! Vui lòng nhập 10 chữ số bắt đầu bằng 0.');
+					$('input[name="DienThoai"]').focus();
+					return false;
+				}
+
+				if (!provinceId) {
+					e.preventDefault();
+					alert('Vui lòng chọn Tỉnh/Thành phố!');
+					$('#provinceSelect').focus();
+					return false;
+				}
+
+				if (!districtId) {
+					e.preventDefault();
+					alert('Vui lòng chọn Quận/Huyện!');
+					$('#districtSelect').focus();
+					return false;
+				}
+
+				if (!wardCode) {
+					e.preventDefault();
+					alert('Vui lòng chọn Phường/Xã!');
+					$('#wardSelect').focus();
+					return false;
+				}
+
+				if (!diaChi) {
+					e.preventDefault();
+					alert('Vui lòng nhập địa chỉ chi tiết (số nhà, tên đường)!');
+					$('input[name="DiaChi"]').focus();
+					return false;
+				}
+
+				// Kiểm tra đã chọn phương thức thanh toán chưa (optional)
+				const paymentMethod = $('input[name="payment"]:focus').val();
+				if (!paymentMethod) {
+					console.warn('Không xác định được phương thức thanh toán');
+				}
+
+				return true;
+			});
+
+			// 7. Track button submit được click (cho VNPay)
+			$('input[type="submit"]').on('click', function () {
+				$(this).closest('form').data('submit-button', $(this).val());
+			});
+
+			// 8. Enter key trên input mã giảm giá
+			$('#MaGiamGia').on('keypress', function (e) {
+				if (e.which === 13) { // Enter key
+					e.preventDefault();
+					$('#ApDungMa').click();
+				}
+			});
+
+			// ===== CONSOLE LOG FOR DEBUGGING =====
+			console.log('Checkout initialized:', {
+				baseTotal: baseTotal,
+				customerInfo: customerInfo,
+				freeShipThreshold: FREE_SHIP_THRESHOLD
+			});
+		});
 	</script>
-
-    <!-- Phí vận chuyển và mã giảm giá -->
-    <script>
-        $(document).ready(function () {
-            const baseTotal = @Model.Sum(p => p.ThanhTien);
-            const diaChiInput = $('input[name="DiaChi"]'); // Sửa lại để chọn đúng input
-            const customerAddress = @Json.Serialize(customerAddress);
-
-            function tinhPhiVanChuyen(diaChi, tongTienHang) {
-                if (!diaChi) return 30000; // Phí mặc định nếu không có địa chỉ
-                const diaChiLower = diaChi.toLowerCase();
-                const isHCM = diaChiLower.includes("hồ chí minh") || diaChiLower.includes("tp. hcm");
-                const isFreeByTotal = tongTienHang >= 500000;
-                return (isHCM || isFreeByTotal) ? 0 : 30000;
-            }
-
-            function capNhatTongTien(diaChi, giamGia) {
-                const phi = tinhPhiVanChuyen(diaChi, baseTotal);
-                const tong = baseTotal - (giamGia || 0) + phi;
-                $('#shippingFee').text(phi.toLocaleString() + " VNĐ");
-                $('#giamGia').text((giamGia || 0).toLocaleString() + " VNĐ");
-                $('#grandTotal').text(tong.toLocaleString() + " VNĐ");
-                $('#PhiVanChuyen').val(phi);
-            }
-
-            diaChiInput.on('input', function () {
-                capNhatTongTien($(this).val(), parseFloat($('#giamGia').text().replace(/[^\d.-]/g, '')) || 0);
-            });
-
-            // Khi bấm checkbox "Giống khách hàng"
-           $('#GiongKhachHang').change(function () {
-                if ($(this).prop('checked')) {
-                    $(this).val('true');
-                    $(".delivery-info").addClass("d-none");
-                    diaChiInput.val(customerAddress);
-                } else {
-                    $(this).val('false');
-                    $(".delivery-info").removeClass("d-none");
-                    diaChiInput.val("");
-                }
-                capNhatTongTien(diaChiInput.val(), parseFloat($('#giamGia').text().replace(/[^\d.-]/g, '')) || 0);
-            });
-
-            capNhatTongTien(diaChiInput.val(), 0);
-
-            // Xử lý áp dụng mã giảm giá
-            $('#ApDungMa').click(function () {
-                var ma = $('#MaGiamGia').val();
-                if (ma) {
-                    $.ajax({
-                        url: '/Cart/KiemTraMaGiamGia',
-                        type: 'POST',
-                        data: { maGiamGia: ma },
-                        success: function (response) {
-                            if (response.success) {
-                                $('#giamGia').text(response.giamGia.toLocaleString() + ' VNĐ');
-                                var phi = parseInt($('#PhiVanChuyen').val());
-                                var tong = baseTotal - response.giamGia + phi;
-                                $('#grandTotal').text(tong.toLocaleString() + ' VNĐ');
-                                $('#GiamGiaStatus').text('Áp dụng thành công: ' + response.moTa);
-                            } else {
-                                $('#GiamGiaStatus').addClass('text-danger').text(response.message);
-                                $('#giamGia').text('0 VNĐ');
-                                var phi = parseInt($('#PhiVanChuyen').val());
-                                var tong = baseTotal + phi;
-                                $('#grandTotal').text(tong.toLocaleString() + ' VNĐ');
-                            }
-                        },
-                        error: function () {
-                            console.log('Lỗi Ajax: ', error); // Thêm log để debug
-                            $('#GiamGiaStatus').addClass('text-danger').text('Lỗi khi kiểm tra mã giảm giá.');
-                            $('#giamGia').text('0 VNĐ');
-                            var phi = parseInt($('#PhiVanChuyen').val());
-                            var tong = baseTotal + phi;
-                            $('#grandTotal').text(tong.toLocaleString() + ' VNĐ');
-                        }
-                    });
-                }
-            });
-        });
-    </script>
-
-
 }
