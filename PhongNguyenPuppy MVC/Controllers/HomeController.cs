@@ -46,6 +46,22 @@ namespace PhongNguyenPuppy_MVC.Controllers
             return View(model);
         }
 
+        public IActionResult Subscribe()
+        {
+            // THÊM PHẦN SEO Data cho trang Subscribe
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            ViewData["SeoData"] = new PhongNguyenPuppy_MVC.Helpers.SeoData
+            {
+                Title = "Đăng ký nhận tin - PhongNguyen Puppy Shop",
+                Description = "Đăng ký nhận bản tin để cập nhật sản phẩm mới, chương trình khuyến mãi và mẹo chăm sóc thú cưng từ PhongNguyen Puppy Shop.",
+                Keywords = "đăng ký nhận tin, newsletter, khuyến mãi chó, tin tức thú cưng",
+                ImageUrl = "/img/hero_1.png",
+                CanonicalUrl = $"{baseUrl}/Home/Subscribe",
+                Type = "website"
+            };
+            return View();
+        }
+
         [Route("/404")]
         public IActionResult PageNotFound()
         {

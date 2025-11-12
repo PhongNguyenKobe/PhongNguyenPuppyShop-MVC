@@ -1,0 +1,164 @@
+﻿@{
+    ViewData["Title"] = "Đăng ký nhận tin";
+    Layout = "~/Views/Shared/_LayoutCustomer.cshtml";
+}
+
+<!-- Hero Section -->
+<div class="container-fluid page-header py-5">
+    <h1 class="text-center text-white display-6">📬 Đăng ký nhận tin</h1>
+    <ol class="breadcrumb justify-content-center mb-0">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+        <li class="breadcrumb-item active text-white">Đăng ký nhận tin</li>
+    </ol>
+</div>
+
+<!-- Subscribe Section -->
+<div class="container-fluid py-5">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-7">
+                <!-- Intro Text -->
+                <div class="text-center mb-5">
+                    <h2 class="display-5 text-primary fw-bold">Nhận Thông Tin Mới Nhất</h2>
+                    <p class="lead text-secondary mb-4">
+                        Đăng ký nhận bản tin để cập nhật:
+                    </p>
+                    <div class="row g-3 text-start">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle text-primary me-2 fs-5"></i>
+                                <span>Sản phẩm mới cho thú cưng</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle text-primary me-2 fs-5"></i>
+                                <span>Chương trình khuyến mãi đặc biệt</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle text-primary me-2 fs-5"></i>
+                                <span>Mẹo chăm sóc chó cưng</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle text-primary me-2 fs-5"></i>
+                                <span>Ưu đãi dành riêng cho thành viên</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MailChimp Form -->
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-4 p-md-5">
+                        @await Html.PartialAsync("_Mailchimp")
+                    </div>
+                </div>
+
+                <!-- Trust Badges -->
+                <div class="text-center mt-4">
+                    <p class="text-muted small mb-2">
+                        <i class="fas fa-shield-alt text-success me-1"></i>
+                        Chúng tôi tôn trọng quyền riêng tư của bạn. Thông tin của bạn sẽ được bảo mật tuyệt đối.
+                    </p>
+                    <p class="text-muted small">
+                        <i class="fas fa-envelope-open-text text-primary me-1"></i>
+                        Bạn có thể hủy đăng ký bất cứ lúc nào.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .page-header {
+            background: linear-gradient(rgba(248, 223, 173, 0.9), rgba(248, 223, 173, 0.9)), url('/img/cart-page-header-img.jpg');
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: #fff;
+        }
+
+        /* Custom styling cho MailChimp form */
+        #mc_embed_signup {
+            background: transparent !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+            #mc_embed_signup h2 {
+                font-size: 1.75rem;
+                font-weight: 600;
+                color: #81c408;
+                margin-bottom: 1.5rem;
+            }
+
+            #mc_embed_signup .mc-field-group {
+                padding-bottom: 1.5rem;
+            }
+
+                #mc_embed_signup .mc-field-group label {
+                    font-weight: 600;
+                    color: #333;
+                    margin-bottom: 0.5rem;
+                }
+
+            #mc_embed_signup input[type="email"] {
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 12px 15px;
+                font-size: 1rem;
+                transition: all 0.3s ease;
+                width: 100%;
+            }
+
+                #mc_embed_signup input[type="email"]:focus {
+                    border-color: #81c408;
+                    outline: none;
+                    box-shadow: 0 0 0 0.2rem rgba(129, 196, 8, 0.25);
+                }
+
+            #mc_embed_signup .button {
+                background-color: #81c408;
+                border: none;
+                border-radius: 8px;
+                padding: 12px 40px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: white;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                width: 100%;
+            }
+
+                #mc_embed_signup .button:hover {
+                    background-color: #6fa307;
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(129, 196, 8, 0.3);
+                }
+
+            #mc_embed_signup .asterisk {
+                color: #dc3545;
+            }
+
+            #mc_embed_signup .indicates-required {
+                text-align: right;
+                font-size: 0.875rem;
+                color: #666;
+                margin-bottom: 1rem;
+            }
+
+        .card {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+    </style>
+}

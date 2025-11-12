@@ -10,35 +10,13 @@
                     </a>
                 </div>
                 <div class="col-lg-6">
-                    <div class="position-relative mx-auto">
-                        
-                        <div id="mc_embed_signup_footer">
-                            <form action="https://nttu.us18.list-manage.com/subscribe/post?u=5552e93329392823b9547b36e&amp;id=888fdbdd9c&amp;f_id=0023b3e6f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank">
-                                <div id="mc_embed_signup_scroll">
-                                    <h5 class="text-white-50 mb-3">Đăng ký nhận tin mới!</h5>
-                                    
-                                    <div class="mc-field-group">
-                                        <input type="email" name="EMAIL" class="required email form-control border-0 w-100 py-3 px-4 rounded-pill" id="mce-EMAIL" required="" value="" placeholder="Email của bạn">
-                                    </div>
-                                    
-                                    <div id="mce-responses" class="clear foot">
-                                        <div class="response" id="mce-error-response" style="display: none;"></div>
-                                        <div class="response" id="mce-success-response" style="display: none;"></div>
-                                    </div>
-                                    <div aria-hidden="true" style="position: absolute; left: -5000px;">
-                                        <input type="text" name="b_2610a3224735575504110a083_fe3f94ef4b" tabindex="-1" value="">
-                                    </div>
-                                    
-                                    <div class="optionalParent">
-                                        <div class="clear foot">
-                                            <input type="submit" name="subscribe" id="mc-embedded-subscribe" class="button btn btn-primary border-0 border-secondary py-3 px-4 position-absolute rounded-pill text-white" value="Đăng ký ngay" style="top: 40px; right: 0;">
-                                            <p style="margin: 0px auto;"></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        </div>
+                    <div class="text-center">
+                        <h5 class="text-white mb-3">Nhận tin tức và ưu đãi mới nhất!</h5>
+                        <p class="text-white-50 mb-3">Đăng ký ngay để không bỏ lỡ các chương trình khuyến mãi đặc biệt</p>
+                        <a asp-controller="Home" asp-action="Subscribe" class="btn btn-primary border-0 border-secondary py-3 px-5 rounded-pill">
+                            <i class="fas fa-envelope me-2"></i>Đăng ký nhận tin
+                        </a>
+                    </div>
                 </div>
                 <div class="col-lg-3">
                     <div class="d-flex justify-content-end pt-3">
@@ -102,26 +80,4 @@
         </div>
     </div>
 </div>
-<script type="text/javascript" src="//s3.amazonaws.com/downloads.mailchimp.com/js/mc-validate.js"></script>
-<script type="text/javascript">
-    (function($) {
-        window.fnames = new Array();
-        window.ftypes = new Array();
-        // Cần khớp với các trường trong form của bạn
-        fnames[0] = 'EMAIL';
-        ftypes[0] = 'email';
-        // ... nếu có thêm trường khác như FNAME, LNAME thì thêm vào đây ...
-    }(jQuery));
-    var $mcj = jQuery.noConflict(true);
-
-    // Kích hoạt validation
-    $(document).ready(function() {
-        $('#mc-embedded-subscribe-form').each(function(){
-            $(this).mc_validate();
-        });
-    });
-
-    // Nếu bạn có toàn bộ phần script dài của Mailchimp (bao gồm cả smsPhone), hãy đặt nó ở đây
-    /* ... TOÀN BỘ SCRIPT DÀI CỦA MAILCHIMP BẮT ĐẦU TỪ "(function($) {window.fnames = new Array()..." CỦA BẠN NÊN ĐẶT Ở ĐÂY ... */
-</script>
 <!-- Footer End -->
