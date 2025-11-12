@@ -13,7 +13,7 @@
 - ASP.NET Core MVC (.NET 9), C#
 - SQL Server, Entity Framework Core
 - Bootstrap 5, JavaScript, jQuery
-- MailChimp, PayPal, VNPay APIs,GHN
+- MailChimp, PayPal, VNPay APIs, GHN
 
 ---
 
