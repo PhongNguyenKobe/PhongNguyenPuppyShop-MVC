@@ -3,22 +3,11 @@
 > ⚠️ *Dự án này hiện vẫn đang trong quá trình phát triển và sẽ tiếp tục được hoàn thiện trong tương lai.*
 
 ## 📌 Giới thiệu
-**PhongNguyenPuppy** là một Website thương mại điện tử được phát triển bằng **ASP.NET Core MVC**, phục vụ cho việc quản lý sản phẩm (hàng hóa) tại cửa hàng cún. Dự án bao gồm các chức năng như thêm, sửa, xóa sản phẩm, quản lý loại sản phẩm và nhà cung cấp. Đây là một dự án học tập, được cá nhân hóa từ khóa học trên YouTube để phù hợp với nhu cầu thực hành.
+**PhongNguyenPuppy** là một Website thương mại điện tử được phát triển bằng **ASP.NET Core MVC** với kiến trúc phân tầng, tích hợp nhiều dịch vụ bên thứ ba, tối ưu SEO, bảo mật, phục vụ cho việc quản lý sản phẩm (hàng hóa) tại cửa hàng cún. Dự án bao gồm các chức năng như thêm, sửa, xóa sản phẩm, quản lý loại sản phẩm và nhà cung cấp. Đây là một dự án học tập, được cá nhân hóa từ khóa học trên YouTube để phù hợp với nhu cầu thực hành.
 
 ## 🎓 Nguồn học tập
 - **Khóa học YouTube**: [ASP.NET Core MVC - Quản lý sản phẩm](https://www.youtube.com/watch?v=7hwegNKkq9k&list=PLE5Bje814fYbtRxvDgmWJ6fUpIZXtbNrb)
 - **Tác giả**: *HIENLTH*
-
-# 🐶 PhongNguyenPuppyShop
-
-**Website thương mại điện tử bán phụ kiện và sản phẩm cho thú cưng**  
-Dự án cá nhân phát triển bằng **ASP.NET Core MVC (.NET 9)** với kiến trúc phân tầng, tích hợp nhiều dịch vụ bên thứ ba, tối ưu SEO, bảo mật và trải nghiệm người dùng.
-
-## 🔗 Link dự án
-[GitHub Repository](https://github.com/PhongNguyenKobe/PhongNguyenPuppyShop)
-
-## 👨‍💻 Vị trí
-**Full-Stack Developer (Cá nhân)**
 
 ## 🛠️ Công nghệ sử dụng
 - ASP.NET Core MVC (.NET 9), C#
