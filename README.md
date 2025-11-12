@@ -9,24 +9,64 @@
 - **Khóa học YouTube**: [ASP.NET Core MVC - Quản lý sản phẩm](https://www.youtube.com/watch?v=7hwegNKkq9k&list=PLE5Bje814fYbtRxvDgmWJ6fUpIZXtbNrb)
 - **Tác giả**: *HIENLTH*
 
-## ✨ Tính năng nổi bật
-### Khu vực Admin
-- **Quản lý sản phẩm**: Thêm, sửa, xóa, và hiển thị danh sách sản phẩm.
-- **Quản lý loại(danh mục) sản phẩm**: Thêm/xóa loại qua giao diện.
-- **Quản lý mã giảm giá**: Thêm/xóa các mã giảm giá có thể áp dụng cho website.
-- **Tải lên hình ảnh sản phẩm**.
-- **Tìm kiếm, lọc theo loại/nhà cung cấp, sắp xếp theo giá hoặc ngày thêm**.
-- **Giao diện thân thiện sử dụng Bootstrap**.
+# 🐶 PhongNguyenPuppyShop
 
-### Khu vực User
-- **Giỏ hàng**: Thêm, xóa, áp dụng mã giảm giá và quản lý sản phẩm trong giỏ hàng.
-- **Thanh toán**:
-  - Thanh toán khi nhận hàng (COD).
-  - Thanh toán qua PayPal.
-  - Thanh toán qua VNPay.
-- **Đăng ký và đăng nhập**: Quản lý tài khoản người dùng.
-- **Đổi mật khẩu**: Gửi email chứa token với thời hạn 1 tiếng để đổi mật khẩu.
-- **Giao diện người dùng**: Sử dụng Bootstrap cho trải nghiệm thân thiện.
+**Website thương mại điện tử bán phụ kiện và sản phẩm cho thú cưng**  
+Dự án cá nhân phát triển bằng **ASP.NET Core MVC (.NET 9)** với kiến trúc phân tầng, tích hợp nhiều dịch vụ bên thứ ba, tối ưu SEO, bảo mật và trải nghiệm người dùng.
+
+## 🔗 Link dự án
+[GitHub Repository](https://github.com/PhongNguyenKobe/PhongNguyenPuppyShop)
+
+## 👨‍💻 Vị trí
+**Full-Stack Developer (Cá nhân)**
+
+## 🛠️ Công nghệ sử dụng
+- ASP.NET Core MVC (.NET 9), C#
+- SQL Server, Entity Framework Core
+- Bootstrap 5, JavaScript, jQuery
+- MailChimp, PayPal, VNPay APIs,GHN
+
+---
+
+## ✨ Tính năng nổi bật
+
+### 🔧 Khu vực Admin
+- Quản lý sản phẩm, danh mục, nhà cung cấp (CRUD đầy đủ)
+- Quản lý mã giảm giá với điều kiện linh hoạt
+- Dashboard thống kê doanh thu, đơn hàng, sản phẩm bán chạy
+- Upload & quản lý hình ảnh sản phẩm với validation
+- Tìm kiếm, lọc, sắp xếp dữ liệu động
+- Gửi email tự động xác nhận đơn hàng
+- Theo dõi lịch sử mua hàng chi tiết
+
+### 🛒 Khu vực User
+- Đăng ký, đăng nhập, quên mật khẩu qua email token bảo mật
+- Giỏ hàng động cập nhật real-time bằng AJAX
+- Thanh toán: COD, PayPal, VNPay
+- Tự động tạo hóa đơn điện tử sau thanh toán
+- Theo dõi đơn hàng và lịch sử mua hàng cá nhân
+
+### 📣 Marketing & Giao diện
+- Tích hợp MailChimp để đăng ký nhận bản tin
+- Trang Subscribe chuyên biệt, call-to-action hiệu quả
+- Giao diện responsive, hiện đại, thân thiện
+- Phân tách layout riêng biệt cho Admin và User
+- Tái sử dụng code với Partial Views, breadcrumb navigation
+
+### 🔍 Tối ưu hóa SEO
+- Meta tags động: title, description, keywords
+- Open Graph & Twitter Cards (summary_large_image)
+- Structured data (JSON-LD) theo chuẩn Schema.org
+- Canonical URL, semantic HTML, favicon đa định dạng
+- Preconnect Google Fonts, helper class `SeoData` quản lý metadata
+
+### 🔐 Kỹ thuật & Bảo mật
+- Repository Pattern & Dependency Injection
+- Async/await tối ưu hiệu năng
+- Tích hợp API: PayPal, VNPay, MailChimp, GHN
+- Token-based authentication cho reset password
+- Input validation & chống SQL injection với EF Core
+- Tổ chức code rõ ràng với Areas (Admin/Customer)
 
 ## ⚙️ Yêu cầu hệ thống
 | Thành phần         | Yêu cầu tối thiểu                     |
@@ -39,7 +79,7 @@
 ## 📬 Liên hệ
 - Tác giả: PhongNguyen
 - Email: phongnguyenfe@gmail.com
-- Cập nhật lần cuối: 24/08/2025
+- Cập nhật lần cuối: 12/11/2025
 ---
 
 ## 🖼️ Hình ảnh giao diện ứng dụng
