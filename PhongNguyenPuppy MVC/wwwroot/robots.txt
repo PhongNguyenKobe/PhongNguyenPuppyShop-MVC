@@ -11,4 +11,4 @@ Disallow: /khachhang/dangxuat
 Disallow: /cart/checkout
 
 # Cho phép sitemap
-Sitemap: https://localhost:7112/sitemap.xml
+Sitemap:  https://exacting-glenda-usurpingly.ngrok-free.dev/sitemap.xml

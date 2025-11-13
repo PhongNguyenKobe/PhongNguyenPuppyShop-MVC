@@ -31,7 +31,7 @@
 				<div class="col-md-12 col-lg-6 col-xl-7">
 					<div class="form-check my-3">
 						<input type="checkbox" name="GiongKhachHang" class="form-check-input" id="GiongKhachHang" value="0">
-						<label class="GiongKhachHang">Giống thông tin khách hàng?</label>
+						<label class="GiongKhachHang" for="GiongKhachHang">Giống thông tin khách hàng?</label>
 					</div>
 					<div class="form-item delivery-info">
 						<label class="form-label my-3">Người nhận hàng<sup>*</sup></label>
@@ -228,6 +228,8 @@
 				wardCode: @Html.Raw(ViewBag.CustomerWardCode != null ? $"'{ViewBag.CustomerWardCode}'" : "null")
 			};
 
+			// console.log('Customer Info Loaded:', customerInfo);
+
 			// ===== UTILITY FUNCTIONS =====
 
 			// Kiểm tra điều kiện miễn phí ship
@@ -263,6 +265,7 @@
 			function calculateShipping(districtId, wardCode, onSuccess, onError) {
 				if (checkFreeShip()) {
 					updateTotalAmount();
+					if (onSuccess) onSuccess({ success: true, freeShip: true });
 					return;
 				}
 
@@ -293,36 +296,132 @@
 					}
 				})
 				.fail(function (xhr, status, error) {
-					console.error('Lỗi AJAX khi tính phí ship:', error);
+					// console.error('Lỗi AJAX khi tính phí ship:', error);
 					if (onError) onError(error);
 				});
 			}
 
 			// Reset form về trạng thái nhập mới
 			function resetDeliveryForm() {
-				$('.delivery-info').removeClass('d-none');
+				// Hiện lại tất cả các trường
 				$('input[name="HoTen"], input[name="DienThoai"], input[name="DiaChi"]')
 					.val('')
-					.prop('disabled', false);
+					.prop('readonly', false)
+					.removeClass('bg-light');
 
-				$('#provinceSelect').val('').prop('disabled', false);
-				$('#districtSelect').html('<option value="">-- Chọn Quận/Huyện --</option>').prop('disabled', true);
-				$('#wardSelect').html('<option value="">-- Chọn Phường/Xã --</option>').prop('disabled', true);
+				// Reset dropdowns
+				$('#provinceSelect')
+					.val('')
+					.prop('disabled', false)
+					.removeClass('bg-light');
 
+				$('#districtSelect')
+					.html('<option value="">-- Chọn Quận/Huyện --</option>')
+					.prop('disabled', true)
+					.removeClass('bg-light');
+
+				$('#wardSelect')
+					.html('<option value="">-- Chọn Phường/Xã --</option>')
+					.prop('disabled', true)
+					.removeClass('bg-light');
+
+				// Reset shipping
 				shippingFee = 0;
 				$('#PhiVanChuyen').val(0);
 				$('#shippingFeeText').text('0 VNĐ');
-				checkFreeShip();
+				$('#freeShipNotice').hide();
 				updateTotalAmount();
 			}
 
 			// Điền thông tin khách hàng vào form
-			function fillCustomerInfo() {
-				$('.delivery-info').addClass('d-none');
-				$('input[name="HoTen"]').val(customerInfo.name).prop('disabled', true);
-				$('input[name="DienThoai"]').val(customerInfo.phone).prop('disabled', true);
-				$('input[name="DiaChi"]').val(customerInfo.address).prop('disabled', true);
-				$('#provinceSelect, #districtSelect, #wardSelect').prop('disabled', true);
+			function fillCustomerInfo(callback) {
+				// console.log('Starting fillCustomerInfo...');
+
+				// Điền thông tin cơ bản và đặt readonly
+				$('input[name="HoTen"]')
+					.val(customerInfo.name)
+					.prop('readonly', true)
+					.addClass('bg-light');
+
+				$('input[name="DienThoai"]')
+					.val(customerInfo.phone)
+					.prop('readonly', true)
+					.addClass('bg-light');
+
+				$('input[name="DiaChi"]')
+					.val(customerInfo.address)
+					.prop('readonly', true)
+					.addClass('bg-light');
+
+				// Chọn Province và disable
+				if (customerInfo.provinceId) {
+					$('#provinceSelect')
+						.val(customerInfo.provinceId)
+						.prop('disabled', true)
+						.addClass('bg-light');
+
+					// console.log('Loading districts for province:', customerInfo.provinceId);
+
+					// Load Districts
+					$.get('/Cart/GetDistricts', { provinceId: customerInfo.provinceId })
+						.done(function (districts) {
+							// console.log('Districts loaded:', districts.length);
+
+							let districtOptions = '<option value="">-- Chọn Quận/Huyện --</option>';
+							districts.forEach(d => {
+								const selected = d.districtID == customerInfo.districtId ? 'selected' : '';
+								districtOptions += `<option value="${d.districtID}" ${selected}>${d.districtName}</option>`;
+							});
+
+							$('#districtSelect')
+								.html(districtOptions)
+								.val(customerInfo.districtId)
+								.prop('disabled', true)
+								.addClass('bg-light');
+
+							// Load Wards nếu có districtId
+							if (customerInfo.districtId) {
+								// console.log('Loading wards for district:', customerInfo.districtId);
+
+								$.get('/Cart/GetWards', { districtId: customerInfo.districtId })
+									.done(function (wards) {
+										// console.log('Wards loaded:', wards.length);
+
+										let wardOptions = '<option value="">-- Chọn Phường/Xã --</option>';
+										wards.forEach(w => {
+											const selected = w.wardCode == customerInfo.wardCode ? 'selected' : '';
+											wardOptions += `<option value="${w.wardCode}" ${selected}>${w.wardName}</option>`;
+										});
+
+										$('#wardSelect')
+											.html(wardOptions)
+											.val(customerInfo.wardCode)
+											.prop('disabled', true)
+											.addClass('bg-light');
+
+										// console.log('All location data loaded successfully');
+
+										// Gọi callback sau khi load xong
+										if (callback) callback();
+									})
+									.fail(function () {
+										// console.error('Failed to load wards');
+										alert('Không thể tải dữ liệu Phường/Xã');
+										if (callback) callback();
+									});
+							} else {
+								if (callback) callback();
+							}
+						})
+						.fail(function () {
+							// console.error('Failed to load districts');
+							alert('Không thể tải dữ liệu Quận/Huyện');
+							if (callback) callback();
+						});
+				} else {
+					// console.warn('No provinceId available');
+					if (callback) callback();
+				}
 			}
 
 			// ===== INITIALIZATION =====
@@ -331,8 +430,11 @@
 
 			// ===== EVENT HANDLERS =====
 
-			// 1. Chọn Tỉnh/Thành phố
-			$('#provinceSelect').change(function () {
+			// 1. Chọn Tỉnh/Thành phố (chỉ khi KHÔNG dùng thông tin khách hàng)
+			$('#provinceSelect').on('change', function () {
+				// Bỏ qua nếu đang dùng thông tin khách hàng
+				if ($('#GiongKhachHang').prop('checked')) return;
+
 				const provinceId = $(this).val();
 				const $districtSelect = $('#districtSelect');
 				const $wardSelect = $('#wardSelect');
@@ -363,7 +465,10 @@
 			});
 
 			// 2. Chọn Quận/Huyện
-			$('#districtSelect').change(function () {
+			$('#districtSelect').on('change', function () {
+				// Bỏ qua nếu đang dùng thông tin khách hàng
+				if ($('#GiongKhachHang').prop('checked')) return;
+
 				const districtId = $(this).val();
 				const $wardSelect = $('#wardSelect');
 
@@ -392,51 +497,61 @@
 			});
 
 			// 3. Chọn Phường/Xã - Tính phí vận chuyển
-			$('#wardSelect').change(function () {
+			$('#wardSelect').on('change', function () {
+				// Bỏ qua nếu đang dùng thông tin khách hàng
+				if ($('#GiongKhachHang').prop('checked')) return;
+
 				const districtId = $('#districtSelect').val();
 				const wardCode = $(this).val();
 
 				if (districtId && wardCode) {
 					calculateShipping(districtId, wardCode, null, function (error) {
+						// console.error('Shipping calculation error:', error);
 						alert('Lỗi tính phí vận chuyển: ' + error);
 					});
 				}
 			});
 
 			// 4. Checkbox "Giống thông tin khách hàng"
-			$('#GiongKhachHang').change(function () {
+			$('#GiongKhachHang').on('change', function () {
 				const isChecked = $(this).prop('checked');
 				$(this).val(isChecked ? 'true' : 'false');
 
+				// console.log('Checkbox "Giống thông tin khách hàng" changed:', isChecked);
+
 				if (isChecked) {
 					// Kiểm tra thông tin khách hàng có đầy đủ không
-					if (!customerInfo.districtId || customerInfo.districtId <= 0 || !customerInfo.wardCode) {
+					if (!customerInfo.provinceId || !customerInfo.districtId || !customerInfo.wardCode) {
 						alert('Tài khoản của bạn chưa có thông tin địa chỉ chi tiết.\n\n' +
 							'Vui lòng:\n' +
 							'1. Cập nhật thông tin tại trang "Thông tin cá nhân", hoặc\n' +
 							'2. Bỏ chọn "Giống thông tin khách hàng" để nhập địa chỉ mới.');
 
 						$(this).prop('checked', false).val('false');
-						applyDefaultShipping();
 						return;
 					}
 
 					// Điền thông tin và tính phí ship
-					fillCustomerInfo();
-					console.log('Tự động tính phí ship cho:', customerInfo.districtId, customerInfo.wardCode);
-
-					calculateShipping(
-						customerInfo.districtId,
-						customerInfo.wardCode,
-						null,
-						function (error) {
-							console.warn('Không tính được phí ship, dùng mặc định:', error);
-							applyDefaultShipping();
-						}
-					);
+					fillCustomerInfo(function() {
+						// Callback sau khi load xong tất cả dropdowns
+						// console.log('Starting shipping calculation...');
+						calculateShipping(
+							customerInfo.districtId,
+							customerInfo.wardCode,
+							null,
+							// function(response) {
+							// 	console.log('Shipping calculated successfully:', response);
+							// },
+							function (error) {
+								// console.warn('Shipping calculation failed, using default:', error);
+								applyDefaultShipping();
+							}
+						);
+					});
 
 				} else {
 					// Reset form về trạng thái nhập mới
+					// console.log('Resetting form...');
 					resetDeliveryForm();
 				}
 			});
@@ -494,7 +609,7 @@
 			$('form').on('submit', function (e) {
 				const isGiongKhachHang = $('#GiongKhachHang').prop('checked');
 
-				console.log('Submitting form - Use customer info:', isGiongKhachHang);
+				// console.log('Submitting form - Use customer info:', isGiongKhachHang);
 
 				// Nếu dùng thông tin khách hàng → Không cần validate
 				if (isGiongKhachHang) {
@@ -505,6 +620,8 @@
 						$('#GiongKhachHang').prop('checked', false).trigger('change');
 						return false;
 					}
+					// Enable lại các field disabled trước khi submit
+					$('#provinceSelect, #districtSelect, #wardSelect').prop('disabled', false);
 					return true;
 				}
 
@@ -568,12 +685,6 @@
 					return false;
 				}
 
-				// Kiểm tra đã chọn phương thức thanh toán chưa (optional)
-				const paymentMethod = $('input[name="payment"]:focus').val();
-				if (!paymentMethod) {
-					console.warn('Không xác định được phương thức thanh toán');
-				}
-
 				return true;
 			});
 
@@ -591,11 +702,11 @@
 			});
 
 			// ===== CONSOLE LOG FOR DEBUGGING =====
-			console.log('Checkout initialized:', {
-				baseTotal: baseTotal,
-				customerInfo: customerInfo,
-				freeShipThreshold: FREE_SHIP_THRESHOLD
-			});
+			// console.log('Checkout initialized:', {
+			// 	baseTotal: baseTotal,
+			// 	customerInfo: customerInfo,
+			// 	freeShipThreshold: FREE_SHIP_THRESHOLD
+			// });
 		});
 	</script>
 }
