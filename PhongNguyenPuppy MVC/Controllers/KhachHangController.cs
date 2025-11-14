@@ -1,16 +1,17 @@
-﻿using System.IO;
+﻿using System;
 using System.Security.Claims;
+using Azure.Core;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhongNguyenPuppy_MVC.Areas.Admin.ViewModels;
 using PhongNguyenPuppy_MVC.Data;
 using PhongNguyenPuppy_MVC.Helpers;
-using PhongNguyenPuppy_MVC.Models; // nếu có entity KhachHang
+using PhongNguyenPuppy_MVC.Models;
 using PhongNguyenPuppy_MVC.Services;
 using PhongNguyenPuppy_MVC.ViewModels;
+
 
 namespace PhongNguyenPuppy_MVC.Controllers
 {
@@ -21,19 +22,41 @@ namespace PhongNguyenPuppy_MVC.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly MyEmailHelper _emailHelper;
         private readonly IGHNService _ghnService;
+        private readonly IConfiguration _configuration;
         private const int PageSize = 10;
-        public KhachHangController(PhongNguyenPuppyContext context, IWebHostEnvironment env, MyEmailHelper emailHelper, IGHNService ghnService)
+        public KhachHangController(PhongNguyenPuppyContext context, IWebHostEnvironment env, MyEmailHelper emailHelper, IGHNService ghnService, IConfiguration configuration)
         {
             db = context;
             _env = env;
             _emailHelper = emailHelper;
             _ghnService = ghnService;
+            _configuration = configuration;
+        }
+
+        private string GetAbsoluteUrl(string actionName, string controllerName, object routeValues = null)
+        {
+            string baseUrl = _configuration["AppSettings:BaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
+            string relativePath = Url.Action(actionName, controllerName, routeValues)!;
+            return $"{baseUrl}{relativePath}";
         }
 
         #region Register in
         [HttpGet]
-        public IActionResult DangKy()
+        public async Task<IActionResult> DangKy()
         {
+            // Load danh sách tỉnh từ GHN service
+            try
+            {
+                var provinces = await _ghnService.GetProvincesAsync();
+                ViewBag.Provinces = provinces;
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Provinces = new List<GHNProvince>();
+                ViewBag.ErrorMessage = "Không thể tải danh sách tỉnh/thành phố. Vui lòng thử lại sau.";
+                Console.WriteLine($"Lỗi load provinces: {ex.Message}");
+            }
+
             return View();
         }
 
@@ -42,6 +65,16 @@ namespace PhongNguyenPuppy_MVC.Controllers
         {
             if (!ModelState.IsValid)
             {
+                //Reload lại danh sách tỉnh khi có lỗi validation
+                try
+                {
+                    var provinces = await _ghnService.GetProvincesAsync();
+                    ViewBag.Provinces = provinces;
+                }
+                catch
+                {
+                    ViewBag.Provinces = new List<GHNProvince>();
+                }
                 return View(model);
             }
 
@@ -50,6 +83,16 @@ namespace PhongNguyenPuppy_MVC.Controllers
             if (db.KhachHangs.Any(k => k.Email == model.Email))
             {
                 ModelState.AddModelError("Email", "Email đã được sử dụng.");
+                // Reload provinces
+                try
+                {
+                    var provinces = await _ghnService.GetProvincesAsync();
+                    ViewBag.Provinces = provinces;
+                }
+                catch
+                {
+                    ViewBag.Provinces = new List<GHNProvince>();
+                }
                 return View(model);
             }
 
@@ -64,10 +107,10 @@ namespace PhongNguyenPuppy_MVC.Controllers
             var kh = new KhachHang
             {
                 MaKh = model.MaKh,
-                MatKhau = model.MatKhau ?? string.Empty, // Ensure MatKhau is not null  
+                MatKhau = model.MatKhau ?? string.Empty,
                 HoTen = model.HoTen,
                 GioiTinh = model.GioiTinh,
-                NgaySinh = model.NgaySinh.HasValue ? model.NgaySinh.Value : DateTime.MinValue, // Explicit conversion and default value  
+                NgaySinh = model.NgaySinh.HasValue ? model.NgaySinh.Value : DateTime.MinValue,
                 DiaChi = model.DiaChi,
                 DienThoai = model.DienThoai,
                 Email = model.Email,
@@ -75,18 +118,203 @@ namespace PhongNguyenPuppy_MVC.Controllers
             };
 
             kh.RandomKey = MyUtil.GetRandomKey();
-            kh.MatKhau = kh.MatKhau.ToMd5Hash(kh.RandomKey); // MatKhau is guaranteed to be non-null  
-            kh.HieuLuc = true; // Mặc định là hiệu lực, mặc định xử lý khi dùng Mail để Active  
+            kh.MatKhau = kh.MatKhau.ToMd5Hash(kh.RandomKey);
+
+            // THAY ĐỔI: Chưa kích hoạt tài khoản, cần xác thực email
+            kh.HieuLuc = false;
+            kh.ResetToken = Guid.NewGuid().ToString(); // Token xác thực
+            kh.ResetTokenExpiry = DateTime.Now.AddHours(24); // Hết hạn sau 24 giờ
 
             db.KhachHangs.Add(kh);
             await db.SaveChangesAsync();
 
-            TempData["Success"] = "Đăng ký thành công!";
+            // Gửi email xác thực
+            try
+            {
+                string verifyLink = GetAbsoluteUrl("XacThucEmail", "KhachHang", new { token = kh.ResetToken });
+                string subject = "Xác thực tài khoản - Phong Nguyen Puppy Shop";
+                string body = $@"
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset='utf-8'>
+                        <style>
+                            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; }}
+                            .header {{ background-color: #4CAF50; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }}
+                            .content {{ background-color: white; padding: 30px; margin-top: 20px; border-radius: 0 0 5px 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
+                            .button {{ display: inline-block; padding: 12px 30px; background-color: #4CAF50; color: white !important; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }}
+                            .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
+                            .link-box {{ background-color: #f0f0f0; padding: 10px; word-break: break-all; margin: 15px 0; border-radius: 3px; }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class='container'>
+                            <div class='header'>
+                                <h1>🐶 Phong Nguyen Puppy Shop</h1>
+                            </div>
+                            <div class='content'>
+                                <h2>Chào mừng {kh.HoTen}!</h2>
+                                <p>Cảm ơn bạn đã đăng ký tài khoản tại <strong>Phong Nguyen Puppy Shop</strong>.</p>
+                                <p>Để hoàn tất đăng ký, vui lòng nhấn vào nút bên dưới để xác thực email của bạn:</p>
+                                <div style='text-align: center;'>
+                                    <a href='{verifyLink}' class='button'>Xác thực tài khoản</a>
+                                </div>
+                                <p>Hoặc copy link sau vào trình duyệt:</p>
+                                <div class='link-box'>{verifyLink}</div>
+                                <p><strong>⚠️ Lưu ý:</strong> Link xác thực sẽ hết hạn sau <strong>24 giờ</strong>.</p>
+                                <p>Nếu bạn không thực hiện đăng ký này, vui lòng bỏ qua email này.</p>
+                            </div>
+                            <div class='footer'>
+                                <p>Email này được gửi tự động, vui lòng không trả lời.</p>
+                                <p>© 2024 Phong Nguyen Puppy Shop. All rights reserved.</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>";
+
+                await _emailHelper.SendMailAsync(kh.Email, subject, body);
+
+                TempData["Success"] = "Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.";
+            }
+            catch (Exception ex)
+            {
+                // Nếu gửi email thất bại, xóa user vừa tạo
+                db.KhachHangs.Remove(kh);
+                await db.SaveChangesAsync();
+
+                ModelState.AddModelError("", $"Đăng ký thất bại. Không thể gửi email xác thực. Lỗi: {ex.Message}");
+                return View(model);
+            }
+
             return RedirectToAction("DangNhap");
+
+        }
+        // THÊM API endpoint để lấy danh sách tỉnh
+        [HttpGet]
+        public async Task<IActionResult> GetProvinces()
+        {
+            try
+            {
+                var provinces = await _ghnService.GetProvincesAsync();
+                return Json(provinces);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = true, message = ex.Message });
+            }
         }
         #endregion
 
+        #region Xác thực Email
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> XacThucEmail(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                TempData["Error"] = "Link xác thực không hợp lệ.";
+                return RedirectToAction("DangNhap");
+            }
 
+            var kh = await db.KhachHangs.SingleOrDefaultAsync(k =>
+                k.ResetToken == token &&
+                k.ResetTokenExpiry > DateTime.Now &&
+                !k.HieuLuc); // Chỉ lấy tài khoản chưa kích hoạt
+
+            if (kh == null)
+            {
+                TempData["Error"] = "Link xác thực không hợp lệ hoặc đã hết hạn. Vui lòng đăng ký lại hoặc yêu cầu gửi lại email.";
+                return RedirectToAction("DangNhap");
+            }
+
+            // Kích hoạt tài khoản
+            kh.HieuLuc = true;
+            kh.ResetToken = null;
+            kh.ResetTokenExpiry = null;
+            await db.SaveChangesAsync();
+
+            TempData["Success"] = "✅ Xác thực email thành công! Bạn có thể đăng nhập ngay bây giờ.";
+            return RedirectToAction("DangNhap");
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult GuiLaiEmailXacThuc()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> GuiLaiEmailXacThuc(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                ModelState.AddModelError("", "Vui lòng nhập email.");
+                return View();
+            }
+
+            var kh = await db.KhachHangs.SingleOrDefaultAsync(k => k.Email == email && !k.HieuLuc);
+
+            if (kh == null)
+            {
+                ModelState.AddModelError("", "Email không tồn tại hoặc tài khoản đã được kích hoạt.");
+                return View();
+            }
+
+            // Tạo token mới
+            kh.ResetToken = Guid.NewGuid().ToString();
+            kh.ResetTokenExpiry = DateTime.Now.AddHours(24);
+            await db.SaveChangesAsync();
+
+            // Gửi lại email
+            try
+            {
+                string verifyLink = GetAbsoluteUrl("XacThucEmail", "KhachHang", new { token = kh.ResetToken });
+                string subject = "Gửi lại link xác thực tài khoản - Phong Nguyen Puppy Shop";
+                string body = $@"
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset='utf-8'>
+                        <style>
+                            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                            .header {{ background-color: #2196F3; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }}
+                            .content {{ background-color: white; padding: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
+                            .button {{ display: inline-block; padding: 12px 30px; background-color: #2196F3; color: white !important; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class='container'>
+                            <div class='header'>
+                                <h2>🐶 Phong Nguyen Puppy Shop</h2>
+                            </div>
+                            <div class='content'>
+                                <h2>Xin chào {kh.HoTen},</h2>
+                                <p>Bạn đã yêu cầu gửi lại link xác thực tài khoản.</p>
+                                <div style='text-align: center;'>
+                                    <a href='{verifyLink}' class='button'>✅ Xác thực tài khoản</a>
+                                </div>
+                                <p>Link sẽ hết hạn sau 24 giờ.</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>";
+
+                await _emailHelper.SendMailAsync(kh.Email, subject, body);
+
+                TempData["Success"] = "Email xác thực đã được gửi lại. Vui lòng kiểm tra hộp thư (bao gồm cả thư mục spam).";
+                return RedirectToAction("DangNhap");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Không thể gửi email. Lỗi: {ex.Message}");
+                return View();
+            }
+        }
+        #endregion
 
 
         #region Login
@@ -112,6 +340,8 @@ namespace PhongNguyenPuppy_MVC.Controllers
             if (!khachHang.HieuLuc)
             {
                 ModelState.AddModelError("Lỗi", "Tài khoản của bạn chưa được kích hoạt. Vui lòng kiểm tra email để kích hoạt tài khoản.");
+                ViewBag.ShowResendLink = true; // ✅ Hiển thị link gửi lại email
+                ViewBag.UserEmail = khachHang.Email;
                 return View(model);
             }
 
@@ -182,8 +412,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             await db.SaveChangesAsync();
 
             // Tạo link đặt lại mật khẩu
-            string resetLink = Url.Action("DatLaiMatKhau", "KhachHang", new { token }, Request.Scheme);
-
+            string resetLink = GetAbsoluteUrl("DatLaiMatKhau", "KhachHang", new { token });
             // Gửi email
             string subject = "Yêu cầu đặt lại mật khẩu";
             string body = $@"

@@ -34,21 +34,36 @@ namespace PhongNguyenPuppy_MVC.ViewModels
         [DataType(DataType.Date)]
         public DateTime? NgaySinh { get; set; }
 
-        [Display(Name = "Địa chỉ")]
-        [MaxLength(60, ErrorMessage = "Địa chỉ không được quá 60 ký tự")]
+        [Display(Name = "Địa chỉ chi tiết")]
+        [MaxLength(200, ErrorMessage = "Địa chỉ không được quá 200 ký tự")]
+        [Required(ErrorMessage = "Vui lòng nhập địa chỉ chi tiết (số nhà, tên đường)")]
         public string? DiaChi { get; set; }
 
         [Display(Name = "Điện thoại")]
+        [Required(ErrorMessage = "Vui lòng nhập số điện thoại")]
         [MaxLength(12, ErrorMessage = "Điện thoại không được quá 12 ký tự")]
         [RegularExpression(@"^(\+84|0)[0-9]{9,10}$", ErrorMessage = "Số điện thoại không hợp lệ")]
         public string? DienThoai { get; set; }
 
         [StringLength(256)]
         [EmailAddress]
+        [Required(ErrorMessage = "Vui lòng nhập email")]
         public string Email { get; set; }
 
-
         [Display(Name = "Hình ảnh")]
-        public IFormFile Hinh { get; set; }
+        public IFormFile? Hinh { get; set; }
+
+        // THÊM CÁC TRƯỜNG GHN
+        [Display(Name = "Tỉnh/Thành phố")]
+        [Required(ErrorMessage = "Vui lòng chọn Tỉnh/Thành phố")]
+        public int? ProvinceId { get; set; }
+
+        [Display(Name = "Quận/Huyện")]
+        [Required(ErrorMessage = "Vui lòng chọn Quận/Huyện")]
+        public int? DistrictId { get; set; }
+
+        [Display(Name = "Phường/Xã")]
+        [Required(ErrorMessage = "Vui lòng chọn Phường/Xã")]
+        public string? WardCode { get; set; }
     }
 }

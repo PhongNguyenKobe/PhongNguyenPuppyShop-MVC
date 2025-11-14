@@ -3,86 +3,242 @@
     ViewData["Title"] = "Đăng Ký";
 }
 
-<div class="d-flex justify-content-center align-items-center bg-light" style="min-height: calc(100vh - 80px); padding-top: 170px;">
-    <div class="card shadow-sm p-4" style="min-width: 500px;">
+<div class="d-flex justify-content-center align-items-center bg-light" style="min-height: calc(100vh - 80px); padding-top: 170px; padding-bottom: 50px;">
+    <div class="card shadow-sm p-4" style="min-width: 600px; max-width: 700px;">
         <div class="text-center mb-4">
             <h3 class="fw-bold text-success">Đăng ký tài khoản mới 🐾</h3>
             <p class="text-muted">Hãy điền thông tin bên dưới để đăng ký thành viên!</p>
         </div>
 
-        <form asp-action="DangKy" method="post" enctype="multipart/form-data">
+        <form asp-action="DangKy" method="post" enctype="multipart/form-data" id="registerForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <h5 class="text-primary mb-3">📝 Thông tin tài khoản</h5>
+
             <div class="form-floating mb-3">
-                <input asp-for="MaKh" class="form-control" placeholder="Mã khách hàng" />
-                <label asp-for="MaKh">Tên đăng nhập</label>
+                <input asp-for="MaKh" class="form-control" placeholder="Tên đăng nhập" />
+                <label asp-for="MaKh"><i class="bi bi-person-badge"></i> Tên đăng nhập</label>
                 <span asp-validation-for="MaKh" class="text-danger small"></span>
             </div>
 
-            <div class="form-floating mb-3">
-                <input asp-for="MatKhau" class="form-control" type="password" placeholder="Mật khẩu" />
-                <label asp-for="MatKhau">Mật khẩu</label>
-                <span asp-validation-for="MatKhau" class="text-danger small"></span>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="MatKhau" class="form-control" type="password" placeholder="Mật khẩu" />
+                        <label asp-for="MatKhau"><i class="bi bi-lock"></i> Mật khẩu</label>
+                        <span asp-validation-for="MatKhau" class="text-danger small"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="MatKhauNhapLai" class="form-control" type="password" placeholder="Nhập lại mật khẩu" />
+                        <label asp-for="MatKhauNhapLai"><i class="bi bi-lock-fill"></i> Nhập lại mật khẩu</label>
+                        <span asp-validation-for="MatKhauNhapLai" class="text-danger small"></span>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-floating mb-3">
-                <input asp-for="MatKhauNhapLai" class="form-control" type="password" placeholder="Nhập lại mật khẩu" />
-                <label asp-for="MatKhauNhapLai">Nhập lại mật khẩu</label>
-                <span asp-validation-for="MatKhauNhapLai" class="text-danger small"></span>
-            </div>
+            <hr class="my-4">
+            <h5 class="text-primary mb-3">👤 Thông tin cá nhân</h5>
 
             <div class="form-floating mb-3">
                 <input asp-for="HoTen" class="form-control" placeholder="Họ tên" />
-                <label asp-for="HoTen">Họ tên</label>
+                <label asp-for="HoTen"><i class="bi bi-person"></i> Họ tên</label>
                 <span asp-validation-for="HoTen" class="text-danger small"></span>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Giới tính</label>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="GioiTinh" value="true" checked />
-                    <label class="form-check-label">Nam</label>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="bi bi-gender-ambiguous"></i> Giới tính</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="GioiTinh" value="true" checked id="male" />
+                            <label class="form-check-label" for="male">Nam</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="GioiTinh" value="false" id="female" />
+                            <label class="form-check-label" for="female">Nữ</label>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="GioiTinh" value="false" />
-                    <label class="form-check-label">Nữ</label>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="NgaySinh" class="form-control" type="date" placeholder="Ngày sinh" />
+                        <label asp-for="NgaySinh"><i class="bi bi-calendar"></i> Ngày sinh</label>
+                        <span asp-validation-for="NgaySinh" class="text-danger small"></span>
+                    </div>
                 </div>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="NgaySinh" class="form-control" type="date" placeholder="Ngày sinh" />
-                <label asp-for="NgaySinh">Ngày sinh</label>
-                <span asp-validation-for="NgaySinh" class="text-danger small"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="DiaChi" class="form-control" placeholder="Địa chỉ" />
-                <label asp-for="DiaChi">Địa chỉ</label>
-                <span asp-validation-for="DiaChi" class="text-danger small"></span>
             </div>
 
             <div class="row g-3 mb-3">
-                <div class="col-md-6 form-floating">
-                    <input asp-for="DienThoai" class="form-control" placeholder="Số điện thoại" />
-                    <label asp-for="DienThoai">Số điện thoại</label>
-                    <span asp-validation-for="DienThoai" class="text-danger small"></span>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="DienThoai" class="form-control" placeholder="Số điện thoại" />
+                        <label asp-for="DienThoai"><i class="bi bi-telephone"></i> Số điện thoại</label>
+                        <span asp-validation-for="DienThoai" class="text-danger small"></span>
+                    </div>
                 </div>
-                <div class="col-md-6 form-floating">
-                    <input asp-for="Email" class="form-control" type="email" placeholder="Email" />
-                    <label asp-for="Email">Email</label>
-                    <span asp-validation-for="Email" class="text-danger small"></span>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="Email" class="form-control" type="email" placeholder="Email" />
+                        <label asp-for="Email"><i class="bi bi-envelope"></i> Email</label>
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
                 </div>
+            </div>
+
+            <hr class="my-4">
+            <h5 class="text-primary mb-3">📍 Địa chỉ giao hàng</h5>
+
+            <!-- THÊM PHẦN CHỌN ĐỊA CHỈ GHN -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <select asp-for="ProvinceId" class="form-select" id="province">
+                            <option value="">-- Chọn Tỉnh/TP --</option>
+                        </select>
+                        <label asp-for="ProvinceId"><i class="bi bi-geo-alt"></i> Tỉnh/Thành phố</label>
+                        <span asp-validation-for="ProvinceId" class="text-danger small"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <select asp-for="DistrictId" class="form-select" id="district" disabled>
+                            <option value="">-- Chọn Quận/Huyện --</option>
+                        </select>
+                        <label asp-for="DistrictId"><i class="bi bi-building"></i> Quận/Huyện</label>
+                        <span asp-validation-for="DistrictId" class="text-danger small"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <select asp-for="WardCode" class="form-select" id="ward" disabled>
+                            <option value="">-- Chọn Phường/Xã --</option>
+                        </select>
+                        <label asp-for="WardCode"><i class="bi bi-signpost"></i> Phường/Xã</label>
+                        <span asp-validation-for="WardCode" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <textarea asp-for="DiaChi" class="form-control" placeholder="Địa chỉ chi tiết" style="height: 80px;"></textarea>
+                <label asp-for="DiaChi"><i class="bi bi-house"></i> Địa chỉ chi tiết (số nhà, tên đường)</label>
+                <span asp-validation-for="DiaChi" class="text-danger small"></span>
+                <small class="text-muted">Ví dụ: 123 Nguyễn Văn Linh, Khu phố 2</small>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Hinh" class="form-label fw-semibold">Ảnh đại diện</label>
-                <input asp-for="Hinh" class="form-control" type="file" />
+                <label asp-for="Hinh" class="form-label fw-semibold"><i class="bi bi-image"></i> Ảnh đại diện (không bắt buộc)</label>
+                <input asp-for="Hinh" class="form-control" type="file" accept="image/*" />
             </div>
 
-            <div class="d-grid">
-                <button type="submit" class="btn btn-success btn-lg">🎉 Tạo tài khoản</button>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="bi bi-check-circle"></i> 🎉 Tạo tài khoản
+                </button>
+                <a asp-action="DangNhap" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Đã có tài khoản? Đăng nhập
+                </a>
             </div>
         </form>
     </div>
 </div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        $(document).ready(function () {
+            // Load danh sách tỉnh/thành phố từ Controller
+            $.ajax({
+                url: '@Url.Action("GetProvinces", "KhachHang")',
+                type: 'GET',
+                success: function (response) {
+                    if (response.error) {
+                        alert('Không thể tải danh sách tỉnh/thành phố: ' + response.message);
+                        return;
+                    }
+
+                    $('#province').empty().append('<option value="">-- Chọn Tỉnh/TP --</option>');
+                    response.forEach(p => {
+                        $('#province').append(`<option value="${p.provinceID}">${p.provinceName}</option>`);
+                    });
+
+                    // ✅ Nếu đang edit và có ProvinceId, chọn lại
+                    var selectedProvinceId = '@Model?.ProvinceId';
+                    if (selectedProvinceId) {
+                        $('#province').val(selectedProvinceId).trigger('change');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert('Không thể tải danh sách tỉnh/thành phố. Vui lòng thử lại sau!');
+                    console.error('Error:', error);
+                }
+            });
+
+            // Khi chọn tỉnh/thành phố
+            $('#province').on('change', function () {
+                const provinceId = $(this).val();
+                $('#district').prop('disabled', true).empty().append('<option value="">-- Chọn Quận/Huyện --</option>');
+                $('#ward').prop('disabled', true).empty().append('<option value="">-- Chọn Phường/Xã --</option>');
+
+                if (!provinceId) return;
+
+                $.ajax({
+                    url: '@Url.Action("GetDistricts", "KhachHang")',
+                    type: 'GET',
+                    data: { provinceId: provinceId },
+                    success: function (response) {
+                        if (response && response.length > 0) {
+                            $('#district').prop('disabled', false);
+                            response.forEach(d => {
+                                $('#district').append(`<option value="${d.districtID}">${d.districtName}</option>`);
+                            });
+
+                            //  Nếu đang edit và có DistrictId, chọn lại
+                            var selectedDistrictId = '@Model?.DistrictId';
+                            if (selectedDistrictId) {
+                                $('#district').val(selectedDistrictId).trigger('change');
+                            }
+                        }
+                    },
+                    error: function () {
+                        alert('Không thể tải danh sách quận/huyện!');
+                    }
+                });
+            });
+
+            // Khi chọn quận/huyện
+            $('#district').on('change', function () {
+                const districtId = $(this).val();
+                $('#ward').prop('disabled', true).empty().append('<option value="">-- Chọn Phường/Xã --</option>');
+
+                if (!districtId) return;
+
+                $.ajax({
+                    url: '@Url.Action("GetWards", "KhachHang")',
+                    type: 'GET',
+                    data: { districtId: districtId },
+                    success: function (response) {
+                        if (response && response.length > 0) {
+                            $('#ward').prop('disabled', false);
+                            response.forEach(w => {
+                                $('#ward').append(`<option value="${w.wardCode}">${w.wardName}</option>`);
+                            });
+
+                            // ✅ Nếu đang edit và có WardCode, chọn lại
+                            var selectedWardCode = '@Model?.WardCode';
+                            if (selectedWardCode) {
+                                $('#ward').val(selectedWardCode);
+                            }
+                        }
+                    },
+                    error: function () {
+                        alert('Không thể tải danh sách phường/xã!');
+                    }
+                });
+            });
+        });
+    </script>
 }
