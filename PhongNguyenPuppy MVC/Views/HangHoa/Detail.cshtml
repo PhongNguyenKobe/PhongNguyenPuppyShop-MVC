@@ -244,6 +244,30 @@
     <script>
         (function($) {
             $(document).ready(function() {
+                // Xử lý tăng/giảm số lượng
+                $('.btn-minus').click(function(e) {
+                    e.preventDefault();
+                    var $input = $(this).closest('.input-group').find('input[name="quantity"]');
+                    var value = parseInt($input.val());
+                    if (value > 1) {
+                        $input.val(value - 1);
+                    }
+                });
+
+                $('.btn-plus').click(function(e) {
+                    e.preventDefault();
+                    var $input = $(this).closest('.input-group').find('input[name="quantity"]');
+                    var value = parseInt($input.val());
+                    $input.val(value + 1);
+                });
+
+                // Đảm bảo chỉ nhập số
+                $('input[name="quantity"]').on('input', function() {
+                    var value = parseInt($(this).val());
+                    if (isNaN(value) || value < 1) {
+                        $(this).val(1);
+                    }
+                });
                 if (typeof $.fn.owlCarousel === 'undefined') {
                     var owlCSS = document.createElement('link');
                     owlCSS.rel = 'stylesheet';
