@@ -91,7 +91,7 @@
 	<link href="~/css/style.css" rel="stylesheet">
 	@RenderSection("Styles", required: false)
 
-	@* ✅ Schema.org Structured Data *@
+	@* Schema.org Structured Data *@
 	<script type="application/ld+json">
 		{
 			"@@context": "https://schema.org",
@@ -354,6 +354,128 @@
 
 				return false;
 			});
+		});
+	</script>
+	<script>
+		$(document).ready(function() {
+			// ===== AJAX ADD TO CART - GLOBAL =====
+			$(document).on('click', '.btn-add-to-cart-ajax', function(e) {
+				e.preventDefault();
+
+				var $btn = $(this);
+				var productId = $btn.data('product-id');
+				var productName = $btn.data('product-name');
+				var originalHtml = $btn.html();
+
+				// Disable button và hiển thị loading
+				$btn.prop('disabled', true)
+					.html('<i class="fa fa-spinner fa-spin me-2"></i>Đang thêm...');
+
+				$.ajax({
+					url: '/Cart/AddToCartAjax',
+					type: 'POST',
+					data: {
+						id: productId,
+						quantity: 1
+					},
+					success: function(response) {
+						if (response.success) {
+							//  Hiển thị toast thành công
+							showCartToast('success', response.message || `Đã thêm "${productName}" vào giỏ hàng`);
+
+							//  Cập nhật số lượng giỏ hàng
+							updateCartBadge(response.totalQuantity);
+
+							//  RELOAD CART DROPDOWN - QUAN TRỌNG
+							reloadCartDropdown();
+						} else {
+							showCartToast('error', response.message || 'Không thể thêm sản phẩm');
+						}
+					},
+					error: function(xhr, status, error) {
+						console.error('AJAX Error:', error);
+						showCartToast('error', 'Có lỗi xảy ra. Vui lòng thử lại!');
+					},
+					complete: function() {
+						// Enable lại button sau 500ms
+						setTimeout(function() {
+							$btn.prop('disabled', false).html(originalHtml);
+						}, 500);
+					}
+				});
+			});
+
+			// ===== HÀM HIỂN THỊ TOAST =====
+			function showCartToast(type, message) {
+				var icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+				var bgColor = type === 'success' ? '#28a745' : '#dc3545';
+
+				var $toast = $('<div class="cart-toast">')
+					.html(`<i class="fa ${icon} me-2"></i>${message}`)
+					.css({
+						position: 'fixed',
+						top: '100px',
+						right: '-400px',
+						background: bgColor,
+						color: 'white',
+						padding: '15px 25px',
+						borderRadius: '8px',
+						boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+						zIndex: 99999,
+						fontSize: '15px',
+						fontWeight: '500',
+						minWidth: '300px',
+						maxWidth: '450px',
+						display: 'flex',
+						alignItems: 'center',
+						transition: 'right 0.4s ease'
+					});
+
+				$('body').append($toast);
+
+				// Slide in
+				setTimeout(function() {
+					$toast.css('right', '20px');
+				}, 10);
+
+				// Slide out after 3s
+				setTimeout(function() {
+					$toast.css('right', '-400px');
+					setTimeout(function() {
+						$toast.remove();
+					}, 400);
+				}, 3000);
+			}
+
+			// ===== CẬP NHẬT SỐ LƯỢNG GIỎ HÀNG =====
+			function updateCartBadge(quantity) {
+				var $badge = $('.fa-shopping-bag').next('.position-absolute');
+				if ($badge.length > 0) {
+					$badge.text(quantity);
+
+					// Animation bounce
+					$badge.addClass('cart-badge-bounce');
+					setTimeout(function() {
+						$badge.removeClass('cart-badge-bounce');
+					}, 600);
+				}
+			}
+
+			// ===== RELOAD CART DROPDOWN - FIX CHÍNH =====
+			function reloadCartDropdown() {
+				$.ajax({
+					url: '/Cart/GetCartDropdown',
+					type: 'GET',
+					success: function(html) {
+						// Thay thế toàn bộ cart dropdown container
+						$('.cart-dropdown-container').replaceWith(html);
+						console.log('✅ Cart dropdown đã được reload');
+					},
+					error: function(xhr, status, error) {
+						console.error('❌ Không thể reload cart dropdown:', error);
+					}
+				});
+			}
 		});
 	</script>
 </body>

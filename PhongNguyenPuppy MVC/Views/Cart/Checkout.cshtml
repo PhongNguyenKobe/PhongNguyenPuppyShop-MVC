@@ -512,49 +512,99 @@
 				}
 			});
 
-			// 4. Checkbox "Giống thông tin khách hàng"
-			$('#GiongKhachHang').on('change', function () {
-				const isChecked = $(this).prop('checked');
-				$(this).val(isChecked ? 'true' : 'false');
+					// 4. Checkbox "Giống thông tin khách hàng"
+		$('#GiongKhachHang').on('change', function () {
+			const isChecked = $(this).prop('checked');
+			$(this).val(isChecked ? 'true' : 'false');
 
-				// console.log('Checkbox "Giống thông tin khách hàng" changed:', isChecked);
+			if (isChecked) {
+				// Kiểm tra thông tin khách hàng có đầy đủ không
+				if (!customerInfo.provinceId || !customerInfo.districtId || !customerInfo.wardCode) {
+					alert('Tài khoản của bạn chưa có thông tin địa chỉ chi tiết.\n\n' +
+						'Vui lòng:\n' +
+						'1. Cập nhật thông tin tại trang "Thông tin cá nhân", hoặc\n' +
+						'2. Bỏ chọn "Giống thông tin khách hàng" để nhập địa chỉ mới.');
 
-				if (isChecked) {
-					// Kiểm tra thông tin khách hàng có đầy đủ không
-					if (!customerInfo.provinceId || !customerInfo.districtId || !customerInfo.wardCode) {
-						alert('Tài khoản của bạn chưa có thông tin địa chỉ chi tiết.\n\n' +
-							'Vui lòng:\n' +
-							'1. Cập nhật thông tin tại trang "Thông tin cá nhân", hoặc\n' +
-							'2. Bỏ chọn "Giống thông tin khách hàng" để nhập địa chỉ mới.');
-
-						$(this).prop('checked', false).val('false');
-						return;
-					}
-
-					// Điền thông tin và tính phí ship
-					fillCustomerInfo(function() {
-						// Callback sau khi load xong tất cả dropdowns
-						// console.log('Starting shipping calculation...');
-						calculateShipping(
-							customerInfo.districtId,
-							customerInfo.wardCode,
-							null,
-							// function(response) {
-							// 	console.log('Shipping calculated successfully:', response);
-							// },
-							function (error) {
-								// console.warn('Shipping calculation failed, using default:', error);
-								applyDefaultShipping();
-							}
-						);
-					});
-
-				} else {
-					// Reset form về trạng thái nhập mới
-					// console.log('Resetting form...');
-					resetDeliveryForm();
+					$(this).prop('checked', false).val('false');
+					return;
 				}
-			});
+
+				//FIX: Điền thông tin KHÔNG set disabled/readonly
+				fillCustomerInfoWithoutDisable(function() {
+					calculateShipping(
+						customerInfo.districtId,
+						customerInfo.wardCode,
+						null,
+						function (error) {
+							applyDefaultShipping();
+						}
+					);
+				});
+
+			} else {
+				// Reset form về trạng thái nhập mới
+				resetDeliveryForm();
+			}
+		});
+
+		// Điền thông tin KHÔNG disable/readonly
+		function fillCustomerInfoWithoutDisable(callback) {
+			// Điền thông tin cơ bản KHÔNG set readonly - CHỈ hiển thị
+			$('input[name="HoTen"]').val(customerInfo.name);
+			$('input[name="DienThoai"]').val(customerInfo.phone);
+			$('input[name="DiaChi"]').val(customerInfo.address);
+
+			// Chọn Province KHÔNG disable
+			if (customerInfo.provinceId) {
+				$('#provinceSelect').val(customerInfo.provinceId);
+
+				// Load Districts
+				$.get('/Cart/GetDistricts', { provinceId: customerInfo.provinceId })
+					.done(function (districts) {
+						let districtOptions = '<option value="">-- Chọn Quận/Huyện --</option>';
+						districts.forEach(d => {
+							const selected = d.districtID == customerInfo.districtId ? 'selected' : '';
+							districtOptions += `<option value="${d.districtID}" ${selected}>${d.districtName}</option>`;
+						});
+
+						$('#districtSelect')
+							.html(districtOptions)
+							.val(customerInfo.districtId)
+							.prop('disabled', false);
+
+						// Load Wards
+						if (customerInfo.districtId) {
+							$.get('/Cart/GetWards', { districtId: customerInfo.districtId })
+								.done(function (wards) {
+									let wardOptions = '<option value="">-- Chọn Phường/Xã --</option>';
+									wards.forEach(w => {
+										const selected = w.wardCode == customerInfo.wardCode ? 'selected' : '';
+										wardOptions += `<option value="${w.wardCode}" ${selected}>${w.wardName}</option>`;
+									});
+
+									$('#wardSelect')
+										.html(wardOptions)
+										.val(customerInfo.wardCode)
+										.prop('disabled', false);
+
+									if (callback) callback();
+								})
+								.fail(function () {
+									alert('Không thể tải dữ liệu Phường/Xã');
+									if (callback) callback();
+								});
+						} else {
+							if (callback) callback();
+						}
+					})
+					.fail(function () {
+						alert('Không thể tải dữ liệu Quận/Huyện');
+						if (callback) callback();
+					});
+			} else {
+				if (callback) callback();
+			}
+		}
 
 			// 5. Áp dụng mã giảm giá
 			$('#ApDungMa').click(function () {
@@ -605,88 +655,83 @@
 				});
 			});
 
-			// 6. Validation khi submit form
-			$('form').on('submit', function (e) {
-				const isGiongKhachHang = $('#GiongKhachHang').prop('checked');
+					// 6. Validation khi submit form
+		$('form').on('submit', function (e) {
+			const isGiongKhachHang = $('#GiongKhachHang').prop('checked');
 
-				// console.log('Submitting form - Use customer info:', isGiongKhachHang);
-
-				// Nếu dùng thông tin khách hàng → Không cần validate
-				if (isGiongKhachHang) {
-					// Kiểm tra lại thông tin có đầy đủ không
-					if (!customerInfo.districtId || !customerInfo.wardCode) {
-						e.preventDefault();
-						alert('Thông tin địa chỉ không đầy đủ. Vui lòng cập nhật thông tin tài khoản.');
-						$('#GiongKhachHang').prop('checked', false).trigger('change');
-						return false;
-					}
-					// Enable lại các field disabled trước khi submit
-					$('#provinceSelect, #districtSelect, #wardSelect').prop('disabled', false);
-					return true;
-				}
-
-				// Nếu KHÔNG dùng thông tin khách hàng → Validate đầy đủ
-				const hoTen = $('input[name="HoTen"]').val().trim();
-				const dienThoai = $('input[name="DienThoai"]').val().trim();
-				const diaChi = $('input[name="DiaChi"]').val().trim();
-				const provinceId = $('#provinceSelect').val();
-				const districtId = $('#districtSelect').val();
-				const wardCode = $('#wardSelect').val();
-
-				// Validate từng trường
-				if (!hoTen) {
+			// Nếu dùng thông tin khách hàng → Chỉ validate có đủ thông tin
+			if (isGiongKhachHang) {
+				if (!customerInfo.districtId || !customerInfo.wardCode) {
 					e.preventDefault();
-					alert('Vui lòng nhập tên người nhận hàng!');
-					$('input[name="HoTen"]').focus();
+					alert('Thông tin địa chỉ không đầy đủ. Vui lòng cập nhật thông tin tài khoản.');
+					$('#GiongKhachHang').prop('checked', false).trigger('change');
 					return false;
 				}
 
-				if (!dienThoai) {
-					e.preventDefault();
-					alert('Vui lòng nhập số điện thoại!');
-					$('input[name="DienThoai"]').focus();
-					return false;
-				}
-
-				// Validate định dạng số điện thoại (10 số)
-				const phonePattern = /^0\d{9}$/;
-				if (!phonePattern.test(dienThoai)) {
-					e.preventDefault();
-					alert('Số điện thoại không hợp lệ! Vui lòng nhập 10 chữ số bắt đầu bằng 0.');
-					$('input[name="DienThoai"]').focus();
-					return false;
-				}
-
-				if (!provinceId) {
-					e.preventDefault();
-					alert('Vui lòng chọn Tỉnh/Thành phố!');
-					$('#provinceSelect').focus();
-					return false;
-				}
-
-				if (!districtId) {
-					e.preventDefault();
-					alert('Vui lòng chọn Quận/Huyện!');
-					$('#districtSelect').focus();
-					return false;
-				}
-
-				if (!wardCode) {
-					e.preventDefault();
-					alert('Vui lòng chọn Phường/Xã!');
-					$('#wardSelect').focus();
-					return false;
-				}
-
-				if (!diaChi) {
-					e.preventDefault();
-					alert('Vui lòng nhập địa chỉ chi tiết (số nhà, tên đường)!');
-					$('input[name="DiaChi"]').focus();
-					return false;
-				}
-
+				// KHÔNG cần enable vì đã không disable từ đầu
 				return true;
-			});
+			}
+
+			// Nếu KHÔNG dùng thông tin khách hàng → Validate đầy đủ
+			const hoTen = $('input[name="HoTen"]').val().trim();
+			const dienThoai = $('input[name="DienThoai"]').val().trim();
+			const diaChi = $('input[name="DiaChi"]').val().trim();
+			const provinceId = $('#provinceSelect').val();
+			const districtId = $('#districtSelect').val();
+			const wardCode = $('#wardSelect').val();
+
+			if (!hoTen) {
+				e.preventDefault();
+				alert('Vui lòng nhập tên người nhận hàng!');
+				$('input[name="HoTen"]').focus();
+				return false;
+			}
+
+			if (!dienThoai) {
+				e.preventDefault();
+				alert('Vui lòng nhập số điện thoại!');
+				$('input[name="DienThoai"]').focus();
+				return false;
+			}
+
+			const phonePattern = /^0\d{9}$/;
+			if (!phonePattern.test(dienThoai)) {
+				e.preventDefault();
+				alert('Số điện thoại không hợp lệ! Vui lòng nhập 10 chữ số bắt đầu bằng 0.');
+				$('input[name="DienThoai"]').focus();
+				return false;
+			}
+
+			if (!provinceId) {
+				e.preventDefault();
+				alert('Vui lòng chọn Tỉnh/Thành phố!');
+				$('#provinceSelect').focus();
+				return false;
+			}
+
+			if (!districtId) {
+				e.preventDefault();
+				alert('Vui lòng chọn Quận/Huyện!');
+				$('#districtSelect').focus();
+				return false;
+			}
+
+			if (!wardCode) {
+				e.preventDefault();
+				alert('Vui lòng chọn Phường/Xã!');
+				$('#wardSelect').focus();
+				return false;
+			}
+
+			if (!diaChi) {
+				e.preventDefault();
+				alert('Vui lòng nhập địa chỉ chi tiết (số nhà, tên đường)!');
+				$('input[name="DiaChi"]').focus();
+				return false;
+			}
+
+			return true;
+		});
 
 			// 7. Track button submit được click (cho VNPay)
 			$('input[type="submit"]').on('click', function () {

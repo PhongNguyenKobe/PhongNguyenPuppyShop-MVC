@@ -12,8 +12,8 @@ namespace PhongNguyenPuppy_MVC.ViewComponents
             return View("CartPanel", new CartModel
             {
                 Quantity = cart.Sum(p => p.SoLuong),
-                Total = cart.Sum(p => p.ThanhTien)
-
+                Total = cart.Sum(p => p.ThanhTien),
+                Items = cart 
             });
         }
     }

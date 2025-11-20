@@ -16,8 +16,12 @@
 				<p>@item.MoTaNgan</p>
 				<div class="d-flex justify-content-between flex-lg-wrap">
 					<p class="price text-dark fs-5 fw-bold mb-0">@item.DonGia.ToString("N0") VNĐ</p>
-
-					<a asp-action="AddToCart" asp-controller="Cart" asp-route-id="@item.MaHh" class="btn border border-secondary rounded-pill px-3 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Cho vào giỏ </a>
+					<button type="button"
+							class="btn border border-secondary rounded-pill px-3 text-primary btn-add-to-cart-ajax"
+							data-product-id="@item.MaHh"
+							data-product-name="@item.TenHh">
+						<i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm vào giỏ
+					</button>
 				</div>
 			</div>
 		</div>
