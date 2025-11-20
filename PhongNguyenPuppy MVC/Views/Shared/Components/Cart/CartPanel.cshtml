@@ -1,8 +1,57 @@
 ﻿@model PhongNguyenPuppy_MVC.ViewModels.CartModel
-<a asp-controller="Cart" asp-action="Index" class="position-relative me-4 my-auto">
-    <i class="fa fa-shopping-bag fa-2x"></i>
-    <span class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
-          style="bottom: -3px; right: -5px; height: 16px; min-width: 16px; font-size: 0.7rem;">
-        @Model.Quantity
-    </span>
-</a>
+
+<div class="position-relative cart-dropdown-container">
+    <a asp-controller="Cart" asp-action="Index" class="position-relative me-4 my-auto">
+        <i class="fa fa-shopping-bag fa-2x"></i>
+        <span class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
+              style="bottom: -3px; right: -5px; height: 16px; min-width: 16px; font-size: 0.7rem;">
+            @Model.Quantity
+        </span>
+    </a>
+
+    <!-- Dropdown hiển thị khi hover -->
+    <div class="cart-dropdown shadow-lg">
+        @if (Model.Items != null && Model.Items.Any())
+        {
+            <div class="cart-dropdown-header">
+                <h6 class="mb-0">Giỏ hàng của bạn (@Model.Quantity sản phẩm)</h6>
+            </div>
+            <div class="cart-dropdown-body">
+                @foreach (var item in Model.Items)
+                {
+                    <div class="cart-item-preview">
+                        <img src="~/Hinh/HangHoa/@item.Hinh" alt="@item.TenHH" class="cart-item-image">
+                        <div class="cart-item-info">
+                            <p class="cart-item-name">@item.TenHH</p>
+                            <p class="cart-item-quantity">
+                                <span class="text-muted">SL:</span> @item.SoLuong × <span class="text-primary">@item.DonGia.ToString("N0") ₫</span>
+                            </p>
+                        </div>
+                        <div class="cart-item-price">
+                            <strong>@item.ThanhTien.ToString("N0") ₫</strong>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="cart-dropdown-footer">
+                <div class="d-flex justify-content-between mb-3">
+                    <strong>Tổng cộng:</strong>
+                    <strong class="text-primary">@Model.Total.ToString("N0") ₫</strong>
+                </div>
+                <a asp-controller="Cart" asp-action="Index" class="btn btn-primary w-100">
+                    <i class="fa fa-shopping-cart me-2"></i>Xem giỏ hàng
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="cart-dropdown-empty">
+                <i class="fa fa-shopping-bag fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Giỏ hàng trống</p>
+                <a asp-controller="HangHoa" asp-action="Index" class="btn btn-primary btn-sm">
+                    Tiếp tục mua sắm
+                </a>
+            </div>
+        }
+    </div>
+</div>
