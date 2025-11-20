@@ -143,7 +143,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             if (item == null)
             {
                 var hanghoa = db.HangHoas.SingleOrDefault(p => p.MaHh == id);
-                if (hanghoa == null) 
+                if (hanghoa == null)
                 {
                     TempData["Message"] = "Không tìm thấy hàng hóa mà bạn tìm";
                     return RedirectToAction("/404");
@@ -280,7 +280,6 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 }
             }
 
-            // Phần còn lại giữ nguyên...
             double giamGia = 0;
             if (!string.IsNullOrEmpty(model.MaGiamGia))
             {
@@ -304,6 +303,16 @@ namespace PhongNguyenPuppy_MVC.Controllers
             }
 
             int tongCong = tongTienHang - (int)giamGia + phiVanChuyen;
+
+            // LƯU THÔNG TIN CHECKOUT VÀO SESSION (cho VNPay/PayPal)
+            HttpContext.Session.SetString("CheckoutHoTen", model.HoTen ?? "");
+            HttpContext.Session.SetString("CheckoutDienThoai", model.DienThoai ?? "");
+            HttpContext.Session.SetString("CheckoutDiaChi", model.DiaChi ?? "");
+            HttpContext.Session.SetString("CheckoutGhiChu", model.GhiChu ?? "");
+            HttpContext.Session.SetInt32("CheckoutProvinceId", model.ProvinceId);
+            HttpContext.Session.SetInt32("CheckoutDistrictId", model.DistrictId);
+            HttpContext.Session.SetString("CheckoutWardCode", model.WardCode ?? "");
+            HttpContext.Session.SetString("CheckoutGiongKhachHang", model.GiongKhachHang.ToString());
 
             if (payment == "Thanh toán VNPay")
             {
@@ -332,12 +341,17 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
                 string diaChiDayDu = model.DiaChi ?? khachHang?.DiaChi ?? "";
 
+                //RÚT GỌN NỘI DUNG GHI CHÚ
+                string ghiChuFinal = string.IsNullOrWhiteSpace(model.GhiChu)
+                    ? "Thanh toán khi nhận hàng (COD)"
+                    : $"Thanh toán khi nhận hàng (COD) - {model.GhiChu}";
+
                 var hoadon = new HoaDon
                 {
                     MaKh = customerId,
                     DiaChi = diaChiDayDu,
-                    ProvinceId = model.ProvinceId,     // Lưu từ form checkout
-                    DistrictId = model.DistrictId,     // Lưu từ form checkout
+                    ProvinceId = model.ProvinceId,
+                    DistrictId = model.DistrictId,
                     WardCode = model.WardCode,
                     DienThoai = model.DienThoai ?? khachHang?.DienThoai,
                     HoTen = model.HoTen ?? khachHang?.HoTen,
@@ -345,7 +359,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     CachThanhToan = "Thanh toán khi nhận hàng",
                     CachVanChuyen = "Giao hàng tận nơi",
                     MaTrangThai = 0,
-                    GhiChu = model.GhiChu,
+                    GhiChu = ghiChuFinal,
                     PhiVanChuyen = phiVanChuyen,
                     GiamGia = (float)giamGia
                 };
@@ -480,20 +494,34 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 var giamGiaStr = HttpContext.Session.GetString("GiamGia");
                 var giamGia = string.IsNullOrEmpty(giamGiaStr) ? 0 : double.Parse(giamGiaStr);
 
+                // LẤY THÔNG TIN TỪ SESSION
+                var hoTen = HttpContext.Session.GetString("CheckoutHoTen") ?? "";
+                var dienThoai = HttpContext.Session.GetString("CheckoutDienThoai") ?? "";
+                var diaChi = HttpContext.Session.GetString("CheckoutDiaChi") ?? "";
+                var ghiChu = HttpContext.Session.GetString("CheckoutGhiChu") ?? "";
+                var provinceId = HttpContext.Session.GetInt32("CheckoutProvinceId") ?? 0;
+                var districtId = HttpContext.Session.GetInt32("CheckoutDistrictId") ?? 0;
+                var wardCode = HttpContext.Session.GetString("CheckoutWardCode") ?? "";
+
+                // XỬ LÝ GHI CHÚ
+                string ghiChuFinal = string.IsNullOrWhiteSpace(ghiChu)
+                    ? "Thanh toán thành công qua PayPal"
+                    : $"Thanh toán thành công qua PayPal - {ghiChu}";
+
                 var hoadon = new HoaDon
                 {
                     MaKh = customerId,
-                    DiaChi = khachHang?.DiaChi,
-                    ProvinceId = khachHang?.ProvinceId,     
-                    DistrictId = khachHang?.DistrictId,     
-                    WardCode = khachHang?.WardCode,
-                    DienThoai = khachHang?.DienThoai,
-                    HoTen = khachHang?.HoTen,
+                    DiaChi = !string.IsNullOrWhiteSpace(diaChi) ? diaChi : khachHang?.DiaChi,
+                    ProvinceId = provinceId > 0 ? provinceId : khachHang?.ProvinceId,
+                    DistrictId = districtId > 0 ? districtId : khachHang?.DistrictId,
+                    WardCode = !string.IsNullOrWhiteSpace(wardCode) ? wardCode : khachHang?.WardCode,
+                    DienThoai = !string.IsNullOrWhiteSpace(dienThoai) ? dienThoai : khachHang?.DienThoai,
+                    HoTen = !string.IsNullOrWhiteSpace(hoTen) ? hoTen : khachHang?.HoTen,
                     NgayDat = DateTime.Now,
                     CachThanhToan = "Thanh toán qua Paypal",
                     CachVanChuyen = "Giao hàng tận nơi",
                     MaTrangThai = 0,
-                    GhiChu = "Thanh toán thành công qua Paypal",
+                    GhiChu = ghiChuFinal,
                     PhiVanChuyen = phiVanChuyen,
                     GiamGia = (float)giamGia
                 };
@@ -521,6 +549,18 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
                 HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
 
+                // XÓA THÔNG TIN CHECKOUT TRONG SESSION
+                HttpContext.Session.Remove("CheckoutHoTen");
+                HttpContext.Session.Remove("CheckoutDienThoai");
+                HttpContext.Session.Remove("CheckoutDiaChi");
+                HttpContext.Session.Remove("CheckoutGhiChu");
+                HttpContext.Session.Remove("CheckoutProvinceId");
+                HttpContext.Session.Remove("CheckoutDistrictId");
+                HttpContext.Session.Remove("CheckoutWardCode");
+                HttpContext.Session.Remove("PhiVanChuyen");
+                HttpContext.Session.Remove("GiamGia");
+                HttpContext.Session.Remove("MaGiamGia");
+
                 return Ok(new
                 {
                     status = "success",
@@ -533,7 +573,6 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 return BadRequest(new { message = "Thanh toán thất bại: " + ex.GetBaseException().Message });
             }
         }
-
         #endregion
 
 
@@ -543,7 +582,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             return View();
         }
 
-        [Authorize]
+        #region VNPay callback
         [Authorize]
         public IActionResult PaymentCallBack()
         {
@@ -558,31 +597,45 @@ namespace PhongNguyenPuppy_MVC.Controllers
             // Lấy thông tin từ giỏ hàng và session
             var gioHang = Cart;
             int tongTienHang = (int)gioHang.Sum(p => p.ThanhTien);
-            var phiVanChuyen = HttpContext.Session.GetInt32("PhiVanChuyen") ?? 30000; // Lấy từ session
+            var phiVanChuyen = HttpContext.Session.GetInt32("PhiVanChuyen") ?? 30000;
             var giamGiaStr = HttpContext.Session.GetString("GiamGia");
-            var giamGia = string.IsNullOrEmpty(giamGiaStr) ? 0 : double.Parse(giamGiaStr); // Lấy từ session
+            var giamGia = string.IsNullOrEmpty(giamGiaStr) ? 0 : double.Parse(giamGiaStr);
+
+            // LẤY THÔNG TIN TỪ SESSION
+            var hoTen = HttpContext.Session.GetString("CheckoutHoTen") ?? "";
+            var dienThoai = HttpContext.Session.GetString("CheckoutDienThoai") ?? "";
+            var diaChi = HttpContext.Session.GetString("CheckoutDiaChi") ?? "";
+            var ghiChu = HttpContext.Session.GetString("CheckoutGhiChu") ?? "";
+            var provinceId = HttpContext.Session.GetInt32("CheckoutProvinceId") ?? 0;
+            var districtId = HttpContext.Session.GetInt32("CheckoutDistrictId") ?? 0;
+            var wardCode = HttpContext.Session.GetString("CheckoutWardCode") ?? "";
 
             // Lấy thông tin khách hàng
             var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
             var khachHang = db.KhachHangs.SingleOrDefault(p => p.MaKh == customerId);
 
-            // Tạo hóa đơn (không dùng TongTien)
+            // XỬ LÝ GHI CHÚ
+            string ghiChuFinal = string.IsNullOrWhiteSpace(ghiChu)
+                ? "Thanh toán thành công qua VNPay"
+                : $"Thanh toán thành công qua VNPay - Ghi chú: {ghiChu}";
+
+            // Tạo hóa đơn
             var hoadon = new HoaDon
             {
                 MaKh = customerId,
-                DiaChi = khachHang?.DiaChi ?? "Địa chỉ mặc định",
-                ProvinceId = khachHang?.ProvinceId,
-                DistrictId = khachHang?.DistrictId,
-                WardCode = khachHang?.WardCode,
-                DienThoai = khachHang?.DienThoai ?? "SĐT mặc định",
-                HoTen = khachHang?.HoTen ?? "Tên KH mặc định",
+                DiaChi = !string.IsNullOrWhiteSpace(diaChi) ? diaChi : (khachHang?.DiaChi ?? "Địa chỉ mặc định"),
+                ProvinceId = provinceId > 0 ? provinceId : khachHang?.ProvinceId,
+                DistrictId = districtId > 0 ? districtId : khachHang?.DistrictId,
+                WardCode = !string.IsNullOrWhiteSpace(wardCode) ? wardCode : khachHang?.WardCode,
+                DienThoai = !string.IsNullOrWhiteSpace(dienThoai) ? dienThoai : (khachHang?.DienThoai ?? "SĐT mặc định"),
+                HoTen = !string.IsNullOrWhiteSpace(hoTen) ? hoTen : (khachHang?.HoTen ?? "Tên KH mặc định"),
                 NgayDat = DateTime.Now,
                 CachThanhToan = "Thanh toán VNPay",
                 CachVanChuyen = "Giao hàng tận nơi",
                 MaTrangThai = 0,
-                GhiChu = "Đơn hàng thanh toán qua VNPay",
-                PhiVanChuyen = phiVanChuyen, // Lưu phí vận chuyển từ session
-                GiamGia = giamGia // Lưu giảm giá từ session
+                GhiChu = ghiChuFinal,
+                PhiVanChuyen = phiVanChuyen,
+                GiamGia = (float)giamGia
             };
 
             using var transaction = db.Database.BeginTransaction();
@@ -600,7 +653,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                         SoLuong = item.SoLuong,
                         DonGia = item.DonGia,
                         MaHh = item.MaHh,
-                        GiamGia = 0, // Giảm giá chi tiết vẫn là 0
+                        GiamGia = 0,
                     });
                 }
 
@@ -609,6 +662,19 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 transaction.Commit();
 
                 HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
+
+                //XÓA THÔNG TIN CHECKOUT TRONG SESSION
+                HttpContext.Session.Remove("CheckoutHoTen");
+                HttpContext.Session.Remove("CheckoutDienThoai");
+                HttpContext.Session.Remove("CheckoutDiaChi");
+                HttpContext.Session.Remove("CheckoutGhiChu");
+                HttpContext.Session.Remove("CheckoutProvinceId");
+                HttpContext.Session.Remove("CheckoutDistrictId");
+                HttpContext.Session.Remove("CheckoutWardCode");
+                HttpContext.Session.Remove("PhiVanChuyen");
+                HttpContext.Session.Remove("GiamGia");
+                HttpContext.Session.Remove("MaGiamGia");
+
                 ViewBag.PaymentMethod = "VNPay";
                 ViewBag.MaHd = hoadon.MaHd;
                 ViewBag.VnPayCode = response.VnPayResponseCode;
@@ -620,6 +686,71 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 TempData["Message"] = "Đặt hàng không thành công sau khi thanh toán. Vui lòng liên hệ hỗ trợ.";
                 return RedirectToAction("PaymentFail");
             }
+        }
+        #endregion
+
+        [HttpPost]
+        public IActionResult AddToCartAjax(int id, int quantity = 1)
+        {
+            try
+            {
+                var giohang = Cart;
+                var item = giohang.SingleOrDefault(p => p.MaHh == id);
+
+                if (item == null)
+                {
+                    var hanghoa = db.HangHoas.SingleOrDefault(p => p.MaHh == id);
+                    if (hanghoa == null)
+                    {
+                        return Json(new { success = false, message = "Không tìm thấy sản phẩm" });
+                    }
+
+                    item = new CartItem
+                    {
+                        MaHh = hanghoa.MaHh,
+                        TenHH = hanghoa.TenHh,
+                        DonGia = hanghoa.DonGia ?? 0,
+                        Hinh = hanghoa.Hinh ?? string.Empty,
+                        SoLuong = quantity
+                    };
+                    giohang.Add(item);
+                }
+                else
+                {
+                    item.SoLuong += quantity;
+                }
+
+                HttpContext.Session.Set(MySetting.CART_KEY, giohang);
+
+                var totalQuantity = giohang.Sum(p => p.SoLuong);
+                var totalAmount = giohang.Sum(p => p.ThanhTien);
+
+                return Json(new
+                {
+                    success = true,
+                    message = $"Đã thêm {item.TenHH} vào giỏ hàng",
+                    totalQuantity = totalQuantity,
+                    totalAmount = totalAmount,
+                    productName = item.TenHH
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+            }
+        }
+        [HttpGet]
+        public IActionResult GetCartDropdown() 
+        {
+            var cart = Cart;
+            var model = new CartModel
+            {
+                Quantity = cart.Sum(p => p.SoLuong),
+                Total = cart.Sum(p => p.ThanhTien),
+                Items = cart
+            };
+
+            return PartialView("~/Views/Shared/Components/Cart/CartPanel.cshtml", model);
         }
 
     }
