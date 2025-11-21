@@ -178,6 +178,12 @@ namespace PhongNguyenPuppy_MVC.Controllers
             return RedirectToAction("Index");
         }
 
+        public IActionResult RemoveAllCart()
+        {
+            HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
+            return RedirectToAction("Index");
+        }
+
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> Checkout()
@@ -740,7 +746,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             }
         }
         [HttpGet]
-        public IActionResult GetCartDropdown() 
+        public IActionResult GetCartDropdown()
         {
             var cart = Cart;
             var model = new CartModel

@@ -46,6 +46,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             return View(model);
         }
 
+        [Route("/dang-ky-nhan-tin")]
         public IActionResult Subscribe()
         {
             // THÊM PHẦN SEO Data cho trang Subscribe
@@ -56,7 +57,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 Description = "Đăng ký nhận bản tin để cập nhật sản phẩm mới, chương trình khuyến mãi và mẹo chăm sóc thú cưng từ PhongNguyen Puppy Shop.",
                 Keywords = "đăng ký nhận tin, newsletter, khuyến mãi chó, tin tức thú cưng",
                 ImageUrl = "/img/hero_1.png",
-                CanonicalUrl = $"{baseUrl}/Home/Subscribe",
+                CanonicalUrl = $"{baseUrl}/dang-ky-nhan-tin",
                 Type = "website"
             };
             return View();
