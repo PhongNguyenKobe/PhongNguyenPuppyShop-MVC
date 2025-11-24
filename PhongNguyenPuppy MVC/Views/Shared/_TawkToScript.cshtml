@@ -1,0 +1,37 @@
+﻿PhongNguyenPuppy MVC\Views\Shared\_TawkToScript.cshtml
+@using System.Security.Claims
+
+@{
+    var hoTen = User.Identity.IsAuthenticated ? User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value : null;
+    var email = User.Identity.IsAuthenticated ? User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value : null;
+}
+
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+
+    // Ẩn widget Tawk.to mặc định (chỉ mở khi click button)
+    Tawk_API.onLoad = function(){
+        Tawk_API.hideWidget();
+    };
+
+    @if (User.Identity.IsAuthenticated)
+    {
+            <text>
+            Tawk_API.visitor = {
+                name: '@hoTen',
+                email: '@email'
+            };
+            </text>
+    }
+
+    (function(){
+        var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+        s1.async=true;
+        s1.src='https://embed.tawk.to/6923e3e046b1451960bcd014/1jaq349vd';
+        s1.charset='UTF-8';
+        s1.setAttribute('crossorigin','*');
+        s0.parentNode.insertBefore(s1,s0);
+    })();
+</script>
+<!--End of Tawk.to Script-->

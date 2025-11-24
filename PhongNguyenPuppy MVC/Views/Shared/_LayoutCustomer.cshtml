@@ -318,13 +318,15 @@
 		});
 	</script>
 
-	<!-- Facebook Messenger Chat Widget -->
-	@await Html.PartialAsync("_FacebookMessengerCustom")
-
 	<!-- Back to Top -->
 	<a href="#" class="btn btn-primary border-3 border-primary rounded-circle back-to-top">
 		<i class="fa fa-arrow-up"></i>
 	</a>
+
+	<!-- Multi Chat Widget (Tawk.to + Facebook Messenger) -->
+	@await Html.PartialAsync("_ChatWidgetSwitcher")
+	<!-- Tawk.to Chat Widget -->
+	@await Html.PartialAsync("_TawkToScript")
 
 	<script>
 		$(document).ready(function() {
@@ -469,10 +471,10 @@
 					success: function(html) {
 						// Thay thế toàn bộ cart dropdown container
 						$('.cart-dropdown-container').replaceWith(html);
-						console.log('✅ Cart dropdown đã được reload');
+						console.log('Cart dropdown đã được reload');
 					},
 					error: function(xhr, status, error) {
-						console.error('❌ Không thể reload cart dropdown:', error);
+						console.error('Không thể reload cart dropdown:', error);
 					}
 				});
 			}

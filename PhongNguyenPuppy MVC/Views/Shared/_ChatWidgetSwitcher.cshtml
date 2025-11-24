@@ -1,0 +1,288 @@
+﻿@using Microsoft.Extensions.Options
+@inject IOptions<PhongNguyenPuppy_MVC.Helpers.FacebookChatSettings> FacebookSettings
+
+@{
+    var settings = FacebookSettings.Value;
+}
+
+<!-- Multi Chat Widget Container -->
+<div class="multi-chat-widget">
+    <!-- Main Toggle Button -->
+    <button class="chat-toggle-btn" id="chatToggleBtn" title="Liên hệ với chúng tôi">
+        <i class="fas fa-comments"></i>
+        <span class="chat-pulse-ring"></span>
+    </button>
+
+    <!-- Chat Options Dropdown -->
+    <div class="chat-options-menu" id="chatOptionsMenu">
+        <div class="chat-option" onclick="openTawkChat()">
+            <div class="chat-icon tawk-icon">
+                <i class="fas fa-headset"></i>
+            </div>
+            <div class="chat-info">
+                <div class="chat-title">Tawk.to Chat</div>
+                <div class="chat-subtitle">Live chat hỗ trợ</div>
+            </div>
+        </div>
+
+        @if (settings.Enabled && !string.IsNullOrEmpty(settings.PageId))
+        {
+            <div class="chat-option" onclick="openMessenger()">
+                <div class="chat-icon messenger-icon">
+                    <i class="fab fa-facebook-messenger"></i>
+                </div>
+                <div class="chat-info">
+                    <div class="chat-title">Messenger</div>
+                    <div class="chat-subtitle">Chat qua Facebook</div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .multi-chat-widget {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 10000;
+    }
+
+    /* Main Toggle Button */
+    .chat-toggle-btn {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: none;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-size: 26px;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.5);
+        position: relative;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .chat-toggle-btn:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.7);
+        }
+
+        .chat-toggle-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            transform: rotate(90deg);
+        }
+
+    .chat-pulse-ring {
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        border: 3px solid #667eea;
+        border-radius: 50%;
+        animation: chatPulse 2s ease-out infinite;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+    }
+
+    @@keyframes chatPulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        100% {
+            transform: scale(1.6);
+            opacity: 0;
+        }
+    }
+
+    /* Chat Options Menu */
+    .chat-options-menu {
+        position: absolute;
+        bottom: 75px;
+        right: 0;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        padding: 8px;
+        min-width: 280px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(10px) scale(0.95);
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+        .chat-options-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+    /* Chat Option Item */
+    .chat-option {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 4px;
+    }
+
+        .chat-option:last-child {
+            margin-bottom: 0;
+        }
+
+        .chat-option:hover {
+            background: #f8f9fa;
+            transform: translateX(-3px);
+        }
+
+    .chat-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        font-size: 20px;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .tawk-icon {
+        background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+    }
+
+    .messenger-icon {
+        background: linear-gradient(135deg, #0099FF, #A033FF);
+    }
+
+    .chat-info {
+        flex: 1;
+    }
+
+    .chat-title {
+        font-weight: 600;
+        font-size: 15px;
+        color: #2d3748;
+        margin-bottom: 2px;
+    }
+
+    .chat-subtitle {
+        font-size: 12px;
+        color: #718096;
+    }
+
+    /* Mobile Responsive */
+    @@media (max-width: 768px) {
+        .multi-chat-widget {
+            bottom: 15px;
+            right: 15px;
+        }
+
+        .chat-toggle-btn {
+            width: 55px;
+            height: 55px;
+            font-size: 24px;
+        }
+
+        .chat-options-menu {
+            min-width: 260px;
+            bottom: 70px;
+        }
+
+        .chat-option {
+            padding: 10px;
+        }
+
+        .chat-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+        }
+    }
+
+    /* Animation for popup */
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<script>
+    // Toggle Chat Menu
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('chatToggleBtn');
+        const optionsMenu = document.getElementById('chatOptionsMenu');
+
+        if (toggleBtn && optionsMenu) {
+            toggleBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleBtn.classList.toggle('active');
+                optionsMenu.classList.toggle('show');
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.multi-chat-widget')) {
+                    toggleBtn.classList.remove('active');
+                    optionsMenu.classList.remove('show');
+                }
+            });
+        }
+    });
+
+    // Open Tawk.to Chat
+    function openTawkChat() {
+        if (typeof Tawk_API !== 'undefined') {
+            Tawk_API.maximize();
+            closeMenu();
+        } else {
+            console.warn('Tawk.to chưa được load');
+            alert('Chat đang được tải, vui lòng thử lại sau giây lát');
+        }
+    }
+
+    // Open Facebook Messenger
+    function openMessenger() {
+        console.log('Opening Facebook Messenger...');
+
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const pageId = '@settings.PageId';
+
+        if (isMobile) {
+            window.open('https://m.me/' + pageId, '_blank');
+        } else {
+            const width = 450;
+            const height = 700;
+            const left = (screen.width / 2) - (width / 2);
+            const top = (screen.height / 2) - (height / 2);
+
+            window.open(
+                'https://m.me/' + pageId,
+                'messenger_popup',
+                `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
+            );
+        }
+
+        closeMenu();
+    }
+
+    function closeMenu() {
+        document.getElementById('chatToggleBtn').classList.remove('active');
+        document.getElementById('chatOptionsMenu').classList.remove('show');
+    }
+</script>
