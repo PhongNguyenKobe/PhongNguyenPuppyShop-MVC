@@ -11,7 +11,7 @@ using PhongNguyenPuppy_MVC.Helpers;
 using PhongNguyenPuppy_MVC.Models;
 using PhongNguyenPuppy_MVC.Services;
 using PhongNguyenPuppy_MVC.ViewModels;
-
+using PhongNguyenPuppy_MVC.ViewModels.EmailTemplates;
 
 namespace PhongNguyenPuppy_MVC.Controllers
 {
@@ -23,19 +23,22 @@ namespace PhongNguyenPuppy_MVC.Controllers
         private readonly MyEmailHelper _emailHelper;
         private readonly IGHNService _ghnService;
         private readonly IConfiguration _configuration;
+        private readonly IViewRenderService _viewRenderService;
         private const int PageSize = 10;
-        public KhachHangController(PhongNguyenPuppyContext context, IWebHostEnvironment env, MyEmailHelper emailHelper, IGHNService ghnService, IConfiguration configuration)
+        public KhachHangController(PhongNguyenPuppyContext context, IWebHostEnvironment env, MyEmailHelper emailHelper, IGHNService ghnService, IConfiguration configuration, IViewRenderService viewRenderService)
         {
             db = context;
             _env = env;
             _emailHelper = emailHelper;
             _ghnService = ghnService;
             _configuration = configuration;
+            _viewRenderService = viewRenderService;
         }
 
         private string GetAbsoluteUrl(string actionName, string controllerName, object routeValues = null)
         {
             string baseUrl = _configuration["AppSettings:BaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
+            baseUrl = baseUrl.TrimEnd('/');
             string relativePath = Url.Action(actionName, controllerName, routeValues)!;
             return $"{baseUrl}{relativePath}";
         }
@@ -133,45 +136,11 @@ namespace PhongNguyenPuppy_MVC.Controllers
             {
                 string verifyLink = GetAbsoluteUrl("XacThucEmail", "KhachHang", new { token = kh.ResetToken });
                 string subject = "Xác thực tài khoản - Phong Nguyen Puppy Shop";
-                string body = $@"
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta charset='utf-8'>
-                        <style>
-                            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; }}
-                            .header {{ background-color: #4CAF50; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }}
-                            .content {{ background-color: white; padding: 30px; margin-top: 20px; border-radius: 0 0 5px 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
-                            .button {{ display: inline-block; padding: 12px 30px; background-color: #4CAF50; color: white !important; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }}
-                            .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
-                            .link-box {{ background-color: #f0f0f0; padding: 10px; word-break: break-all; margin: 15px 0; border-radius: 3px; }}
-                        </style>
-                    </head>
-                    <body>
-                        <div class='container'>
-                            <div class='header'>
-                                <h1>🐶 Phong Nguyen Puppy Shop</h1>
-                            </div>
-                            <div class='content'>
-                                <h2>Chào mừng {kh.HoTen}!</h2>
-                                <p>Cảm ơn bạn đã đăng ký tài khoản tại <strong>Phong Nguyen Puppy Shop</strong>.</p>
-                                <p>Để hoàn tất đăng ký, vui lòng nhấn vào nút bên dưới để xác thực email của bạn:</p>
-                                <div style='text-align: center;'>
-                                    <a href='{verifyLink}' class='button'>Xác thực tài khoản</a>
-                                </div>
-                                <p>Hoặc copy link sau vào trình duyệt:</p>
-                                <div class='link-box'>{verifyLink}</div>
-                                <p><strong>⚠️ Lưu ý:</strong> Link xác thực sẽ hết hạn sau <strong>24 giờ</strong>.</p>
-                                <p>Nếu bạn không thực hiện đăng ký này, vui lòng bỏ qua email này.</p>
-                            </div>
-                            <div class='footer'>
-                                <p>Email này được gửi tự động, vui lòng không trả lời.</p>
-                                <p>© 2024 Phong Nguyen Puppy Shop. All rights reserved.</p>
-                            </div>
-                        </div>
-                    </body>
-                    </html>";
+
+                var emailModel = new EmailVerifyVM { HoTen = kh.HoTen, VerifyLink = verifyLink };
+
+                // Note: use absolute view path so rendering works from controllers/background tasks
+                string body = await _viewRenderService.RenderToStringAsync("/Views/EmailTemplates/VerifyAccount.cshtml", emailModel);
 
                 await _emailHelper.SendMailAsync(kh.Email, subject, body);
 
@@ -188,8 +157,8 @@ namespace PhongNguyenPuppy_MVC.Controllers
             }
 
             return RedirectToAction("DangNhap");
-
         }
+
         // THÊM API endpoint để lấy danh sách tỉnh
         [HttpGet]
         public async Task<IActionResult> GetProvinces()
@@ -268,40 +237,13 @@ namespace PhongNguyenPuppy_MVC.Controllers
             kh.ResetTokenExpiry = DateTime.Now.AddHours(24);
             await db.SaveChangesAsync();
 
-            // Gửi lại email
             try
             {
                 string verifyLink = GetAbsoluteUrl("XacThucEmail", "KhachHang", new { token = kh.ResetToken });
                 string subject = "Gửi lại link xác thực tài khoản - Phong Nguyen Puppy Shop";
-                string body = $@"
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta charset='utf-8'>
-                        <style>
-                            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                            .header {{ background-color: #2196F3; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }}
-                            .content {{ background-color: white; padding: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
-                            .button {{ display: inline-block; padding: 12px 30px; background-color: #2196F3; color: white !important; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
-                        </style>
-                    </head>
-                    <body>
-                        <div class='container'>
-                            <div class='header'>
-                                <h2>🐶 Phong Nguyen Puppy Shop</h2>
-                            </div>
-                            <div class='content'>
-                                <h2>Xin chào {kh.HoTen},</h2>
-                                <p>Bạn đã yêu cầu gửi lại link xác thực tài khoản.</p>
-                                <div style='text-align: center;'>
-                                    <a href='{verifyLink}' class='button'>✅ Xác thực tài khoản</a>
-                                </div>
-                                <p>Link sẽ hết hạn sau 24 giờ.</p>
-                            </div>
-                        </div>
-                    </body>
-                    </html>";
+
+                var emailModel = new EmailVerifyVM { HoTen = kh.HoTen, VerifyLink = verifyLink };
+                string body = await _viewRenderService.RenderToStringAsync("/Views/EmailTemplates/VerifyAccount.cshtml", emailModel);
 
                 await _emailHelper.SendMailAsync(kh.Email, subject, body);
 
@@ -413,13 +355,10 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
             // Tạo link đặt lại mật khẩu
             string resetLink = GetAbsoluteUrl("DatLaiMatKhau", "KhachHang", new { token });
-            // Gửi email
             string subject = "Yêu cầu đặt lại mật khẩu";
-            string body = $@"
-        <p>Xin chào {kh.HoTen},</p>
-        <p>Bạn đã yêu cầu đặt lại mật khẩu. Bấm vào liên kết bên dưới để thực hiện:</p>
-        <p><a href='{resetLink}'>Đặt lại mật khẩu</a></p>
-        <p>Liên kết sẽ hết hạn sau 1 giờ.</p>";
+
+            var emailModel = new EmailPasswordResetVM { HoTen = kh.HoTen, ResetLink = resetLink };
+            string body = await _viewRenderService.RenderToStringAsync("/Views/EmailTemplates/PasswordReset.cshtml", emailModel);
 
             await _emailHelper.SendMailAsync(kh.Email, subject, body);
 
