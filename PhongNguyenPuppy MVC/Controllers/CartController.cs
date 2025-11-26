@@ -5,6 +5,7 @@ using PhongNguyenPuppy_MVC.Data;
 using PhongNguyenPuppy_MVC.Helpers;
 using PhongNguyenPuppy_MVC.Services;
 using PhongNguyenPuppy_MVC.ViewModels;
+using PhongNguyenPuppy_MVC.ViewModels.EmailTemplates;
 
 namespace PhongNguyenPuppy_MVC.Controllers
 {
@@ -14,13 +15,19 @@ namespace PhongNguyenPuppy_MVC.Controllers
         private readonly PaypalClient _paypalClient;
         private readonly IVnPayService _vnPayService;
         private readonly IGHNService _ghnService;
+        private readonly MyEmailHelper _emailHelper;
+        private readonly IConfiguration _configuration;
 
-        public CartController(PhongNguyenPuppyContext Context, PaypalClient paypalClient, IVnPayService vnPayService, IGHNService ghnService)
+
+
+        public CartController(PhongNguyenPuppyContext Context, PaypalClient paypalClient, IVnPayService vnPayService, IGHNService ghnService, MyEmailHelper emailHelper, IConfiguration configuration)
         {
             db = Context;
             _paypalClient = paypalClient;
             _vnPayService = vnPayService;
             _ghnService = ghnService;
+            _emailHelper = emailHelper;
+            _configuration = configuration;
         }
 
         // Thêm API endpoint để tính phí vận chuyển động
@@ -163,6 +170,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 item.SoLuong += quantity;
             }
             HttpContext.Session.Set(MySetting.CART_KEY, giohang);
+
             return RedirectToAction("Index");
         }
 
@@ -403,6 +411,16 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
                     HttpContext.Session.Remove("PhiVanChuyen");
 
+                    // send order email (best-effort, do not block order success)
+                    try
+                    {
+                        await SendOrderInfoEmailAsync(hoadon.MaHd);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: failed to send order email for order {hoadon.MaHd}: {ex.GetBaseException().Message}");
+                    }
+
                     ViewBag.PaymentMethod = "COD";
                     ViewBag.MaHd = hoadon.MaHd;
                     return View("Success");
@@ -552,7 +570,14 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 db.AddRange(cthds);
                 db.SaveChanges();
                 transaction.Commit();
-
+                try
+                {
+                    await SendOrderInfoEmailAsync(hoadon.MaHd);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Warning: failed to send PayPal order email for {hoadon.MaHd}: {ex.GetBaseException().Message}");
+                }
                 HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
 
                 // XÓA THÔNG TIN CHECKOUT TRONG SESSION
@@ -590,7 +615,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
         #region VNPay callback
         [Authorize]
-        public IActionResult PaymentCallBack()
+        public async Task<IActionResult> PaymentCallBack()
         {
             var response = _vnPayService.PaymentExecute(Request.Query);
 
@@ -666,7 +691,14 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 db.AddRange(cthds);
                 db.SaveChanges();
                 transaction.Commit();
-
+                try
+                {
+                    await SendOrderInfoEmailAsync(hoadon.MaHd);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Warning: failed to send VNPay order email for {hoadon.MaHd}: {ex.GetBaseException().Message}");
+                }
                 HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
 
                 //XÓA THÔNG TIN CHECKOUT TRONG SESSION
@@ -696,7 +728,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
         #endregion
 
         [HttpPost]
-        public IActionResult AddToCartAjax(int id, int quantity = 1)
+        public async Task<IActionResult> AddToCartAjax(int id, int quantity = 1)
         {
             try
             {
@@ -759,6 +791,172 @@ namespace PhongNguyenPuppy_MVC.Controllers
             return PartialView("~/Views/Shared/Components/Cart/CartPanel.cshtml", model);
         }
 
+        // gửi mail xác nhận mua hàng
+        private async Task SendOrderInfoEmailAsync(int orderId)
+        {
+            var order = db.HoaDons
+                .Where(h => h.MaHd == orderId)
+                .Select(h => new
+                {
+                    Hoadon = h,
+                    Kh = h.MaKhNavigation,
+                    CTHDs = h.ChiTietHds.Select(ct => new
+                    {
+                        ct.SoLuong,
+                        ct.DonGia,
+                        TenHh = ct.MaHhNavigation.TenHh,
+                        Image = ct.MaHhNavigation.Hinh ?? ""
+                    }).ToList()
+                })
+                .FirstOrDefault();
+
+            if (order == null) return;
+
+            // Helpers to find names in returned GHN lists using reflection (works with typical GHN DTOs)
+            static string GetNameFromEnumerable(object listObj, string idProp, object idValue, string[] nameProps)
+            {
+                if (listObj == null) return "";
+                if (!(listObj is System.Collections.IEnumerable enumerable)) return "";
+
+                foreach (var item in enumerable)
+                {
+                    if (item == null) continue;
+                    var t = item.GetType();
+                    var idP = t.GetProperty(idProp);
+                    if (idP == null) continue;
+                    var val = idP.GetValue(item);
+                    if (val == null) continue;
+                    if (val.ToString() == idValue?.ToString())
+                    {
+                        foreach (var np in nameProps)
+                        {
+                            var nameP = t.GetProperty(np);
+                            if (nameP != null)
+                            {
+                                var nameVal = nameP.GetValue(item);
+                                if (nameVal != null) return nameVal.ToString();
+                            }
+                        }
+                    }
+                }
+                return "";
+            }
+
+            string provinceName = "";
+            string districtName = "";
+            string wardName = "";
+
+            try
+            {
+                var provinceId = order.Hoadon.ProvinceId ?? 0;
+                var districtId = order.Hoadon.DistrictId ?? 0;
+                var wardCode = order.Hoadon.WardCode ?? "";
+
+                // Try to get province name
+                if (provinceId > 0)
+                {
+                    try
+                    {
+                        var provinces = await _ghnService.GetProvincesAsync();
+                        provinceName = GetNameFromEnumerable(provinces, "ProvinceID", provinceId, new[] { "ProvinceName", "Name", "province_name" });
+                        if (string.IsNullOrEmpty(provinceName))
+                        {
+                            // some APIs use "ProvinceId"
+                            provinceName = GetNameFromEnumerable(provinces, "ProvinceId", provinceId, new[] { "ProvinceName", "Name", "province_name" });
+                        }
+                    }
+                    catch { /* ignore lookup errors */ }
+                }
+
+                // Try to get district name
+                if (districtId > 0)
+                {
+                    try
+                    {
+                        // many GHN APIs require provinceId to fetch districts; try with provinceId first
+                        var districts = await _ghnService.GetDistrictsAsync(provinceId > 0 ? provinceId : 0);
+                        districtName = GetNameFromEnumerable(districts, "DistrictID", districtId, new[] { "DistrictName", "Name", "district_name" });
+                        if (string.IsNullOrEmpty(districtName))
+                        {
+                            districtName = GetNameFromEnumerable(districts, "DistrictId", districtId, new[] { "DistrictName", "Name", "district_name" });
+                        }
+                    }
+                    catch { /* ignore */ }
+                }
+
+                // Try to get ward name by districtId + wardCode
+                if (districtId > 0 && !string.IsNullOrEmpty(wardCode))
+                {
+                    try
+                    {
+                        var wards = await _ghnService.GetWardsAsync(districtId);
+                        // find by WardCode or Code
+                        if (wards is System.Collections.IEnumerable)
+                        {
+                            foreach (var w in (System.Collections.IEnumerable)wards)
+                            {
+                                if (w == null) continue;
+                                var wt = w.GetType();
+                                var codeProp = wt.GetProperty("WardCode") ?? wt.GetProperty("Code") ?? wt.GetProperty("ward_code");
+                                var nameProp = wt.GetProperty("WardName") ?? wt.GetProperty("Name") ?? wt.GetProperty("ward_name");
+                                if (codeProp != null && nameProp != null)
+                                {
+                                    var codeVal = codeProp.GetValue(w)?.ToString();
+                                    if (!string.IsNullOrEmpty(codeVal) && codeVal.Equals(wardCode, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        wardName = nameProp.GetValue(w)?.ToString() ?? "";
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch { /* ignore */ }
+                }
+            }
+            catch
+            {
+                // ignore lookup exceptions — we still send the email with whatever we have
+            }
+
+            var vm = new EmailOrderInfoVM
+            {
+                HoTen = order.Hoadon.HoTen ?? order.Kh?.HoTen ?? "",
+                OrderId = order.Hoadon.MaHd,
+                OrderDate = order.Hoadon.NgayDat,
+                Items = order.CTHDs.Select(i => new EmailOrderInfoItemVM
+                {
+                    TenHh = i.TenHh ?? "",
+                    SoLuong = i.SoLuong,
+                    DonGia = (decimal)i.DonGia,
+                    ThanhTien = (decimal)(i.DonGia * i.SoLuong),
+                    ImageUrl = "" // images removed per request
+                }).ToList(),
+                Total = (decimal)(order.Hoadon.ChiTietHds.Sum(ct => ct.DonGia * ct.SoLuong) - order.Hoadon.GiamGia + order.Hoadon.PhiVanChuyen),
+                Address = order.Hoadon.DiaChi ?? "",
+                Province = provinceName,
+                District = districtName,
+                Ward = wardName,
+                Phone = order.Kh?.DienThoai ?? order.Hoadon.DienThoai ?? "",
+                Email = order.Kh?.Email ?? "",
+                Note = order.Hoadon.GhiChu ?? "",
+                OrderLink = (Request?.Scheme != null && Request?.Host.HasValue == true)
+                    ? Url.Action("Details", "KhachHang", new { id = order.Hoadon.MaHd }, Request.Scheme)
+                    : (string.IsNullOrEmpty(_configuration["AppSettings:BaseUrl"]) ? "" : $"{_configuration["AppSettings:BaseUrl"].TrimEnd('/')}/KhachHang/Details/{order.Hoadon.MaHd}")
+            };
+
+            if (string.IsNullOrEmpty(vm.Email)) return;
+
+            string subject = $"[PhongNguyen Puppy] Thông tin đơn hàng #{vm.OrderId}";
+            try
+            {
+                await _emailHelper.SendTemplateAsync("/Views/EmailTemplates/OrderInfo.cshtml", vm, vm.Email, subject);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[EMAIL] Error sending order email for {vm.OrderId}: {ex.GetBaseException().Message}");
+            }
+        }
     }
 }
 

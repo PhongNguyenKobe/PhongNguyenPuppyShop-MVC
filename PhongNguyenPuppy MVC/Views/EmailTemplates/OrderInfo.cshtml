@@ -1,0 +1,146 @@
+﻿@model PhongNguyenPuppy_MVC.ViewModels.EmailTemplates.EmailOrderInfoVM
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+
+        .header {
+            background: #4CAF50;
+            color: #fff;
+            padding: 16px;
+            text-align: center;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 0 0 6px 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .total {
+            font-weight: 700;
+            font-size: 1.05em;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 18px;
+            background: #4CAF50;
+            color: #fff !important;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        .prod-img {
+            width: 72px;
+            height: auto;
+            border-radius: 6px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .prod-name {
+            vertical-align: middle;
+            display: inline-block;
+            max-width: 480px;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🌟 Thông tin đơn hàng #@Model.OrderId</h2>
+        </div>
+        <div class="content">
+            <p>Xin chào <strong>@Model.HoTen</strong>,</p>
+            <p>Cảm ơn bạn đã đặt hàng. Dưới đây là chi tiết đơn hàng của bạn (ngày: @Model.OrderDate.ToString("g")):</p>
+
+            <table>
+                <thead>
+                    <tr><th>Sản phẩm</th><th>Đơn giá</th><th>Số lượng</th><th>Thành tiền</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var it in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                @* @if (!string.IsNullOrEmpty(it.ImageUrl))
+                                {
+                                    <img src="@it.ImageUrl" alt="@it.TenHh" class="prod-img" />
+                                } *@
+                                <span class="prod-name">@it.TenHh</span>
+                            </td>
+                            <td>@it.DonGia.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</td>
+                            <td>@it.SoLuong</td>
+                            <td>@it.ThanhTien.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <p class="total">Tổng: @Model.Total.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</p>
+
+            @if (!string.IsNullOrEmpty(Model.Address))
+            {
+                <p><strong>Địa chỉ:</strong> @Model.Address</p>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Province) || !string.IsNullOrEmpty(Model.District) || !string.IsNullOrEmpty(Model.Ward))
+            {
+                <p>
+                    <strong> Tỉnh/TP:</strong> @Model.Province <br />
+                    <strong> Quận/Huyện:</strong> @Model.District <br />
+                    <strong> Phường/Xã:</strong> @Model.Ward
+                </p>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Phone))
+            {
+                <p><strong>Điện thoại:</strong> @Model.Phone</p>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Note))
+            {
+                <p><strong>Ghi chú:</strong> @Model.Note</p>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.OrderLink))
+            {
+                <p style="text-align:center; margin-top:18px;">
+                    <a href="@Model.OrderLink" class="button">Xem chi tiết đơn hàng</a>
+                </p>
+            }
+
+            <p style="font-size:.9em; color:#666; margin-top:12px;">Email tự động — vui lòng không trả lời.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -23,16 +23,14 @@ namespace PhongNguyenPuppy_MVC.Controllers
         private readonly MyEmailHelper _emailHelper;
         private readonly IGHNService _ghnService;
         private readonly IConfiguration _configuration;
-        private readonly IViewRenderService _viewRenderService;
         private const int PageSize = 10;
-        public KhachHangController(PhongNguyenPuppyContext context, IWebHostEnvironment env, MyEmailHelper emailHelper, IGHNService ghnService, IConfiguration configuration, IViewRenderService viewRenderService)
+        public KhachHangController(PhongNguyenPuppyContext context, IWebHostEnvironment env, MyEmailHelper emailHelper, IGHNService ghnService, IConfiguration configuration)
         {
             db = context;
             _env = env;
             _emailHelper = emailHelper;
             _ghnService = ghnService;
             _configuration = configuration;
-            _viewRenderService = viewRenderService;
         }
 
         private string GetAbsoluteUrl(string actionName, string controllerName, object routeValues = null)
@@ -135,20 +133,16 @@ namespace PhongNguyenPuppy_MVC.Controllers
             try
             {
                 string verifyLink = GetAbsoluteUrl("XacThucEmail", "KhachHang", new { token = kh.ResetToken });
-                string subject = "Xác thực tài khoản - Phong Nguyen Puppy Shop";
+                string subject = "Xác thực tài khoản - PhongNguyen Puppy Shop";
 
                 var emailModel = new EmailVerifyVM { HoTen = kh.HoTen, VerifyLink = verifyLink };
 
-                // Note: use absolute view path so rendering works from controllers/background tasks
-                string body = await _viewRenderService.RenderToStringAsync("/Views/EmailTemplates/VerifyAccount.cshtml", emailModel);
-
-                await _emailHelper.SendMailAsync(kh.Email, subject, body);
+                await _emailHelper.SendTemplateAsync("/Views/EmailTemplates/VerifyAccount.cshtml", emailModel, kh.Email, subject);
 
                 TempData["Success"] = "Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.";
             }
             catch (Exception ex)
             {
-                // Nếu gửi email thất bại, xóa user vừa tạo
                 db.KhachHangs.Remove(kh);
                 await db.SaveChangesAsync();
 
@@ -240,12 +234,10 @@ namespace PhongNguyenPuppy_MVC.Controllers
             try
             {
                 string verifyLink = GetAbsoluteUrl("XacThucEmail", "KhachHang", new { token = kh.ResetToken });
-                string subject = "Gửi lại link xác thực tài khoản - Phong Nguyen Puppy Shop";
+                string subject = "Gửi lại link xác thực tài khoản - PhongNguyen Puppy Shop";
 
                 var emailModel = new EmailVerifyVM { HoTen = kh.HoTen, VerifyLink = verifyLink };
-                string body = await _viewRenderService.RenderToStringAsync("/Views/EmailTemplates/VerifyAccount.cshtml", emailModel);
-
-                await _emailHelper.SendMailAsync(kh.Email, subject, body);
+                await _emailHelper.SendTemplateAsync("/Views/EmailTemplates/VerifyAccount.cshtml", emailModel, kh.Email, subject);
 
                 TempData["Success"] = "Email xác thực đã được gửi lại. Vui lòng kiểm tra hộp thư (bao gồm cả thư mục spam).";
                 return RedirectToAction("DangNhap");
@@ -282,7 +274,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             if (!khachHang.HieuLuc)
             {
                 ModelState.AddModelError("Lỗi", "Tài khoản của bạn chưa được kích hoạt. Vui lòng kiểm tra email để kích hoạt tài khoản.");
-                ViewBag.ShowResendLink = true; // ✅ Hiển thị link gửi lại email
+                ViewBag.ShowResendLink = true; // Hiển thị link gửi lại email
                 ViewBag.UserEmail = khachHang.Email;
                 return View(model);
             }
@@ -345,22 +337,16 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 return View(model);
             }
 
-            // Tạo token ngẫu nhiên
             string token = Guid.NewGuid().ToString();
-
-            // Lưu token và thời hạn
             kh.ResetToken = token;
             kh.ResetTokenExpiry = DateTime.Now.AddHours(1);
             await db.SaveChangesAsync();
 
-            // Tạo link đặt lại mật khẩu
             string resetLink = GetAbsoluteUrl("DatLaiMatKhau", "KhachHang", new { token });
             string subject = "Yêu cầu đặt lại mật khẩu";
 
             var emailModel = new EmailPasswordResetVM { HoTen = kh.HoTen, ResetLink = resetLink };
-            string body = await _viewRenderService.RenderToStringAsync("/Views/EmailTemplates/PasswordReset.cshtml", emailModel);
-
-            await _emailHelper.SendMailAsync(kh.Email, subject, body);
+            await _emailHelper.SendTemplateAsync("/Views/EmailTemplates/PasswordReset.cshtml", emailModel, kh.Email, subject);
 
             TempData["Success"] = "Liên kết đặt lại mật khẩu đã được gửi đến email.";
             return RedirectToAction("DangNhap");
