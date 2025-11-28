@@ -63,11 +63,14 @@
                 <td>@hd.HoTen</td>
                 <td>@hd.NgayDat.ToString("dd/MM/yyyy")</td>
                 <td>
-                    <select class="form-select form-select-sm trang-thai-select" data-id="@hd.MaHd">
+                    <!-- Add a placeholder "Chọn" as the visible default in the dropdown.
+                         Keep the current status available in the options and as a data attribute
+                         so we can validate or fallback in JavaScript if needed. -->
+                    <select class="form-select form-select-sm trang-thai-select" data-id="@hd.MaHd" data-current="@hd.TrangThai">
+                        <option value="">Chọn</option>
                         @foreach (var tt in ViewBag.TrangThaiList as List<SelectListItem>)
                         {
-                            var selected = tt.Text == hd.TrangThai ? "selected" : "";
-                            <option value="@tt.Value" selected="@selected">@tt.Text</option>
+                            <option value="@tt.Value">@tt.Text</option>
                         }
                     </select>
                     <span class="badge mt-2 d-block @GetBadgeClass(hd.TrangThai)">
@@ -110,8 +113,23 @@
             $('.btn-luu-trangthai').click(function () {
                 const maHd = $(this).data('id');
                 const select = $(`.trang-thai-select[data-id='${maHd}']`);
-                const maTrangThai = select.val();
+                let maTrangThai = select.val();
+                const currentTrangThai = select.data('current');
                 const token = $('input[name="__RequestVerificationToken"]').val();
+
+                if (!maTrangThai) {
+                    // Option 1: show warning and require selection
+                    const toastEl = document.getElementById('toastThongBao');
+                    const toastBody = toastEl.querySelector('.toast-body');
+                    toastBody.textContent = '⚠️ Vui lòng chọn trạng thái trước khi lưu.';
+                    toastEl.classList.remove('bg-success', 'bg-danger');
+                    toastEl.classList.add('bg-warning', 'text-dark');
+                    const toast = new bootstrap.Toast(toastEl);
+                    toast.show();
+                    return;
+                    // Option 2 (alternative): uncomment next line to fallback to current value instead of blocking
+                    // maTrangThai = currentTrangThai;
+                }
 
                 $.ajax({
                     url: '/Admin/HoaDon/CapNhatTrangThai',
@@ -125,7 +143,7 @@
                         const toastEl = document.getElementById('toastThongBao');
                         const toastBody = toastEl.querySelector('.toast-body');
                         toastBody.textContent = '✅ Cập nhật trạng thái thành công!';
-                        toastEl.classList.remove('bg-danger');
+                        toastEl.classList.remove('bg-danger', 'bg-warning', 'text-dark');
                         toastEl.classList.add('bg-success');
                         const toast = new bootstrap.Toast(toastEl);
                         toast.show();
@@ -137,7 +155,7 @@
                         const toastEl = document.getElementById('toastThongBao');
                         const toastBody = toastEl.querySelector('.toast-body');
                         toastBody.textContent = '❌ Có lỗi xảy ra khi cập nhật trạng thái.';
-                        toastEl.classList.remove('bg-success');
+                        toastEl.classList.remove('bg-success', 'bg-warning', 'text-dark');
                         toastEl.classList.add('bg-danger');
                         const toast = new bootstrap.Toast(toastEl);
                         toast.show();
@@ -147,6 +165,3 @@
         });
     </script>
 }
-
-
-
