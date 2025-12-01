@@ -1,37 +1,48 @@
-﻿PhongNguyenPuppy MVC\Views\Shared\_TawkToScript.cshtml
-@using System.Security.Claims
+﻿@using System.Security.Claims
+@using System.Text.Json
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 
 @{
-    var hoTen = User.Identity.IsAuthenticated ? User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value : null;
-    var email = User.Identity.IsAuthenticated ? User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value : null;
+    var hoTen = User.Identity?.IsAuthenticated == true
+        ? User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value
+        : null;
+    var email = User.Identity?.IsAuthenticated == true
+        ? User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value
+        : null;
+
+    // Cho phép cấu hình qua appsettings, fallback về ID hiện có
+    var propertyId = Configuration["TawkTo:PropertyId"] ?? "6923e3e046b1451960bcd014";
+    var widgetId = Configuration["TawkTo:WidgetId"] ?? "1jaq349vd";
+
+    var hasVisitor = !string.IsNullOrWhiteSpace(hoTen) || !string.IsNullOrWhiteSpace(email);
+    var visitorObj = new { name = hoTen, email = email };
 }
 
 <!--Start of Tawk.to Script-->
 <script type="text/javascript">
-    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
 
-    // Ẩn widget Tawk.to mặc định (chỉ mở khi click button)
-    Tawk_API.onLoad = function(){
-        Tawk_API.hideWidget();
+    // Ẩn widget mặc định (chỉ mở khi bạn muốn)
+    Tawk_API.onLoad = function () {
+        if (Tawk_API.hideWidget) {
+            Tawk_API.hideWidget();
+        }
     };
 
-    @if (User.Identity.IsAuthenticated)
+    @if (hasVisitor)
     {
             <text>
-            Tawk_API.visitor = {
-                name: '@hoTen',
-                email: '@email'
-            };
+            Tawk_API.visitor = @Html.Raw(JsonSerializer.Serialize(visitorObj));
             </text>
     }
 
-    (function(){
-        var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-        s1.async=true;
-        s1.src='https://embed.tawk.to/6923e3e046b1451960bcd014/1jaq349vd';
-        s1.charset='UTF-8';
-        s1.setAttribute('crossorigin','*');
-        s0.parentNode.insertBefore(s1,s0);
+    (function () {
+        var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
+        s1.async = true;
+        s1.src = "https://embed.tawk.to/@propertyId/@widgetId";
+        s1.charset = "UTF-8";
+        s1.setAttribute("crossorigin", "*");
+        s0.parentNode.insertBefore(s1, s0);
     })();
 </script>
 <!--End of Tawk.to Script-->

@@ -1,7 +1,8 @@
 ﻿@using System.Security.Claims
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 <!DOCTYPE html>
 
-<html>
+<html lang="vi">
 <head>
 	<meta name="viewport" content="width=device-width" />
 	<meta charset="utf-8">
@@ -24,13 +25,15 @@
 		{
 			canonicalUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
 		}
-		// thêm giới hạn độ dài mô tả cho SEO
 		if (description.Length > 160)
 		{
 			description = description.Substring(0, 157) + "...";
 		}
 
 		var fullImageUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{imageUrl}";
+
+		// Thêm: lấy Facebook AppId từ cấu hình
+		var fbAppId = Configuration["FacebookChatSettings:AppId"];
 	}
 	<title>@pageTitle</title>
 	<meta content="@keywords" name="keywords">
@@ -48,6 +51,7 @@
 	}
 
 	@* Open Graph Meta Tags (Facebook, LinkedIn) *@
+	<meta 
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content="@pageTitle" />
 	<meta property="og:description" content="@description" />
@@ -60,6 +64,10 @@
 	<meta property="og:url" content="@canonicalUrl" />
 	<meta property="og:site_name" content="PhongNguyen Puppy Shop" />
 	<meta property="og:locale" content="vi_VN" />
+	@if (!string.IsNullOrWhiteSpace(fbAppId))
+	{
+		<meta property="fb:app_id" content="@fbAppId" />
+	}
 
 	<!-- Twitter Card Meta Tags -->
 	<meta name="twitter:card" content="summary_large_image" />
@@ -481,4 +489,4 @@
 		});
 	</script>
 </body>
-</html>
+</htm>
