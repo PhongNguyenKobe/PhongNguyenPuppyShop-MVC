@@ -1,14 +1,4 @@
-﻿ongNguyenPuppy MVC\wwwroot\robots.txt
-User-agent: *
+﻿User-agent: *
 Allow: /
 
-# Chặn các trang admin
-Disallow: /admin/
-Disallow: /Admin/
-
-# Chặn các trang nội bộ
-Disallow: /khachhang/dangxuat
-Disallow: /cart/checkout
-
-# Cho phép sitemap
-Sitemap:  https://exacting-glenda-usurpingly.ngrok-free.dev/sitemap.xml
+Sitemap: https://localhost:7112/sitemap.xml

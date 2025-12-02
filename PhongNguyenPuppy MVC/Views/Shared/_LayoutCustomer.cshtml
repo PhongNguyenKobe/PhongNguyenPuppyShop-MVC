@@ -1,5 +1,6 @@
 ﻿@using System.Security.Claims
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Env
 <!DOCTYPE html>
 
 <html lang="vi">
@@ -40,7 +41,7 @@
 	<meta content="@description" name="description">
 
 	@* QUAN TRỌNG: CHỈ cho phép index khi ở production *@
-	@if (Context.Request.Host.Host.Contains("ngrok") || Context.Request.Host.Host.Contains("localhost"))
+	@* @if (Env.IsDevelopment())
 	{
 		<meta name="robots" content="noindex, nofollow">
 	}
@@ -48,10 +49,11 @@
 	{
 		<meta name="robots" content="index, follow">
 		<meta name="googlebot" content="index, follow">
-	}
+	} *@
+
 
 	@* Open Graph Meta Tags (Facebook, LinkedIn) *@
-	<meta 
+	<meta
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content="@pageTitle" />
 	<meta property="og:description" content="@description" />
@@ -117,8 +119,8 @@
 				"addressCountry": "VN"
 			},
 			"sameAs": [
-				"https://facebook.com/phongnguyen",
-				"https://instagram.com/phongnguyen"
+				"https://www.facebook.com/profile.php?id=61583453691944",
+				"https://www.facebook.com/profile.php?id=61583453691944"
 			]
 		}
 	</script>
@@ -149,7 +151,7 @@
 			<div class="container px-0">
 				<nav class="navbar navbar-light bg-white navbar-expand-xl">
 					<a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand"> <h1 class="text-primary display-6">PhongNguyen Puppy</h1></a>
-					<button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+					<button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-label="Toggle navigation">
 						<span class="fa fa-bars text-primary"></span>
 					</button>
 					<div class="collapse navbar-collapse bg-white" id="navbarCollapse">
@@ -172,7 +174,7 @@
 						</div>
 						<div class="d-flex m-3 me-0 align-items-center">
 							<!-- Nút tìm kiếm -->
-							<button class="btn-search btn border border-secondary btn-md-square rounded-circle bg-white me-4" data-bs-toggle="modal" data-bs-target="#searchModal">
+							<button class="btn-search btn border border-secondary btn-md-square rounded-circle bg-white me-4" data-bs-toggle="modal" data-bs-target="#searchModal" aria-label="Mở hộp thoại tìm kiếm">
 								<i class="fas fa-search text-primary"></i>
 							</button>
 
@@ -187,7 +189,7 @@
 							}
 
 							<div class="nav-item position-relative user-hover ms-3">
-								<button type="button" class="nav-link p-0 toggle-user-dropdown" style="background: none; border: none;">
+								<button type="button" class="nav-link p-0 toggle-user-dropdown" style="background: none; border: none;" aria-label="Mở menu người dùng">
 									<i class="fas fa-user fa-2x text-primary"></i>
 								</button>
 
@@ -249,10 +251,6 @@
 	<script src="~/lib/waypoints/waypoints.min.js"></script>
 	<script src="~/lib/lightbox/js/lightbox.min.js"></script>
 	<script src="~/lib/owlcarousel/owl.carousel.min.js"></script>
-
-	<!-- JavaScript Libraries -->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-	<!-- rest of your scripts -->
 
 	<!-- Template Javascript -->
 	<script src="~/js/main.js"></script>
@@ -327,7 +325,7 @@
 	</script>
 
 	<!-- Back to Top -->
-	<a href="#" class="btn btn-primary border-3 border-primary rounded-circle back-to-top">
+	<a href="#" class="btn btn-primary border-3 border-primary rounded-circle back-to-top" aria-label="Quay lại đầu trang">
 		<i class="fa fa-arrow-up"></i>
 	</a>
 
@@ -489,4 +487,4 @@
 		});
 	</script>
 </body>
-</htm>
+</html>
