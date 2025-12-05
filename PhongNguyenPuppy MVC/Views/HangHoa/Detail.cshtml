@@ -58,6 +58,19 @@
                                 <i class="fa fa-shopping-bag me-2 text-primary"></i> Mua ngay
                             </button>
                         </form>
+                        <!-- AddToAny BEGIN -->
+                        <div class="mt-3">
+                            <span class="me-2">Chia sẻ:</span>
+                            <div class="a2a_kit a2a_kit_size_32 a2a_default_style"
+                                 data-a2a-url="@($"{Context.Request.Scheme}://{Context.Request.Host}/san-pham/{SeoHelper.GenerateSlug(Model.TenHh)}/{Model.MaHh}")"
+                                 data-a2a-title="@Model.TenHh">
+                                <a class="a2a_dd" href="https://www.addtoany.com/share"></a>
+                                <a class="a2a_button_facebook"></a>
+                                <a class="a2a_button_linkedin"></a>
+                                <a class="a2a_button_x"></a>
+                            </div>
+                        </div>
+                        <!-- AddToAny END -->
                     </div>
                     <div class="col-lg-12">
                         <nav>
@@ -224,6 +237,8 @@
     </div>
 </div>
 @section Scripts {
+    <script defer src="https://static.addtoany.com/menu/page.js"></script>
+
     <script type="application/ld+json">
         {
           "@@context": "https://schema.org/",
