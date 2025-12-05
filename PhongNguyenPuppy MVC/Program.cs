@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using PhongNguyenPuppy_MVC.Areas.Admin.Helpers;
 using PhongNguyenPuppy_MVC.Areas.Admin.Services;
 using PhongNguyenPuppy_MVC.Data;
 using PhongNguyenPuppy_MVC.Helpers;
@@ -43,6 +44,9 @@ builder.Services.AddSession(options =>
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<MyEmailHelper>();
+// Đăng ký TinyMceSettings từ appsettings.Secret.json
+builder.Services.Configure<TinyMceSettings>(
+    builder.Configuration.GetSection("TinyMceSettings"));
 
 builder.Services.AddAuthentication(options =>
 {

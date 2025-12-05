@@ -1,5 +1,7 @@
 ﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using PhongNguyenPuppy_MVC.Areas.Admin.Helpers;
 using PhongNguyenPuppy_MVC.Areas.Admin.Services;
 using PhongNguyenPuppy_MVC.Areas.Admin.ViewModels;
 using PhongNguyenPuppy_MVC.Models; // Model KhachHang
@@ -13,21 +15,27 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
         private readonly IKhachHangRepository _khachHangRepository;
         private readonly IDichVuGuiEmail _dichVuGuiEmail;
         private readonly IDichVuThongKe _dichVuThongKe;
+        private readonly IOptions<TinyMceSettings> _tinyMceSettings;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public KhachHangController(
             IKhachHangRepository khachHangRepository,
             IDichVuGuiEmail dichVuGuiEmail,
-            IDichVuThongKe dichVuThongKe)
+            IDichVuThongKe dichVuThongKe,
+            IOptions<TinyMceSettings> tinyMceSettings,
+            IWebHostEnvironment webHostEnvironment)
         {
             _khachHangRepository = khachHangRepository;
             _dichVuGuiEmail = dichVuGuiEmail;
             _dichVuThongKe = dichVuThongKe;
+            _tinyMceSettings = tinyMceSettings;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // 1. Hiển thị danh sách khách hàng
         public IActionResult DanhSach(string tuKhoa = "", int trang = 1)
         {
-            var ketQua = _khachHangRepository.LayTatCa(tuKhoa, trang); // chỉ truyền đúng số tham số
+            var ketQua = _khachHangRepository.LayTatCa(tuKhoa, trang);
 
             var vm = new DanhSachKhachHangVM
             {
@@ -44,11 +52,8 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
                 TongSoTrang = ketQua.TongSoTrang
             };
 
-
             return View(vm);
         }
-
-
 
         // 2. Gửi email cho khách hàng
         [HttpGet]
@@ -56,12 +61,12 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
         {
             var vm = new GuiEmailVM
             {
-                DanhSachEmail = _khachHangRepository.LayDanhSachEmailKhachHang()
+                DanhSachEmail = _khachHangRepository.LayDanhSachEmailKhachHang(),
+                TinyMceApiKey = _tinyMceSettings.Value.ApiKey
             };
 
             return View(vm);
         }
-
 
         [HttpPost]
         public IActionResult GuiEmail(GuiEmailVM vm)
@@ -81,11 +86,52 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
             return RedirectToAction("GuiEmail");
         }
 
+        // Upload ảnh cho TinyMCE - Trả URL tuyệt đối
+        [HttpPost]
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return Json(new { error = "Vui lòng chọn ảnh" });
 
-        
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+            var fileExtension = Path.GetExtension(file.FileName).ToLower();
+
+            if (!allowedExtensions.Contains(fileExtension))
+                return Json(new { error = "Chỉ hỗ trợ ảnh JPG, PNG, GIF, WebP" });
+
+            const long maxFileSize = 5 * 1024 * 1024;
+            if (file.Length > maxFileSize)
+                return Json(new { error = "Kích thước ảnh không được vượt quá 5MB" });
+
+            try
+            {
+                var uploadDirectory = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "email-images");
+                if (!Directory.Exists(uploadDirectory))
+                    Directory.CreateDirectory(uploadDirectory);
+
+                var fileName = $"{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadDirectory, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Trả URL tuyệt đối (không URL tương đối)
+                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+                var imageUrl = $"{baseUrl}/uploads/email-images/{fileName}";
+
+                return Json(new { location = imageUrl });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = $"Lỗi upload ảnh: {ex.Message}" });
+            }
+        }
+
         // 3. Chi tiết khách hàng
         [HttpGet]
-        public IActionResult ChiTiet(string id) 
+        public IActionResult ChiTiet(string id)
         {
             var kh = _khachHangRepository.LayTheoId(id);
             if (kh == null) return NotFound();
@@ -127,6 +173,7 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
             TempData["ThongBao"] = $"🗑️ Đã xóa khách hàng \"{kh.HoTen}\" thành công!";
             return RedirectToAction("DanhSach");
         }
+
         // 5. Gửi email cá nhân
         [HttpPost]
         public IActionResult GuiEmailCaNhan(string MaKh, string Email, string TieuDeEmail, string NoiDungEmail)
@@ -141,8 +188,5 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
             TempData["ThongBao"] = $"✅ Đã gửi email đến khách hàng \"{Email}\".";
             return RedirectToAction("ChiTiet", new { id = MaKh });
         }
-
-
-
     }
 }

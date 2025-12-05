@@ -14,42 +14,223 @@
     </div>
 }
 
-<form asp-action="GuiEmail" method="post">
-    <div class="mb-3">
-        <label for="TieuDe">Tiêu đề</label>
-        <input type="text" class="form-control" name="TieuDe" />
-    </div>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="GuiEmail" method="post" id="formGuiEmail">
+            <!-- Tiêu đề -->
+            <div class="mb-3">
+                <label for="TieuDe" class="form-label"><strong>📝 Tiêu đề</strong></label>
+                <input type="text" class="form-control" id="TieuDe" name="TieuDe" placeholder="Nhập tiêu đề email..." required />
+            </div>
 
-    <div class="mb-3">
-        <label for="NoiDung">Nội dung</label>
-        <textarea class="form-control" name="NoiDung" rows="5"></textarea>
-    </div>
+            <!-- Nội dung với TinyMCE -->
+            <div class="mb-3">
+                <label for="NoiDung" class="form-label"><strong>✍️ Nội dung email</strong></label>
+                <textarea class="form-control" id="NoiDung" name="NoiDung" rows="8"></textarea>
+                <small class="text-muted d-block mt-2">💡 Sử dụng các công cụ bên trên để định dạng nội dung email - Có thể upload ảnh từ máy tính</small>
+            </div>
 
-    <div class="mb-3">
-        <label>📋 Danh sách email khách hàng</label>
-        <div>
-            <input type="checkbox" id="chonTatCa" onclick="chonTatCaEmail(this)" />
-            <label for="chonTatCa"><strong>Chọn tất cả</strong></label>
-        </div>
+            <!-- Preview button -->
+            <div class="mb-3">
+                <button type="button" class="btn btn-outline-info btn-sm" onclick="xemTruoc()">
+                    <i class="bi bi-eye"></i> Xem trước
+                </button>
+            </div>
 
-        <div class="border rounded p-2" style="max-height: 300px; overflow-y: auto;">
-            @foreach (var email in Model.DanhSachEmail)
-            {
-                <div class="form-check">
-                    <input class="form-check-input email-checkbox" type="checkbox" name="DanhSachEmail" value="@email" id="@email" />
-                    <label class="form-check-label" for="@email">@email</label>
+            <!-- Danh sách email khách hàng -->
+            <div class="mb-3">
+                <label class="form-label"><strong>📋 Danh sách email khách hàng</strong></label>
+                <div class="mb-2">
+                    <input type="checkbox" id="chonTatCa" onchange="chonTatCaEmail(this)" />
+                    <label for="chonTatCa"><strong>Chọn tất cả (@Model.DanhSachEmail.Count) khách hàng</strong></label>
                 </div>
-            }
+
+                <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto; background-color: #f9f9f9;">
+                    @if (Model.DanhSachEmail.Count == 0)
+                    {
+                        <p class="text-muted text-center">Không có khách hàng nào</p>
+                    }
+                    else
+                    {
+                        @foreach (var email in Model.DanhSachEmail)
+                        {
+                            <div class="form-check mb-2">
+                                <input class="form-check-input email-checkbox" type="checkbox" name="DanhSachEmail" value="@email" id="email_@email.GetHashCode()" />
+                                <label class="form-check-label" for="email_@email.GetHashCode()">
+                                    <i class="bi bi-envelope"></i> @email
+                                </label>
+                            </div>
+                        }
+                    }
+                </div>
+                <small class="text-muted d-block mt-2">Đã chọn: <span id="soLuongChon">0</span> khách hàng</small>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" id="btnGuiEmail">
+                    <i class="bi bi-send"></i> 📤 Gửi email
+                </button>
+                <a href="@Url.Action("DanhSach", "KhachHang")" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Preview Email -->
+<div class="modal fade" id="modalXemTruoc" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">👁️ Xem trước email</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; background-color: #fff;">
+                    <h5 id="previewTieuDe" style="color: #1e3a8a; margin-bottom: 15px;"></h5>
+                    <div id="previewNoiDung"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
         </div>
     </div>
+</div>
 
-    <button type="submit" class="btn btn-primary">📤 Gửi email</button>
-</form>
+<!-- TinyMCE CDN -->
+<script src="https://cdn.tiny.cloud/1/@Html.Raw(Model.TinyMceApiKey)/tinymce/6/tinymce.min.js"></script>
 
 <script>
+    // Khởi tạo TinyMCE
+    tinymce.init({
+        selector: '#NoiDung',
+        language: 'vi',
+        height: 400,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount', 'emoticons'
+        ],
+        toolbar: [
+            'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify',
+            'bullist numlist outdent indent | link image media table | removeformat | help | emoticons'
+        ],
+        toolbar_mode: 'floating',
+        content_css: 'default',
+
+        //CẤU HÌNH UPLOAD ẢNH
+        images_upload_url: '@Url.Action("UploadImage", "KhachHang", new { area = "Admin" })',
+        automatic_uploads: true,
+        file_picker_types: 'image',
+
+        //Custom images_upload_handler để upload lên server
+        images_upload_handler: function (blobInfo, progress) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.withCredentials = false;
+                xhr.open('POST', '@Url.Action("UploadImage", "KhachHang", new { area = "Admin" })');
+
+                xhr.upload.onprogress = (e) => {
+                    progress(e.loaded / e.total * 100);
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        try {
+                            const json = JSON.parse(xhr.responseText);
+                            console.log('Response:', json); // Debug
+
+                            if (!json || typeof json.location !== 'string') {
+                                reject('Invalid JSON: ' + xhr.responseText);
+                                return;
+                            }
+                            resolve(json.location);
+                        } catch (e) {
+                            reject('Parse error: ' + xhr.responseText);
+                        }
+                    } else {
+                        reject('Image upload failed with status ' + xhr.status + ': ' + xhr.responseText);
+                    }
+                };
+
+                xhr.onerror = () => {
+                    reject('Image upload failed');
+                };
+
+                xhr.onabort = () => {
+                    reject('Image upload aborted');
+                };
+
+                const formData = new FormData();
+                formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+                xhr.send(formData);
+            });
+        },
+
+        setup: function (editor) {
+            editor.on('change', function () {
+                updateEmailCount();
+            });
+        }
+    });
+
+    // Hàm chọn/bỏ chọn tất cả email
     function chonTatCaEmail(source) {
         const checkboxes = document.querySelectorAll('.email-checkbox');
         checkboxes.forEach(cb => cb.checked = source.checked);
+        updateEmailCount();
     }
-</script>
 
+    // Hàm cập nhật số lượng email được chọn
+    function updateEmailCount() {
+        const soLuong = document.querySelectorAll('.email-checkbox:checked').length;
+        document.getElementById('soLuongChon').textContent = soLuong;
+    }
+
+    // Hàm xem trước email
+    function xemTruoc() {
+        const tieuDe = document.getElementById('TieuDe').value;
+        const noiDung = tinymce.get('NoiDung').getContent();
+
+        if (!tieuDe || !noiDung) {
+            alert('⚠️ Vui lòng nhập tiêu đề và nội dung trước khi xem trước!');
+            return;
+        }
+
+        document.getElementById('previewTieuDe').textContent = tieuDe;
+        document.getElementById('previewNoiDung').innerHTML = noiDung;
+
+        const modal = new bootstrap.Modal(document.getElementById('modalXemTruoc'));
+        modal.show();
+    }
+
+    // Validate trước khi submit
+    document.getElementById('formGuiEmail').addEventListener('submit', function (e) {
+        const tieuDe = document.getElementById('TieuDe').value.trim();
+        const noiDung = tinymce.get('NoiDung').getContent().trim();
+        const soEmailChon = document.querySelectorAll('.email-checkbox:checked').length;
+
+        if (!tieuDe || !noiDung || soEmailChon === 0) {
+            e.preventDefault();
+            alert('⚠️ Vui lòng:\n1. Nhập tiêu đề\n2. Nhập nội dung\n3. Chọn ít nhất 1 khách hàng');
+            return;
+        }
+
+        // Hiển thị loading state
+        const btn = document.getElementById('btnGuiEmail');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang gửi...';
+    });
+
+    // Cập nhật số lượng khi page load
+    updateEmailCount();
+
+    // Cập nhật khi checkbox thay đổi
+    document.querySelectorAll('.email-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateEmailCount);
+    });
+</script>
