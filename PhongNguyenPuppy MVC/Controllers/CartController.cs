@@ -1,8 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using PhongNguyenPuppy_MVC.Data;
 using PhongNguyenPuppy_MVC.Helpers;
+using PhongNguyenPuppy_MVC.Models;
 using PhongNguyenPuppy_MVC.Services;
 using PhongNguyenPuppy_MVC.ViewModels;
 using PhongNguyenPuppy_MVC.ViewModels.EmailTemplates;
@@ -17,10 +19,12 @@ namespace PhongNguyenPuppy_MVC.Controllers
         private readonly IGHNService _ghnService;
         private readonly MyEmailHelper _emailHelper;
         private readonly IConfiguration _configuration;
+        private readonly AppSettings _appSettings;
 
 
 
-        public CartController(PhongNguyenPuppyContext Context, PaypalClient paypalClient, IVnPayService vnPayService, IGHNService ghnService, MyEmailHelper emailHelper, IConfiguration configuration)
+
+        public CartController(PhongNguyenPuppyContext Context, PaypalClient paypalClient, IVnPayService vnPayService, IGHNService ghnService, MyEmailHelper emailHelper, IConfiguration configuration, IOptions<AppSettings> appSettings)
         {
             db = Context;
             _paypalClient = paypalClient;
@@ -28,6 +32,8 @@ namespace PhongNguyenPuppy_MVC.Controllers
             _ghnService = ghnService;
             _emailHelper = emailHelper;
             _configuration = configuration;
+            _appSettings = appSettings.Value;
+
         }
 
         // Thêm API endpoint để tính phí vận chuyển động
@@ -812,7 +818,6 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
             if (order == null) return;
 
-            // Helpers to find names in returned GHN lists using reflection (works with typical GHN DTOs)
             static string GetNameFromEnumerable(object listObj, string idProp, object idValue, string[] nameProps)
             {
                 if (listObj == null) return "";
@@ -852,7 +857,6 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 var districtId = order.Hoadon.DistrictId ?? 0;
                 var wardCode = order.Hoadon.WardCode ?? "";
 
-                // Try to get province name
                 if (provinceId > 0)
                 {
                     try
@@ -861,19 +865,16 @@ namespace PhongNguyenPuppy_MVC.Controllers
                         provinceName = GetNameFromEnumerable(provinces, "ProvinceID", provinceId, new[] { "ProvinceName", "Name", "province_name" });
                         if (string.IsNullOrEmpty(provinceName))
                         {
-                            // some APIs use "ProvinceId"
                             provinceName = GetNameFromEnumerable(provinces, "ProvinceId", provinceId, new[] { "ProvinceName", "Name", "province_name" });
                         }
                     }
-                    catch { /* ignore lookup errors */ }
+                    catch { }
                 }
 
-                // Try to get district name
                 if (districtId > 0)
                 {
                     try
                     {
-                        // many GHN APIs require provinceId to fetch districts; try with provinceId first
                         var districts = await _ghnService.GetDistrictsAsync(provinceId > 0 ? provinceId : 0);
                         districtName = GetNameFromEnumerable(districts, "DistrictID", districtId, new[] { "DistrictName", "Name", "district_name" });
                         if (string.IsNullOrEmpty(districtName))
@@ -881,16 +882,14 @@ namespace PhongNguyenPuppy_MVC.Controllers
                             districtName = GetNameFromEnumerable(districts, "DistrictId", districtId, new[] { "DistrictName", "Name", "district_name" });
                         }
                     }
-                    catch { /* ignore */ }
+                    catch { }
                 }
 
-                // Try to get ward name by districtId + wardCode
                 if (districtId > 0 && !string.IsNullOrEmpty(wardCode))
                 {
                     try
                     {
                         var wards = await _ghnService.GetWardsAsync(districtId);
-                        // find by WardCode or Code
                         if (wards is System.Collections.IEnumerable)
                         {
                             foreach (var w in (System.Collections.IEnumerable)wards)
@@ -911,12 +910,16 @@ namespace PhongNguyenPuppy_MVC.Controllers
                             }
                         }
                     }
-                    catch { /* ignore */ }
+                    catch { }
                 }
             }
-            catch
+            catch { }
+
+            // Prioritize AppSettings.BaseUrl
+            string orderLink = "";
+            if (!string.IsNullOrEmpty(_appSettings.BaseUrl))
             {
-                // ignore lookup exceptions — we still send the email with whatever we have
+                orderLink = $"{_appSettings.BaseUrl.TrimEnd('/')}/KhachHang/Details/{order.Hoadon.MaHd}";
             }
 
             var vm = new EmailOrderInfoVM
@@ -930,7 +933,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     SoLuong = i.SoLuong,
                     DonGia = (decimal)i.DonGia,
                     ThanhTien = (decimal)(i.DonGia * i.SoLuong),
-                    ImageUrl = "" // images removed per request
+                    ImageUrl = ""
                 }).ToList(),
                 Total = (decimal)(order.Hoadon.ChiTietHds.Sum(ct => ct.DonGia * ct.SoLuong) - order.Hoadon.GiamGia + order.Hoadon.PhiVanChuyen),
                 Address = order.Hoadon.DiaChi ?? "",
@@ -940,9 +943,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 Phone = order.Kh?.DienThoai ?? order.Hoadon.DienThoai ?? "",
                 Email = order.Kh?.Email ?? "",
                 Note = order.Hoadon.GhiChu ?? "",
-                OrderLink = (Request?.Scheme != null && Request?.Host.HasValue == true)
-                    ? Url.Action("Details", "KhachHang", new { id = order.Hoadon.MaHd }, Request.Scheme)
-                    : (string.IsNullOrEmpty(_configuration["AppSettings:BaseUrl"]) ? "" : $"{_configuration["AppSettings:BaseUrl"].TrimEnd('/')}/KhachHang/Details/{order.Hoadon.MaHd}")
+                OrderLink = orderLink
             };
 
             if (string.IsNullOrEmpty(vm.Email)) return;

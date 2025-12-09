@@ -22,16 +22,23 @@
 		var canonicalUrl = seoData?.CanonicalUrl;
 		var imageUrl = seoData?.ImageUrl ?? "/img/hero_1.png";
 
+		// Lấy BaseUrl từ appsettings
+		var baseUrl = Configuration["AppSettings:BaseUrl"]?.TrimEnd('/');
+
 		if (string.IsNullOrEmpty(canonicalUrl))
 		{
-			canonicalUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
+			canonicalUrl = !string.IsNullOrEmpty(baseUrl)
+			? $"{baseUrl}{Context.Request.Path}"
+			: $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
 		}
 		if (description.Length > 160)
 		{
 			description = description.Substring(0, 157) + "...";
 		}
 
-		var fullImageUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{imageUrl}";
+		var fullImageUrl = !string.IsNullOrEmpty(baseUrl)
+		? $"{baseUrl}{imageUrl}"
+		: $"{Context.Request.Scheme}://{Context.Request.Host}{imageUrl}";
 
 		// Tự động phát hiện image MIME type
 		var imageExtension = System.IO.Path.GetExtension(imageUrl).ToLower();

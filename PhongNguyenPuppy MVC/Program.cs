@@ -5,6 +5,7 @@ using PhongNguyenPuppy_MVC.Areas.Admin.Helpers;
 using PhongNguyenPuppy_MVC.Areas.Admin.Services;
 using PhongNguyenPuppy_MVC.Data;
 using PhongNguyenPuppy_MVC.Helpers;
+using PhongNguyenPuppy_MVC.Models;
 using PhongNguyenPuppy_MVC.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,6 +48,9 @@ builder.Services.AddTransient<MyEmailHelper>();
 // Đăng ký TinyMceSettings từ appsettings.Secret.json
 builder.Services.Configure<TinyMceSettings>(
     builder.Configuration.GetSection("TinyMceSettings"));
+// Đăng ký AppSettings từ appsettings.Secret.json
+builder.Services.Configure<AppSettings>(
+    builder.Configuration.GetSection("AppSettings"));
 
 builder.Services.AddAuthentication(options =>
 {
