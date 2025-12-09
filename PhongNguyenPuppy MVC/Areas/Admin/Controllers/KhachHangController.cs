@@ -8,6 +8,7 @@ using PhongNguyenPuppy_MVC.Models; // Model KhachHang
 using PhongNguyenPuppy_MVC.Services; // Dịch vụ gửi mail, thống kê
 
 namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
+
 {
     [Area("Admin")]
     public class KhachHangController : Controller
@@ -69,21 +70,47 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public IActionResult GuiEmail(GuiEmailVM vm)
+        public async Task<IActionResult> GuiEmail(GuiEmailVM model)
         {
-            if (string.IsNullOrEmpty(vm.TieuDe) || string.IsNullOrEmpty(vm.NoiDung) || vm.DanhSachEmail == null || !vm.DanhSachEmail.Any())
+            try
             {
-                ModelState.AddModelError("", "Vui lòng nhập đầy đủ thông tin email.");
-                return View(vm);
-            }
+                // Danh sách email từ khách hàng
+                var danhSachEmailKhachHang = model.DanhSachEmail ?? new List<string>();
 
-            foreach (var email in vm.DanhSachEmail)
+                // Xử lý email bổ sung
+                var emailBoSungList = new List<string>();
+                if (!string.IsNullOrEmpty(model.EmailBoSung))
+                {
+                    emailBoSungList = model.EmailBoSung
+                        .Split(',')
+                        .Select(e => e.Trim())
+                        .Where(e => !string.IsNullOrEmpty(e) && e.Contains("@"))
+                        .ToList();
+                }
+
+                // Gộp cả hai danh sách
+                var allEmails = danhSachEmailKhachHang
+                    .Union(emailBoSungList)
+                    .Distinct()
+                    .ToList();
+
+                if (allEmails.Count == 0)
+                {
+                    TempData["ThongBao"] = "❌ Vui lòng chọn hoặc nhập email!";
+                    return RedirectToAction("GuiEmail");
+                }
+
+                // Gửi email
+                await _dichVuGuiEmail.GuiEmailAsync(allEmails, model.TieuDe, model.NoiDung);
+
+                TempData["ThongBao"] = $"✅ Đã gửi email thành công tới {allEmails.Count} địa chỉ!";
+                return RedirectToAction("GuiEmail");
+            }
+            catch (Exception ex)
             {
-                _dichVuGuiEmail.Gui(email, vm.TieuDe, vm.NoiDung);
+                TempData["ThongBao"] = $"❌ Lỗi: {ex.Message}";
+                return RedirectToAction("GuiEmail");
             }
-
-            TempData["ThongBao"] = "Email đã được gửi thành công!";
-            return RedirectToAction("GuiEmail");
         }
 
         // Upload ảnh cho TinyMCE - Trả URL tuyệt đối
