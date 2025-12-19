@@ -140,7 +140,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
             var canonicalUrl = loai.HasValue
                 ? $"{baseUrl}/danh-muc/{SeoHelper.GenerateSlug(tenLoai ?? "")}/{loai}"
-                : $"{baseUrl}/hang-hoa";
+                : $"{baseUrl}/san-pham";
 
             ViewData["SeoData"] = new SeoData
             {
@@ -213,7 +213,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 Title = $"Tìm kiếm \"{query}\" - {totalItems} sản phẩm | PhongNguyen Puppy Shop",
                 Description = $"Tìm thấy {totalItems} sản phẩm cho từ khóa \"{query}\". Thức ăn, đồ dùng chó chất lượng cao, giá tốt. Giao hàng toàn quốc, tư vấn miễn phí.",
                 Keywords = $"{query}, thức ăn chó, đồ dùng chó, phụ kiện chó, puppy shop",
-                CanonicalUrl = $"{Request.Scheme}://{Request.Host}/HangHoa/Search?query={query}"
+                CanonicalUrl = $"{Request.Scheme}://{Request.Host}/san-pham/Search?query={query}"
             };
 
             return View(result);

@@ -120,18 +120,27 @@ app.MapControllerRoute(
     pattern: "sitemap.xml",
     defaults: new { controller = "Sitemap", action = "Index" });
 
-app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
-
+// THAY ĐỔI ROUTE HANGHOA SANG SANPHAM
 app.MapControllerRoute(
     name: "product-detail",
-    pattern: "san-pham/{slug}/{id:int}",
+    pattern: "san-pham/{slug}-{id:int}",
     defaults: new { controller = "HangHoa", action = "Detail" });
 
 app.MapControllerRoute(
     name: "product-category",
-    pattern: "danh-muc/{slug}/{id:int}",
+    pattern: "danh-muc/{slug}-{id:int}",
+    defaults: new { controller = "HangHoa", action = "Index" });
+
+// THÊM route search sản phẩm
+app.MapControllerRoute(
+    name: "product-search",
+    pattern: "san-pham/tim-kiem",
+    defaults: new { controller = "HangHoa", action = "Search" });
+
+// THÊM route danh sách sản phẩm
+app.MapControllerRoute(
+    name: "products",
+    pattern: "san-pham",
     defaults: new { controller = "HangHoa", action = "Index" });
 
 app.MapControllerRoute(
