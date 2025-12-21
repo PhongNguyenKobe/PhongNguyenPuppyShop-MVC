@@ -468,8 +468,13 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     TongTien = (float)(h.ChiTietHds.Sum(ct => ct.DonGia * ct.SoLuong) - (h.GiamGia) + (h.PhiVanChuyen)),
                     DienThoai = h.MaKhNavigation.DienThoai,
                     Email = h.MaKhNavigation.Email,
+                    //THÊM MỚI: Lấy thông tin thanh toán
+                    TransactionId = h.TransactionId,
+                    PaymentGatewayOrderId = h.PaymentGatewayOrderId,
+                    CachThanhToan = h.CachThanhToan,
                     ChiTietHds = h.ChiTietHds.Select(ct => new ChiTietHdViewModel
                     {
+                        MaHh = ct.MaHh,
                         TenHh = ct.MaHhNavigation.TenHh,
                         DonGia = ct.DonGia,
                         SoLuong = ct.SoLuong,
@@ -488,13 +493,10 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
             if (hoaDon != null)
             {
-                // FALLBACK: Ưu tiên HoaDon, nếu không có thì lấy từ KhachHang
-                // (Phòng trường hợp SQL UPDATE bị lỗi hoặc khách hàng chưa có địa chỉ)
                 int? provinceId = hoaDon.ProvinceId ?? hoaDon.MaKhNavigation?.ProvinceId;
                 int? districtId = hoaDon.DistrictId ?? hoaDon.MaKhNavigation?.DistrictId;
                 string? wardCode = hoaDon.WardCode ?? hoaDon.MaKhNavigation?.WardCode;
 
-                // Chỉ gọi API nếu có dữ liệu hợp lệ
                 if (provinceId.HasValue && provinceId.Value > 0)
                 {
                     try
@@ -504,7 +506,6 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     }
                     catch (Exception ex)
                     {
-                        // Log lỗi nhưng không crash ứng dụng
                         Console.WriteLine($"Lỗi lấy tên tỉnh: {ex.Message}");
                     }
                 }

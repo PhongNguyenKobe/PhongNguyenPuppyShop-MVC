@@ -37,7 +37,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             foreach (var product in products)
             {
                 var slug = SeoHelper.GenerateSlug(product.TenHh);
-                sitemapNodes.Add(new SitemapNode($"{baseUrl}/san-pham/{slug}/{product.MaHh}", "weekly", "0.9"));
+                sitemapNodes.Add(new SitemapNode($"{baseUrl}/san-pham/{slug}-{product.MaHh}", "weekly", "0.9"));
             }
 
             // 4. Tất cả danh mục
@@ -45,7 +45,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
             foreach (var category in categories)
             {
                 var slug = SeoHelper.GenerateSlug(category.TenLoai);
-                sitemapNodes.Add(new SitemapNode($"{baseUrl}/danh-muc/{slug}/{category.MaLoai}", "weekly", "0.8"));
+                sitemapNodes.Add(new SitemapNode($"{baseUrl}/danh-muc/{slug}-{category.MaLoai}", "weekly", "0.8"));
             }
 
             // Tạo XML

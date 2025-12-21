@@ -40,6 +40,12 @@ public partial class HoaDon
 
     public double GiamGia { get; set; }
 
+    // THÊM MỚI: Transaction ID từ cổng thanh toán
+    public string? TransactionId { get; set; }
+
+    //THÊM MỚI: Order ID từ PayPal/VNPay
+    public string? PaymentGatewayOrderId { get; set; }
+
     public virtual ICollection<ChiTietHd> ChiTietHds { get; set; } = new List<ChiTietHd>();
 
     public virtual KhachHang MaKhNavigation { get; set; } = null!;

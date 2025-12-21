@@ -90,10 +90,11 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
         }
 
         //CẬP NHẬT: Chi tiết hóa đơn với địa chỉ đầy đủ
+        //chức năng xem chi tiết hóa đơn
         public async Task<IActionResult> Details(int id)
         {
             var hoaDonVM = await _context.HoaDons
-                .Include(h => h.MaKhNavigation)
+                            .Include(h => h.MaKhNavigation)
                 .Include(h => h.MaTrangThaiNavigation)
                 .Include(h => h.ChiTietHds)
                     .ThenInclude(ct => ct.MaHhNavigation)
@@ -109,9 +110,13 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
                     PhiVanChuyen = h.PhiVanChuyen,
                     GhiChu = h.GhiChu,
                     GiamGia = h.GiamGia,
-                    TongTien = (float)h.ChiTietHds.Sum(ct => (ct.DonGia * ct.SoLuong) * (1 - ct.GiamGia / 100)) - h.GiamGia + h.PhiVanChuyen,
+                    TongTien = (float)(h.ChiTietHds.Sum(ct => ct.DonGia * ct.SoLuong) - (h.GiamGia) + (h.PhiVanChuyen)),
                     DienThoai = h.MaKhNavigation.DienThoai,
                     Email = h.MaKhNavigation.Email,
+                    // ✅ THÊM MỚI: Lấy thông tin thanh toán
+                    TransactionId = h.TransactionId,
+                    PaymentGatewayOrderId = h.PaymentGatewayOrderId,
+                    CachThanhToan = h.CachThanhToan,
                     ChiTietHds = h.ChiTietHds.Select(ct => new ChiTietHdViewModel
                     {
                         TenHh = ct.MaHhNavigation.TenHh,
@@ -125,19 +130,18 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
             if (hoaDonVM == null)
                 return NotFound();
 
-            //LẤY THÔNG TIN ĐỊA CHỈ TỪ GHN API
+            //LẤY CẢ HOADON VÀ KHACHHANG
             var hoaDon = await _context.HoaDons
                 .Include(h => h.MaKhNavigation)
                 .FirstOrDefaultAsync(h => h.MaHd == id);
 
             if (hoaDon != null)
             {
-                // Fallback: Ưu tiên HoaDon, nếu không có thì lấy từ KhachHang
+                // FALLBACK: Ưu tiên HoaDon, nếu không có thì lấy từ KhachHang
                 int? provinceId = hoaDon.ProvinceId ?? hoaDon.MaKhNavigation?.ProvinceId;
                 int? districtId = hoaDon.DistrictId ?? hoaDon.MaKhNavigation?.DistrictId;
                 string? wardCode = hoaDon.WardCode ?? hoaDon.MaKhNavigation?.WardCode;
 
-                // Lấy tên Province
                 if (provinceId.HasValue && provinceId.Value > 0)
                 {
                     try
@@ -147,11 +151,10 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Admin - Lỗi lấy tên tỉnh: {ex.Message}");
+                        Console.WriteLine($"Lỗi lấy tên tỉnh: {ex.Message}");
                     }
                 }
 
-                // Lấy tên District
                 if (districtId.HasValue && districtId.Value > 0 && provinceId.HasValue)
                 {
                     try
@@ -161,11 +164,10 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Admin - Lỗi lấy tên quận: {ex.Message}");
+                        Console.WriteLine($"Lỗi lấy tên quận: {ex.Message}");
                     }
                 }
 
-                // Lấy tên Ward
                 if (!string.IsNullOrEmpty(wardCode) && districtId.HasValue)
                 {
                     try
@@ -175,7 +177,7 @@ namespace PhongNguyenPuppy_MVC.Areas.Admin.Controllers
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($" Admin - Lỗi lấy tên phường: {ex.Message}");
+                        Console.WriteLine($"Lỗi lấy tên phường: {ex.Message}");
                     }
                 }
             }

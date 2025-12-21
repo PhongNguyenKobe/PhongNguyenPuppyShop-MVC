@@ -538,6 +538,22 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     ? "Thanh toán thành công qua PayPal"
                     : $"Thanh toán thành công qua PayPal - {ghiChu}";
 
+                // LẤY TRANSACTION ID TỪ PAYPAL RESPONSE
+                string paypalTransactionId = "";
+                try
+                {
+                    // PayPal trả về transaction ID trong capture response
+                    if (response?.purchase_units != null && response.purchase_units.Count > 0)
+                    {
+                        var payments = response.purchase_units[0]?.payments;
+                        if (payments?.captures != null && payments.captures.Count > 0)
+                        {
+                            paypalTransactionId = payments.captures[0]?.id ?? "";
+                        }
+                    }
+                }
+                catch { }
+
                 var hoadon = new HoaDon
                 {
                     MaKh = customerId,
@@ -553,7 +569,10 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     MaTrangThai = 0,
                     GhiChu = ghiChuFinal,
                     PhiVanChuyen = phiVanChuyen,
-                    GiamGia = (float)giamGia
+                    GiamGia = (float)giamGia,
+                    // THÊM: Lưu TransactionId từ PayPal
+                    TransactionId = paypalTransactionId,
+                    PaymentGatewayOrderId = orderID
                 };
 
                 using var transaction = db.Database.BeginTransaction();
@@ -672,7 +691,10 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 MaTrangThai = 0,
                 GhiChu = ghiChuFinal,
                 PhiVanChuyen = phiVanChuyen,
-                GiamGia = (float)giamGia
+                GiamGia = (float)giamGia,
+                //THÊM: Lưu TransactionId từ VNPay
+                TransactionId = response.TransactionId,
+                PaymentGatewayOrderId = response.OrderId
             };
 
             using var transaction = db.Database.BeginTransaction();

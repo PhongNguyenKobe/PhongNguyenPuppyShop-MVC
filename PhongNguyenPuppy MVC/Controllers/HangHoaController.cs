@@ -233,7 +233,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
             var correctSlug = SeoHelper.GenerateSlug(product.TenHh);
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
-            var canonicalUrl = $"{baseUrl}/san-pham/{correctSlug}/{id}";
+            var canonicalUrl = $"{baseUrl}/san-pham/{correctSlug}-{id}";
 
             if (string.IsNullOrEmpty(slug) || slug != correctSlug)
             {
