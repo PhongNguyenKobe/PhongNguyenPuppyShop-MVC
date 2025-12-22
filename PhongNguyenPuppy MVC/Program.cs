@@ -66,7 +66,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddCookie("AdminScheme", options =>
 {
-    options.LoginPath = "/admin/admin/login";
+    options.LoginPath = "/admin/admin/login"; 
     options.AccessDeniedPath = "/admin/admin/accessdenied";
     options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     options.SlidingExpiration = true;
@@ -95,13 +95,17 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-// Chỉ redirect GET requests
+// Chỉ redirect GET requests (NGOẠI TRỪ ADMIN AREA)
 app.Use(async (context, next) =>
 {
     var url = context.Request.Path.Value;
     var method = context.Request.Method;
 
-    if (method == "GET" && !string.IsNullOrEmpty(url) && url != url.ToLower())
+    //THÊM: Bỏ qua lowercase cho Admin Area
+    if (method == "GET" &&
+        !string.IsNullOrEmpty(url) &&
+        url != url.ToLower() &&
+        !url.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase))
     {
         context.Response.Redirect(url.ToLower() + context.Request.QueryString, permanent: true);
         return;
@@ -117,10 +121,10 @@ app.UseAuthorization();
 
 
 // THÊM: Route cho Admin Area
-app.MapControllerRoute(
-    name: "admin",
-    pattern: "admin/{controller=Admin}/{action=Index}/{id?}",
-    defaults: new { area = "Admin" });
+app.MapAreaControllerRoute(
+    name: "admin_area",
+    areaName: "Admin",
+    pattern: "Admin/{controller=Admin}/{action=Login}/{id?}");
 
 app.MapControllerRoute(
     name: "sitemap",
