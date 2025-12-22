@@ -115,6 +115,19 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+
+// THÊM: Route cho Admin Area
+app.MapControllerRoute(
+    name: "admin",
+    pattern: "admin/{controller=Admin}/{action=Index}/{id?}",
+    defaults: new { area = "Admin" });
+
+app.MapControllerRoute(
+    name: "sitemap",
+    pattern: "sitemap.xml",
+    defaults: new { controller = "Sitemap", action = "Index" });
+
+
 app.MapControllerRoute(
     name: "sitemap",
     pattern: "sitemap.xml",
