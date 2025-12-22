@@ -78,4 +78,49 @@
         public int DistrictID { get; set; }
         public string? WardName { get; set; }
     }
+
+    // Request tạo đơn GHN
+    public class GHNCreateOrderRequest
+    {
+        public int to_district_id { get; set; }
+        public string to_ward_code { get; set; } = "";
+        public string to_name { get; set; } = "";
+        public string to_phone { get; set; } = "";
+        public string to_address { get; set; } = "";
+        public int cod_amount { get; set; } // Tiền thu hộ COD
+        public string content { get; set; } = "Hàng hóa";
+        public int weight { get; set; }
+        public int length { get; set; }
+        public int width { get; set; }
+        public int height { get; set; }
+        public int service_type_id { get; set; } = 2;
+        public int payment_type_id { get; set; } = 1; // 1: Người gửi trả phí, 2: Người nhận trả phí
+        public string? note { get; set; }
+        public string required_note { get; set; } = "KHONGCHOXEMHANG"; // Giá trị mặc định
+        public List<GHNOrderItem> items { get; set; } = new();
+    }
+
+    public class GHNOrderItem
+    {
+        public string name { get; set; } = "";
+        public int quantity { get; set; }
+        public int weight { get; set; }
+    }
+
+    // Response từ GHN
+    public class GHNCreateOrderResponse
+    {
+        public int code { get; set; }
+        public string? message { get; set; }
+        public GHNOrderData? data { get; set; }
+    }
+
+    public class GHNOrderData
+    {
+        public string? order_code { get; set; } // Mã vận đơn GHN
+        public string? sort_code { get; set; }
+        public string? trans_type { get; set; }
+        public int total_fee { get; set; }
+        public string? expected_delivery_time { get; set; }
+    }
 }

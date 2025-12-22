@@ -11,6 +11,8 @@ namespace PhongNguyenPuppy_MVC.Services
         Task<List<GHNProvince>?> GetProvincesAsync();
         Task<List<GHNDistrict>?> GetDistrictsAsync(int provinceId);
         Task<List<GHNWard>?> GetWardsAsync(int districtId);
+        Task<string?> CreateOrderAsync(GHNCreateOrderRequest request);
+
     }
 
     public class GHNService : IGHNService
@@ -20,6 +22,7 @@ namespace PhongNguyenPuppy_MVC.Services
         private readonly int _shopId;
         private readonly int _fromDistrictId;
         private readonly ILogger<GHNService> _logger;
+
 
         public GHNService(IConfiguration configuration, HttpClient httpClient, ILogger<GHNService> logger)
         {
@@ -169,6 +172,57 @@ namespace PhongNguyenPuppy_MVC.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[GHN] Error getting wards for district {DistrictId}", districtId);
+                return null;
+            }
+        }
+        // THÊM MỚI: Tạo đơn hàng trên GHN
+        public async Task<string?> CreateOrderAsync(GHNCreateOrderRequest request)
+        {
+            try
+            {
+                var jsonContent = JsonSerializer.Serialize(request, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+                });
+
+                _logger.LogInformation("[GHN] Creating order - Request: {Request}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var httpRequest = new HttpRequestMessage(HttpMethod.Post, "v2/shipping-order/create")
+                {
+                    Content = content
+                };
+                httpRequest.Headers.Add("ShopId", _shopId.ToString());
+
+                var response = await _httpClient.SendAsync(httpRequest);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("[GHN] Create Order Response Status: {StatusCode}, Body: {Response}",
+                    response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<GHNCreateOrderResponse>(responseContent,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (result?.code == 200 && result.data != null)
+                    {
+                        _logger.LogInformation("[GHN] Order created successfully: {OrderCode}", result.data.order_code);
+                        return result.data.order_code; // Trả về mã vận đơn
+                    }
+                    else
+                    {
+                        _logger.LogWarning("[GHN] Create order failed - Code: {Code}, Message: {Message}",
+                            result?.code, result?.message);
+                    }
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[GHN] Exception occurred while creating order");
                 return null;
             }
         }

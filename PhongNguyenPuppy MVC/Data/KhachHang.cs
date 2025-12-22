@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace PhongNguyenPuppy_MVC.Data;
 
@@ -17,8 +18,8 @@ public partial class KhachHang
 
     public string? DiaChi { get; set; }
 
+    [RegularExpression(@"^(03|05|07|08|09)\d{8}$", ErrorMessage = "Số điện thoại phải bắt đầu bằng 03/05/07/08/09 và có 10 số")]
     public string? DienThoai { get; set; }
-
     public string Email { get; set; } = null!;
 
     public string? ResetToken { get; set; }

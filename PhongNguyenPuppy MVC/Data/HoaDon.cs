@@ -45,6 +45,7 @@ public partial class HoaDon
 
     //THÊM MỚI: Order ID từ PayPal/VNPay
     public string? PaymentGatewayOrderId { get; set; }
+    public string? GHNOrderCode { get; set; }
 
     public virtual ICollection<ChiTietHd> ChiTietHds { get; set; } = new List<ChiTietHd>();
 

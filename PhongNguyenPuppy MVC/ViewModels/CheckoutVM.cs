@@ -1,10 +1,15 @@
-﻿namespace PhongNguyenPuppy_MVC.ViewModels
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace PhongNguyenPuppy_MVC.ViewModels
 {
     public class CheckoutVM
     {
         public bool GiongKhachHang { get; set; }
         public string? HoTen { get; set; }
         public string? DiaChi { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng nhập số điện thoại")]
+        [RegularExpression(@"^(03|05|07|08|09)\d{8}$", ErrorMessage = "Số điện thoại không hợp lệ (phải bắt đầu bằng 03/05/07/08/09 và có 10 số)")]
         public string? DienThoai { get; set; }
         public string? GhiChu { get; set; }
 

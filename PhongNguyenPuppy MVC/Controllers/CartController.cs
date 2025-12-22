@@ -414,8 +414,101 @@ namespace PhongNguyenPuppy_MVC.Controllers
                     }
 
                     transaction.Commit();
+
+                    // ✅ LOG 1: Kiểm tra xem code có chạy đến đây không
+                    Console.WriteLine("=== [DEBUG] SAU KHI COMMIT TRANSACTION ===");
+                    Console.WriteLine($"[DEBUG] MaHd: {hoadon.MaHd}");
+                    Console.WriteLine($"[DEBUG] Cart count: {gioHang.Count}");
+                    Console.WriteLine($"[DEBUG] model.DistrictId = {model.DistrictId}");
+                    Console.WriteLine($"[DEBUG] model.WardCode = '{model.WardCode}'");
+                    Console.WriteLine($"[DEBUG] model.DiaChi = '{model.DiaChi}'");
+                    Console.WriteLine($"[DEBUG] model.DienThoai = '{model.DienThoai}'");
+
+                    // ✅ TẠO GHN ORDER TRƯỚC KHI XÓA SESSION
+                    try
+                    {
+                        Console.WriteLine($"[DEBUG] VÀO BLOCK TRY GHN");
+
+                        if (model.DistrictId > 0 && !string.IsNullOrEmpty(model.WardCode))
+                        {
+                            Console.WriteLine($"[DEBUG] ✅ Điều kiện hợp lệ - Bắt đầu tạo GHN request");
+
+                            var ghnRequest = new GHNCreateOrderRequest
+                            {
+                                to_district_id = model.DistrictId,
+                                to_ward_code = model.WardCode,
+                                to_name = model.HoTen ?? khachHang?.HoTen ?? "Khách hàng",
+                                to_phone = model.DienThoai ?? khachHang?.DienThoai ?? "",
+                                to_address = model.DiaChi ?? khachHang?.DiaChi ?? "",
+                                cod_amount = tongCong,
+                                content = $"Đơn hàng #{hoadon.MaHd}",
+                                weight = gioHang.Sum(p => p.SoLuong * 500),
+                                length = 30,
+                                width = 20,
+                                height = 20,
+                                service_type_id = 2,
+                                payment_type_id = 1,
+                                note = model.GhiChu,
+                                items = gioHang.Select(p => new GHNOrderItem
+                                {
+                                    name = p.TenHH,
+                                    quantity = p.SoLuong,
+                                    weight = p.SoLuong * 500
+                                }).ToList()
+                            };
+
+                            Console.WriteLine($"[DEBUG] GHN Request created:");
+                            Console.WriteLine($"  - to_phone: {ghnRequest.to_phone}");
+                            Console.WriteLine($"  - to_address: {ghnRequest.to_address}");
+                            Console.WriteLine($"  - weight: {ghnRequest.weight}");
+                            Console.WriteLine($"  - items count: {ghnRequest.items.Count}");
+
+                            Console.WriteLine($"[DEBUG] Calling _ghnService.CreateOrderAsync...");
+
+                            var ghnOrderCode = await _ghnService.CreateOrderAsync(ghnRequest);
+
+                            Console.WriteLine($"[DEBUG] GHN API Response: {(ghnOrderCode ?? "NULL")}");
+
+                            if (!string.IsNullOrEmpty(ghnOrderCode))
+                            {
+                                hoadon.GHNOrderCode = ghnOrderCode;
+                                db.Update(hoadon);
+                                await db.SaveChangesAsync();
+                                Console.WriteLine($"[GHN] ✅ Order created successfully: {ghnOrderCode}");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[GHN] ❌ CreateOrderAsync returned NULL");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[DEBUG] ❌ Điều kiện KHÔNG hợp lệ:");
+                            Console.WriteLine($"  - DistrictId > 0: {model.DistrictId > 0} (value: {model.DistrictId})");
+                            Console.WriteLine($"  - WardCode not empty: {!string.IsNullOrEmpty(model.WardCode)} (value: '{model.WardCode}')");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[GHN] ❌ EXCEPTION: {ex.Message}");
+                        Console.WriteLine($"[GHN] StackTrace: {ex.StackTrace}");
+                    }
+
+                    Console.WriteLine("=== [DEBUG] KẾT THÚC BLOCK GHN ===");
+
+                    // ✅ CHỈ XÓA SESSION SAU KHI TẠO GHN ORDER XONG
                     HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
                     HttpContext.Session.Remove("PhiVanChuyen");
+
+                    // send order email
+                    try
+                    {
+                        await SendOrderInfoEmailAsync(hoadon.MaHd);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: failed to send order email for order {hoadon.MaHd}: {ex.GetBaseException().Message}");
+                    }
 
                     // send order email (best-effort, do not block order success)
                     try
@@ -595,6 +688,49 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 db.AddRange(cthds);
                 db.SaveChanges();
                 transaction.Commit();
+
+                // THÊM: Tạo đơn GHN cho PayPal
+                try
+                {
+                    if (districtId > 0 && !string.IsNullOrEmpty(wardCode))
+                    {
+                        var ghnRequest = new GHNCreateOrderRequest
+                        {
+                            to_district_id = districtId,
+                            to_ward_code = wardCode,
+                            to_name = !string.IsNullOrWhiteSpace(hoTen) ? hoTen : khachHang?.HoTen ?? "Khách hàng",
+                            to_phone = !string.IsNullOrWhiteSpace(dienThoai) ? dienThoai : khachHang?.DienThoai ?? "",
+                            to_address = !string.IsNullOrWhiteSpace(diaChi) ? diaChi : khachHang?.DiaChi ?? "",
+                            cod_amount = 0, // PayPal đã thanh toán
+                            content = $"Đơn hàng #{hoadon.MaHd} - PayPal",
+                            weight = gioHang.Sum(p => p.SoLuong * 500),
+                            length = 30,
+                            width = 20,
+                            height = 20,
+                            service_type_id = 2,
+                            payment_type_id = 1,
+                            note = ghiChu,
+                            items = gioHang.Select(p => new GHNOrderItem
+                            {
+                                name = p.TenHH,
+                                quantity = p.SoLuong,
+                                weight = p.SoLuong * 500
+                            }).ToList()
+                        };
+
+                        var ghnOrderCode = await _ghnService.CreateOrderAsync(ghnRequest);
+                        if (!string.IsNullOrEmpty(ghnOrderCode))
+                        {
+                            hoadon.GHNOrderCode = ghnOrderCode;
+                            db.Update(hoadon);
+                            await db.SaveChangesAsync();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Warning: failed to create GHN order for PayPal {hoadon.MaHd}: {ex.GetBaseException().Message}");
+                }
                 try
                 {
                     await SendOrderInfoEmailAsync(hoadon.MaHd);
@@ -692,7 +828,6 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 GhiChu = ghiChuFinal,
                 PhiVanChuyen = phiVanChuyen,
                 GiamGia = (float)giamGia,
-                //THÊM: Lưu TransactionId từ VNPay
                 TransactionId = response.TransactionId,
                 PaymentGatewayOrderId = response.OrderId
             };
@@ -719,6 +854,65 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 db.AddRange(cthds);
                 db.SaveChanges();
                 transaction.Commit();
+
+                // ✅ THÊM: TẠO ĐƠN GHN CHO VNPAY
+                try
+                {
+                    Console.WriteLine($"[DEBUG] Bắt đầu tạo GHN order cho VNPay - MaHd: {hoadon.MaHd}");
+
+                    if (districtId > 0 && !string.IsNullOrEmpty(wardCode))
+                    {
+                        var ghnRequest = new GHNCreateOrderRequest
+                        {
+                            to_district_id = districtId,
+                            to_ward_code = wardCode,
+                            to_name = !string.IsNullOrWhiteSpace(hoTen) ? hoTen : khachHang?.HoTen ?? "Khách hàng",
+                            to_phone = !string.IsNullOrWhiteSpace(dienThoai) ? dienThoai : khachHang?.DienThoai ?? "",
+                            to_address = !string.IsNullOrWhiteSpace(diaChi) ? diaChi : khachHang?.DiaChi ?? "",
+                            cod_amount = 0, // VNPay đã thanh toán
+                            content = $"Đơn hàng #{hoadon.MaHd} - VNPay",
+                            weight = gioHang.Sum(p => p.SoLuong * 500),
+                            length = 30,
+                            width = 20,
+                            height = 20,
+                            service_type_id = 2,
+                            payment_type_id = 1,
+                            note = ghiChu,
+                            required_note = "KHONGCHOXEMHANG",
+                            items = gioHang.Select(p => new GHNOrderItem
+                            {
+                                name = p.TenHH,
+                                quantity = p.SoLuong,
+                                weight = p.SoLuong * 500
+                            }).ToList()
+                        };
+
+                        Console.WriteLine($"[DEBUG] GHN Request: to_phone={ghnRequest.to_phone}, to_address={ghnRequest.to_address}");
+
+                        var ghnOrderCode = await _ghnService.CreateOrderAsync(ghnRequest);
+
+                        if (!string.IsNullOrEmpty(ghnOrderCode))
+                        {
+                            hoadon.GHNOrderCode = ghnOrderCode;
+                            db.Update(hoadon);
+                            await db.SaveChangesAsync();
+                            Console.WriteLine($"[GHN] ✅ VNPay order created: {ghnOrderCode}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[GHN] ❌ GHN returned NULL for VNPay order");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[DEBUG] ❌ Không tạo GHN - DistrictId: {districtId}, WardCode: {wardCode}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Warning: failed to create GHN order for VNPay {hoadon.MaHd}: {ex.GetBaseException().Message}");
+                }
+
                 try
                 {
                     await SendOrderInfoEmailAsync(hoadon.MaHd);
@@ -727,6 +921,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
                 {
                     Console.WriteLine($"Warning: failed to send VNPay order email for {hoadon.MaHd}: {ex.GetBaseException().Message}");
                 }
+
                 HttpContext.Session.Set<List<CartItem>>(MySetting.CART_KEY, new List<CartItem>());
 
                 //XÓA THÔNG TIN CHECKOUT TRONG SESSION
