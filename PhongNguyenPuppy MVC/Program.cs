@@ -83,7 +83,8 @@ builder.Services.AddSingleton<IVnPayService, VnPayService>();
 builder.Services.Configure<FacebookChatSettings>(builder.Configuration.GetSection("FacebookChatSettings"));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<PhongNguyenPuppy_MVC.Services.IViewRenderService, PhongNguyenPuppy_MVC.Services.ViewRenderService>();
-
+// Cloudinary Service
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

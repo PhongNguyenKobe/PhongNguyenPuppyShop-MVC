@@ -1,524 +1,763 @@
 ﻿@model PhongNguyenPuppy_MVC.Areas.Admin.ViewModels.GuiEmailVM
 
 @{
-    Layout = "_LayoutAdmin";
-    ViewBag.Title = "Gửi email cho khách hàng";
+	Layout = "_LayoutAdmin";
+	ViewBag.Title = "Gửi email cho khách hàng";
 }
 
 <h2>📧 Gửi email</h2>
 
 @if (TempData["ThongBao"] != null)
 {
-    <div class="alert alert-success">
-        @TempData["ThongBao"]
-    </div>
+	<div class="alert alert-success">
+		@TempData["ThongBao"]
+	</div>
 }
 
 <div class="card shadow-sm">
-    <div class="card-body">
-        <form asp-action="GuiEmail" method="post" id="formGuiEmail">
-            <!-- Tiêu đề -->
-            <div class="mb-3">
-                <label for="TieuDe" class="form-label"><strong>📝 Tiêu đề</strong></label>
-                <input type="text" class="form-control" id="TieuDe" name="TieuDe" placeholder="Nhập tiêu đề email..." required />
-            </div>
+	<div class="card-body">
+		<form asp-action="GuiEmail" method="post" id="formGuiEmail">
+			<!-- Tiêu đề -->
+			<div class="mb-3">
+				<label for="TieuDe" class="form-label"><strong>📝 Tiêu đề</strong></label>
+				<input type="text" class="form-control" id="TieuDe" name="TieuDe" placeholder="Nhập tiêu đề email..." required />
+			</div>
 
-            <!-- Template Selector -->
-            <div class="mb-3">
-                <label for="TemplateId" class="form-label"><strong>🎨 Chọn mẫu email</strong></label>
-                <select class="form-select" id="TemplateId" onchange="loadTemplate()">
-                    <option value="">-- Chọn mẫu hoặc tạo tùy chỉnh --</option>
-                    <optgroup label="🎉 Khuyến mãi">
-                        <option value="promo_christmas">🎄 Khuyến mãi Giáng sinh</option>
-                        <option value="promo_newyear">🎆 Khuyến mãi Năm mới</option>
-                        <option value="promo_summer">☀️ Khuyến mãi Hè</option>
-                        <option value="promo_general">🏷️ Khuyến mãi chung</option>
-                    </optgroup>
-                    <optgroup label="📢 Thông báo">
-                        <option value="product_new">📦 Sản phẩm mới</option>
-                        <option value="announcement">📣 Thông báo chung</option>
-                        <option value="feedback">⭐ Yêu cầu review</option>
-                    </optgroup>
-                    <optgroup label="👋 Chào đón">
-                        <option value="welcome">🎯 Email chào mừng</option>
-                        <option value="thank_you">🙏 Cảm ơn đã mua hàng</option>
-                    </optgroup>
-                </select>
-                <small class="text-muted d-block mt-2">Chọn mẫu sẽ tự động điền nội dung, sau đó bạn có thể chỉnh sửa</small>
-            </div>
+			<!-- Template Selector -->
+			<div class="mb-3">
+				<label for="TemplateId" class="form-label"><strong>🎨 Chọn mẫu email</strong></label>
+				<select class="form-select" id="TemplateId" onchange="loadTemplate()">
+					<option value="">-- Chọn mẫu hoặc tạo tùy chỉnh --</option>
+					<optgroup label="🎉 Khuyến mãi">
+						<option value="promo_christmas">🎄 Khuyến mãi Giáng sinh</option>
+						<option value="promo_newyear">🎆 Khuyến mãi Năm mới</option>
+						<option value="promo_summer">☀️ Khuyến mãi Hè</option>
+						<option value="promo_general">🏷️ Khuyến mãi chung</option>
+					</optgroup>
+					<optgroup label="📢 Thông báo">
+						<option value="product_new">📦 Sản phẩm mới</option>
+						<option value="announcement">📣 Thông báo chung</option>
+						<option value="feedback">⭐ Yêu cầu review</option>
+					</optgroup>
+					<optgroup label="👋 Chào đón">
+						<option value="welcome">🎯 Email chào mừng</option>
+						<option value="thank_you">🙏 Cảm ơn đã mua hàng</option>
+					</optgroup>
+				</select>
+				<small class="text-muted d-block mt-2">Chọn mẫu sẽ tự động điền nội dung, sau đó bạn có thể chỉnh sửa</small>
+			</div>
 
-            <!-- Nội dung với TinyMCE -->
-            <div class="mb-3">
-                <label for="NoiDung" class="form-label"><strong>✍️ Nội dung email</strong></label>
-                <textarea class="form-control" id="NoiDung" name="NoiDung" rows="8"></textarea>
-                <small class="text-muted d-block mt-2">💡 Bạn có thể chỉnh sửa nội dung sau khi chọn mẫu</small>
-            </div>
+			<!-- PRODUCT SELECTOR với TÌM KIẾM -->
+			<div class="mb-3">
+				<label class="form-label"><strong>🛍️ Chọn sản phẩm để hiển thị trong email</strong></label>
+				<button type="button" class="btn btn-sm btn-outline-primary mb-2" onclick="toggleProductSelector()">
+					<i class="bi bi-plus-circle"></i> Thêm sản phẩm vào email
+				</button>
 
-            <!-- Preview button -->
-            <div class="mb-3">
-                <button type="button" class="btn btn-outline-info btn-sm" onclick="xemTruoc()">
-                    <i class="bi bi-eye"></i> Xem trước
-                </button>
-            </div>
+				<div id="productSelectorContainer" style="display: none;">
+					<!-- SEARCH BOX -->
+					<div class="mb-3">
+						<div class="input-group">
+							<input type="text"
+								   class="form-control"
+								   id="productSearchInput"
+								   placeholder="Tìm kiếm sản phẩm..."
+								   autocomplete="off" />
+							<button class="btn btn-outline-secondary" type="button" onclick="searchProducts()">
+								<i class="bi bi-search"></i> Tìm
+							</button>
+						</div>
+						<small class="text-muted">Nhập tên sản phẩm và nhấn Enter hoặc click Tìm</small>
+					</div>
 
-            <!-- Email bổ sung -->
-            <div class="mb-3">
-                <label for="EmailBoSung" class="form-label"><strong>✉️ Email bổ sung (không bắt buộc)</strong></label>
-                <input type="text" class="form-control" id="EmailBoSung" name="EmailBoSung"
-                       placeholder="Nhập email khác, cách nhau bằng dấu phẩy (vd: user1@gmail.com, user2@gmail.com)" />
-                <small class="text-muted d-block mt-2">
-                    💡 Nhập các email không có trong hệ thống, cách nhau bằng dấu phẩy (,). Ví dụ: <code>abc@gmail.com, xyz@outlook.com</code>
-                </small>
-                <div id="emailBoSungList" class="mt-2" style="display: none;">
-                    <p class="text-muted mb-2">📧 Email bổ sung sẽ được gửi:</p>
-                    <div id="emailBoSungPreview" class="border rounded p-2 bg-light" style="max-height: 150px; overflow-y: auto;"></div>
-                </div>
-            </div>
+					<!-- PRODUCT LIST -->
+					<div class="border rounded p-3"
+						 id="productListContainer"
+						 style="max-height: 400px; overflow-y: auto; background-color: #f9f9f9;">
 
-            <!-- Danh sách email khách hàng -->
-            <div class="mb-3">
-                <label class="form-label"><strong>📋 Danh sách email khách hàng</strong></label>
-                <div class="mb-2">
-                    <input type="checkbox" id="chonTatCa" onchange="chonTatCaEmail(this)" />
-                    <label for="chonTatCa"><strong>Chọn tất cả (@Model.DanhSachEmail.Count) khách hàng</strong></label>
-                </div>
+						<!-- Loading indicator -->
+						<div id="productLoading" style="display: none;" class="text-center py-3">
+							<div class="spinner-border text-primary" role="status">
+								<span class="visually-hidden">Loading...</span>
+							</div>
+							<p class="mt-2 text-muted">Đang tải sản phẩm...</p>
+						</div>
 
-                <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto; background-color: #f9f9f9;">
-                    @if (Model.DanhSachEmail.Count == 0)
-                    {
-                        <p class="text-muted text-center">Không có khách hàng nào</p>
-                    }
-                    else
-                    {
-                        @foreach (var email in Model.DanhSachEmail)
-                        {
-                            <div class="form-check mb-2">
-                                <input class="form-check-input email-checkbox" type="checkbox" name="DanhSachEmail" value="@email" id="email_@email.GetHashCode()" />
-                                <label class="form-check-label" for="email_@email.GetHashCode()">
-                                    <i class="bi bi-envelope"></i> @email
-                                </label>
-                            </div>
-                        }
-                    }
-                </div>
-                <small class="text-muted d-block mt-2">Đã chọn: <span id="soLuongChon">0</span> khách hàng</small>
-            </div>
+						<!-- Product grid -->
+						<div class="row g-2" id="productGrid">
+							@foreach (var product in Model.DanhSachSanPham)
+							{
+								<div class="col-md-6 product-item">
+									<div class="card h-100 product-card" style="cursor: pointer;">
+										<div class="form-check p-3">
+											<input class="form-check-input product-checkbox"
+												   type="checkbox"
+												   name="SanPhamDuocChon"
+												   value="@product.MaHh"
+												   id="product_@product.MaHh"
+												   data-product-name="@product.TenHh"
+												   data-product-price="@product.DonGia"
+												   data-product-image="@product.Hinh"
+												   data-product-desc="@product.MoTaNgan"
+												   data-product-discount="@(product.GiamGia ?? 0)"
+												   onchange="updateSelectedProducts()" />
 
-            <!-- Buttons -->
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary" id="btnGuiEmail">
-                    <i class="bi bi-send"></i> 📤 Gửi email
-                </button>
-                <a href="@Url.Action("DanhSach", "KhachHang")" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Quay lại
-                </a>
-            </div>
-        </form>
-    </div>
+											<label class="form-check-label w-100" for="product_@product.MaHh">
+												<div class="row g-2">
+													<div class="col-4">
+														<!-- DÙNG TRỰC TIẾP@product.Hinh -->
+														<img src="@product.Hinh"
+															 alt="@product.TenHh"
+															 class="img-fluid rounded"
+															 style="max-height: 80px; object-fit: cover;" />
+													</div>
+													<div class="col-8">
+														<h6 class="mb-1" style="font-size: 14px;">@product.TenHh</h6>
+														<p class="mb-0 text-primary" style="font-weight: bold;">
+															@product.DonGia.ToString("N0") VNĐ
+														</p>
+														@if (product.GiamGia.HasValue && product.GiamGia > 0)
+														{
+															<span class="badge bg-danger">-@product.GiamGia%</span>
+														}
+													</div>
+												</div>
+											</label>
+										</div>
+									</div>
+								</div>
+							}
+						</div>
+
+						<!-- No results message -->
+						<div id="noResultsMessage" style="display: none;" class="text-center py-4">
+							<i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+							<p class="text-muted mt-2">Không tìm thấy sản phẩm nào</p>
+						</div>
+
+						<!-- Load more button -->
+						<div class="text-center mt-3" id="loadMoreContainer">
+							<button type="button" class="btn btn-sm btn-outline-primary" onclick="loadMoreProducts()">
+								<i class="bi bi-arrow-down-circle"></i> Xem thêm sản phẩm
+							</button>
+						</div>
+					</div>
+
+					<div class="mt-2">
+						<button type="button" class="btn btn-primary btn-sm" onclick="insertProductsToEmail()">
+							<i class="bi bi-plus-lg"></i> Chèn sản phẩm vào email
+						</button>
+						<span class="text-muted ms-3">Đã chọn: <span id="soLuongSanPham">0</span> sản phẩm</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Nội dung với TinyMCE -->
+			<div class="mb-3">
+				<label for="NoiDung" class="form-label"><strong>✍️ Nội dung email</strong></label>
+				<textarea class="form-control" id="NoiDung" name="NoiDung" rows="8"></textarea>
+				<small class="text-muted d-block mt-2">💡 Bạn có thể chỉnh sửa nội dung sau khi chọn mẫu</small>
+			</div>
+
+			<!-- Preview button -->
+			<div class="mb-3">
+				<button type="button" class="btn btn-outline-info btn-sm" onclick="xemTruoc()">
+					<i class="bi bi-eye"></i> Xem trước
+				</button>
+			</div>
+
+			<!-- Email bổ sung -->
+			<div class="mb-3">
+				<label for="EmailBoSung" class="form-label"><strong>✉️ Email bổ sung (không bắt buộc)</strong></label>
+				<input type="text" class="form-control" id="EmailBoSung" name="EmailBoSung"
+					   placeholder="Nhập email khác, cách nhau bằng dấu phẩy (vd: user1@gmail.com, user2@gmail.com)" />
+				<small class="text-muted d-block mt-2">
+					💡 Nhập các email không có trong hệ thống, cách nhau bằng dấu phẩy (,). Ví dụ: <code>abc@gmail.com, xyz@outlook.com</code>
+				</small>
+				<div id="emailBoSungList" class="mt-2" style="display: none;">
+					<p class="text-muted mb-2">📧 Email bổ sung sẽ được gửi:</p>
+					<div id="emailBoSungPreview" class="border rounded p-2 bg-light" style="max-height: 150px; overflow-y: auto;"></div>
+				</div>
+			</div>
+
+			<!-- Danh sách email khách hàng -->
+			<div class="mb-3">
+				<label class="form-label"><strong>📋 Danh sách email khách hàng</strong></label>
+				<div class="mb-2">
+					<input type="checkbox" id="chonTatCa" onchange="chonTatCaEmail(this)" />
+					<label for="chonTatCa"><strong>Chọn tất cả (@Model.DanhSachEmail.Count) khách hàng</strong></label>
+				</div>
+
+				<div class="border rounded p-3" style="max-height: 300px; overflow-y: auto; background-color: #f9f9f9;">
+					@if (Model.DanhSachEmail.Count == 0)
+					{
+						<p class="text-muted text-center">Không có khách hàng nào</p>
+					}
+					else
+					{
+						@foreach (var email in Model.DanhSachEmail)
+						{
+							<div class="form-check mb-2">
+								<input class="form-check-input email-checkbox" type="checkbox" name="DanhSachEmail" value="@email" id="email_@email.GetHashCode()" />
+								<label class="form-check-label" for="email_@email.GetHashCode()">
+									<i class="bi bi-envelope"></i> @email
+								</label>
+							</div>
+						}
+					}
+				</div>
+				<small class="text-muted d-block mt-2">Đã chọn: <span id="soLuongChon">0</span> khách hàng</small>
+			</div>
+
+			<!-- Buttons -->
+			<div class="d-flex gap-2">
+				<button type="submit" class="btn btn-primary" id="btnGuiEmail">
+					<i class="bi bi-send"></i> 📤 Gửi email
+				</button>
+				<a href="@Url.Action("DanhSach", "KhachHang")" class="btn btn-secondary">
+					<i class="bi bi-arrow-left"></i> Quay lại
+				</a>
+			</div>
+		</form>
+	</div>
 </div>
 
 <!-- Modal Preview Email -->
 <div class="modal fade" id="modalXemTruoc" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">👁️ Xem trước email</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" style="background-color: #f5f5f5;">
-                <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; background-color: #fff; font-family: Arial, sans-serif;">
-                    <h5 id="previewTieuDe" style="color: #1e3a8a; margin-bottom: 15px; font-size: 18px;"></h5>
-                    <div id="previewNoiDung" style="line-height: 1.6; color: #333;"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-            </div>
-        </div>
-    </div>
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">👁️ Xem trước email</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+			</div>
+			<div class="modal-body" style="background-color: #f5f5f5;">
+				<div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; background-color: #fff; font-family: Arial, sans-serif;">
+					<h5 id="previewTieuDe" style="color: #1e3a8a; margin-bottom: 15px; font-size: 18px;"></h5>
+					<div id="previewNoiDung" style="line-height: 1.6; color: #333;"></div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+			</div>
+		</div>
+	</div>
 </div>
 
 <!-- TinyMCE CDN - GPL License -->
 <script src="https://cdn.tiny.cloud/1/@Html.Raw(Model.TinyMceApiKey)/tinymce/6/tinymce.min.js"></script>
 <script>
-        // Khởi tạo TinyMCE
-        tinymce.init({
-            selector: '#NoiDung',
-            language: 'vi',
-            height: 400,
-            license_key: 'gpl',
-            plugins: [
-                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                'insertdatetime', 'media', 'table', 'help', 'wordcount', 'emoticons'
-            ],
-            toolbar: [
-                'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify',
-                'bullist numlist outdent indent | link image media table | removeformat | help | emoticons'
-            ],
-            toolbar_mode: 'floating',
-            content_css: 'default',
+	@* ===== GLOBAL VARIABLES ===== *@
+	let selectedProducts = [];
+	let currentPage = 1;
+	let currentQuery = '';
+	let isLoading = false;
+	let hasMoreProducts = true;
 
-            images_upload_url: '@Url.Action("UploadImage", "KhachHang", new { area = "Admin" })',
-            automatic_uploads: true,
-            file_picker_types: 'image',
+	@* ===== TINYMCE INITIALIZATION ===== *@
+	tinymce.init({
+		selector: '#NoiDung',
+		language: 'vi',
+		height: 400,
+		license_key: 'gpl',
+		plugins: ['advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview', 'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen', 'insertdatetime', 'media', 'table', 'help', 'wordcount', 'emoticons'],
+		toolbar: ['undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify', 'bullist numlist outdent indent | link image media table | removeformat | help | emoticons'],
+		toolbar_mode: 'floating',
+		content_css: 'default',
+		images_upload_url: '@Url.Action("UploadImage", "KhachHang", new { area = "Admin" })',
+		automatic_uploads: true,
+		file_picker_types: 'image',
+		images_upload_handler: function (blobInfo, progress) {
+			return new Promise((resolve, reject) => {
+				const xhr = new XMLHttpRequest();
+				xhr.withCredentials = false;
+				xhr.open('POST', '@Url.Action("UploadImage", "KhachHang", new { area = "Admin" })');
+				xhr.upload.onprogress = (e) => { progress(e.loaded / e.total * 100); };
+				xhr.onload = () => {
+					if (xhr.status === 200) {
+						try {
+							const json = JSON.parse(xhr.responseText);
+							if (!json || typeof json.location !== 'string') { reject('Invalid JSON: ' + xhr.responseText); return; }
+							resolve(json.location);
+						} catch (e) { reject('Parse error: ' + xhr.responseText); }
+					} else { reject('Image upload failed: ' + xhr.responseText); }
+				};
+				xhr.onerror = () => reject('Image upload failed');
+				xhr.onabort = () => reject('Image upload aborted');
+				const formData = new FormData();
+				formData.append('file', blobInfo.blob(), blobInfo.filename());
+				xhr.send(formData);
+			});
+		}
+	});
+		// ===== EMAIL TEMPLATES =====
+		const emailTemplates = {
+			'promo_christmas': {
+				title: '🎄 Khuyến mãi Giáng sinh PhongNguyen Puppy',
+				content: `
+	<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
+	  <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
+		<h1 style="color: #d63031; font-size: 28px; margin: 0;">🎄 Giáng sinh vui vẻ!</h1>
+		<p style="color: #666; font-size: 16px; margin: 15px 0;">Xin chào quý khách hàng!</p>
 
-            images_upload_handler: function (blobInfo, progress) {
-                return new Promise((resolve, reject) => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.withCredentials = false;
-                    xhr.open('POST', '@Url.Action("UploadImage", "KhachHang", new { area = "Admin" })');
+		<div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; text-align: left; border-radius: 4px;">
+		  <p style="margin: 0; font-size: 14px; color: #333;">
+			Nhân dịp Giáng sinh, <strong>PhongNguyen Puppy</strong> gửi tặng bạn mã giảm giá <strong style="color: #d63031;">SALE10</strong>
+		  </p>
+		</div>
 
-                    xhr.upload.onprogress = (e) => {
-                        progress(e.loaded / e.total * 100);
-                    };
+		<div style="background: #e8f5e9; padding: 15px; border-radius: 4px; margin: 15px 0;">
+		  <p style="font-size: 16px; color: #2e7d32; margin: 0;">
+			<strong>✨ Giảm 10%</strong> cho tổng giá trị đơn hàng
+		  </p>
+		  <p style="font-size: 14px; color: #666; margin: 5px 0;">Áp dụng cho tất cả sản phẩm</p>
+		</div>
 
-                    xhr.onload = () => {
-                        if (xhr.status === 200) {
-                            try {
-                                const json = JSON.parse(xhr.responseText);
-                                if (!json || typeof json.location !== 'string') {
-                                    reject('Invalid JSON: ' + xhr.responseText);
-                                    return;
-                                }
-                                resolve(json.location);
-                            } catch (e) {
-                                reject('Parse error: ' + xhr.responseText);
-                            }
-                        } else {
-                            reject('Image upload failed: ' + xhr.responseText);
-                        }
-                    };
+		<p style="color: #666; font-size: 15px; margin: 15px 0;">
+		  Hãy nhanh tay đặt hàng để nhận ưu đãi đặc biệt này!
+		</p>
 
-                    xhr.onerror = () => reject('Image upload failed');
-                    xhr.onabort = () => reject('Image upload aborted');
+		<a href="@Url.Action("Index", "Home", new { area = "" }, Context.Request.Scheme)" 
+       style="display: inline-block; background: #d63031; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
+      🛍️ MUA NGAY
+    </a>
 
-                    const formData = new FormData();
-                    formData.append('file', blobInfo.blob(), blobInfo.filename());
-                    xhr.send(formData);
-                });
-            }
-        });
+		<p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+		  Chúc bạn một mùa Giáng sinh an lành và hạnh phúc!<br>
+		  <strong>PhongNguyen Puppy Shop</strong> 🐶
+		</p>
+	  </div>
+	</div>
+				`
+			},
+				'product_showcase': {
+		title: '🛍️ Sản phẩm hot trong tuần từ PhongNguyen Puppy',
+		content: `
+	<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
+		<div style="background: white; border-radius: 8px; padding: 30px;">
+			<h1 style="color: #d63031; font-size: 28px; margin: 0; text-align: center;">🛍️ Sản phẩm hot trong tuần!</h1>
+			<p style="color: #666; font-size: 16px; margin: 15px 0; text-align: center;">Xin chào quý khách hàng!</p>
 
-        // ===== EMAIL TEMPLATES =====
-        const emailTemplates = {
-            'promo_christmas': {
-                title: '🎄 Khuyến mãi Giáng sinh PhongNguyen Puppy',
-                content: `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
-      <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
-        <h1 style="color: #d63031; font-size: 28px; margin: 0;">🎄 Giáng sinh vui vẻ!</h1>
-        <p style="color: #666; font-size: 16px; margin: 15px 0;">Xin chào quý khách hàng!</p>
+			<p style="color: #666; font-size: 15px; margin: 15px 0;">
+				PhongNguyen Puppy xin giới thiệu những sản phẩm chất lượng cao dành cho thú cưng yêu của bạn:
+			</p>
 
-        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; text-align: left; border-radius: 4px;">
-          <p style="margin: 0; font-size: 14px; color: #333;">
-            Nhân dịp Giáng sinh, <strong>PhongNguyen Puppy</strong> gửi tặng bạn mã giảm giá <strong style="color: #d63031;">SALE10</strong>
-          </p>
-        </div>
+			<!-- ⬇️ SẢN PHẨM SẼ ĐƯỢC CHÈN VÀO ĐÂY ⬇️ -->
 
-        <div style="background: #e8f5e9; padding: 15px; border-radius: 4px; margin: 15px 0;">
-          <p style="font-size: 16px; color: #2e7d32; margin: 0;">
-            <strong>✨ Giảm 10%</strong> cho tổng giá trị đơn hàng
-          </p>
-          <p style="font-size: 14px; color: #666; margin: 5px 0;">Áp dụng cho tất cả sản phẩm</p>
-        </div>
+			<p style="color: #999; font-size: 13px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; text-align: center;">
+				Cảm ơn bạn đã tin tưởng PhongNguyen Puppy!<br>
+				<strong>PhongNguyen Puppy Shop</strong> 🐶
+			</p>
+		</div>
+	</div>
+		`
+	},
+			'promo_newyear': {
+				title: '🎆 Khuyến mãi Năm mới PhongNguyen Puppy',
+				content: `
+	<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 10px;">
+	  <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
+		<h1 style="color: #ff6b6b; font-size: 28px; margin: 0;">🎆 Năm mới, năm mới, ưu đãi mới!</h1>
+		<p style="color: #666; font-size: 16px; margin: 15px 0;">Quý khách hàng thân yêu,</p>
 
-        <p style="color: #666; font-size: 15px; margin: 15px 0;">
-          Hãy nhanh tay đặt hàng để nhận ưu đãi đặc biệt này!
-        </p>
+		<div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; text-align: left; border-radius: 4px;">
+		  <p style="margin: 0; font-size: 14px; color: #333;">
+			Bắt đầu năm mới với những ưu đãi tuyệt vời từ <strong>PhongNguyen Puppy</strong>
+		  </p>
+		</div>
 
-        <a href="https://exacting-glenda-usurpingly.ngrok-free.dev/" style="display: inline-block; background: #d63031; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
-          🛍️ MUA NGAY
-        </a>
+		<div style="background: #e8f5e9; padding: 15px; border-radius: 4px; margin: 15px 0;">
+		  <p style="font-size: 18px; color: #2e7d32; margin: 0;">
+			<strong>🎁 KHUYẾN MẠI ĐẶC BIỆT</strong>
+		  </p>
+		  <p style="font-size: 14px; color: #666; margin: 5px 0;">Dành riêng cho quý khách hàng thân thiết</p>
+		</div>
 
-        <p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-          Chúc bạn một mùa Giáng sinh an lành và hạnh phúc!<br>
-          <strong>PhongNguyen Puppy Shop</strong> 🐶
-        </p>
-      </div>
-    </div>
-                `
-            },
-            'promo_newyear': {
-                title: '🎆 Khuyến mãi Năm mới PhongNguyen Puppy',
-                content: `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 10px;">
-      <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
-        <h1 style="color: #ff6b6b; font-size: 28px; margin: 0;">🎆 Năm mới, năm mới, ưu đãi mới!</h1>
-        <p style="color: #666; font-size: 16px; margin: 15px 0;">Quý khách hàng thân yêu,</p>
+		<a  href="@Url.Action("Index", "Home", new { area = "" }, Context.Request.Scheme)" style="display: inline-block; background: #ff6b6b; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
+		  🛍️ ĐẶT HÀNG NGAY
+		</a>
 
-        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; text-align: left; border-radius: 4px;">
-          <p style="margin: 0; font-size: 14px; color: #333;">
-            Bắt đầu năm mới với những ưu đãi tuyệt vời từ <strong>PhongNguyen Puppy</strong>
-          </p>
-        </div>
+		<p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+		  Chúc quý khách một năm mới an khang, thịnh vượng!<br>
+		  <strong>PhongNguyen Puppy Shop</strong> 🐶
+		</p>
+	  </div>
+	</div>
+				`
+			},
+			'promo_summer': {
+				title: '☀️ Khuyến mãi Hè PhongNguyen Puppy',
+				content: `
+	<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #ffa751 0%, #ffe259 100%); padding: 20px; border-radius: 10px;">
+	  <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
+		<h1 style="color: #ff6b35; font-size: 28px; margin: 0;">☀️ Mùa hè sôi động!</h1>
+		<p style="color: #666; font-size: 16px; margin: 15px 0;">Xin chào quý khách hàng!</p>
 
-        <div style="background: #e8f5e9; padding: 15px; border-radius: 4px; margin: 15px 0;">
-          <p style="font-size: 18px; color: #2e7d32; margin: 0;">
-            <strong>🎁 KHUYẾN MẠI ĐẶC BIỆT</strong>
-          </p>
-          <p style="font-size: 14px; color: #666; margin: 5px 0;">Dành riêng cho quý khách hàng thân thiết</p>
-        </div>
+		<p style="color: #666; font-size: 15px; margin: 15px 0;">
+		  Trong mùa hè nóng bức này, hãy chọn những sản phẩm chất lượng từ <strong>PhongNguyen Puppy</strong> để chăm sóc thú cưng yêu.
+		</p>
 
-        <a href="https://exacting-glenda-usurpingly.ngrok-free.dev/" style="display: inline-block; background: #ff6b6b; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
-          🛍️ ĐẶT HÀNG NGAY
-        </a>
+		<div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; text-align: left; border-radius: 4px;">
+		  <p style="margin: 0; font-size: 14px; color: #333;">
+			<strong>🌞 KHUYẾN MẠI HÈ:</strong> Giảm tới 20% cho tất cả sản phẩm
+		  </p>
+		</div>
 
-        <p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-          Chúc quý khách một năm mới an khang, thịnh vượng!<br>
-          <strong>PhongNguyen Puppy Shop</strong> 🐶
-        </p>
-      </div>
-    </div>
-                `
-            },
-            'promo_summer': {
-                title: '☀️ Khuyến mãi Hè PhongNguyen Puppy',
-                content: `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #ffa751 0%, #ffe259 100%); padding: 20px; border-radius: 10px;">
-      <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
-        <h1 style="color: #ff6b35; font-size: 28px; margin: 0;">☀️ Mùa hè sôi động!</h1>
-        <p style="color: #666; font-size: 16px; margin: 15px 0;">Xin chào quý khách hàng!</p>
+		<a href="@Url.Action("Index", "Home", new { area = "" }, Context.Request.Scheme)" style="display: inline-block; background: #ff6b35; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
+		  🛍️ MUA NGAY
+		</a>
 
-        <p style="color: #666; font-size: 15px; margin: 15px 0;">
-          Trong mùa hè nóng bức này, hãy chọn những sản phẩm chất lượng từ <strong>PhongNguyen Puppy</strong> để chăm sóc thú cưng yêu.
-        </p>
+		<p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+		  Chúc bạn một mùa hè vui vẻ cùng thú cưng!<br>
+		  <strong>PhongNguyen Puppy Shop</strong> 🐶
+		</p>
+	  </div>
+	</div>
+				`
+			},
+			'promo_general': {
+				title: '🏷️ Khuyến mãi đặc biệt từ PhongNguyen Puppy',
+				content: `
+	<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); padding: 20px; border-radius: 10px;">
+	  <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
+		<h1 style="color: #d63031; font-size: 28px; margin: 0;">🏷️ Khuyến mãi đặc biệt!</h1>
+		<p style="color: #666; font-size: 16px; margin: 15px 0;">Xin chào quý khách hàng!</p>
 
-        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; text-align: left; border-radius: 4px;">
-          <p style="margin: 0; font-size: 14px; color: #333;">
-            <strong>🌞 KHUYẾN MẠI HÈ:</strong> Giảm tới 20% cho tất cả sản phẩm
-          </p>
-        </div>
+		<div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; text-align: left; border-radius: 4px;">
+		  <p style="margin: 0; font-size: 14px; color: #333;">
+			PhongNguyen Puppy có những <strong>ưu đãi hot</strong> dành riêng cho bạn!
+		  </p>
+		</div>
 
-        <a href="https://exacting-glenda-usurpingly.ngrok-free.dev/" style="display: inline-block; background: #ff6b35; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
-          🛍️ MUA NGAY
-        </a>
+		<a href="@Url.Action("Index", "Home", new { area = "" }, Context.Request.Scheme)" style="display: inline-block; background: #d63031; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
+		  🛍️ MUA NGAY
+		</a>
 
-        <p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-          Chúc bạn một mùa hè vui vẻ cùng thú cưng!<br>
-          <strong>PhongNguyen Puppy Shop</strong> 🐶
-        </p>
-      </div>
-    </div>
-                `
-            },
-            'promo_general': {
-                title: '🏷️ Khuyến mãi đặc biệt từ PhongNguyen Puppy',
-                content: `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); padding: 20px; border-radius: 10px;">
-      <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
-        <h1 style="color: #d63031; font-size: 28px; margin: 0;">🏷️ Khuyến mãi đặc biệt!</h1>
-        <p style="color: #666; font-size: 16px; margin: 15px 0;">Xin chào quý khách hàng!</p>
+		<p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+		  Cảm ơn sự ủng hộ của bạn!<br>
+		  <strong>PhongNguyen Puppy Shop</strong> 🐶
+		</p>
+	  </div>
+	</div>
+				`
+			},
+			'product_new': {
+				title: '📦 Sản phẩm mới từ PhongNguyen Puppy',
+				content: `
+	<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
+	  <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
+		<h1 style="color: #667eea; font-size: 28px; margin: 0;">📦 Sản phẩm mới đã xuất hiện!</h1>
+		<p style="color: #666; font-size: 16px; margin: 15px 0;">Xin chào bạn!</p>
 
-        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; text-align: left; border-radius: 4px;">
-          <p style="margin: 0; font-size: 14px; color: #333;">
-            PhongNguyen Puppy có những <strong>ưu đãi hot</strong> dành riêng cho bạn!
-          </p>
-        </div>
+		<p style="color: #666; font-size: 15px; margin: 15px 0;">
+		  PhongNguyen Puppy vừa cập nhật những <strong>sản phẩm mới</strong> chất lượng cao cho thú cưng yêu của bạn.
+		</p>
 
-        <a href="https://exacting-glenda-usurpingly.ngrok-free.dev/" style="display: inline-block; background: #d63031; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
-          🛍️ MUA NGAY
-        </a>
+		<div style="background: #f0f4ff; padding: 15px; border-radius: 4px; margin: 15px 0;">
+		  <p style="font-size: 14px; color: #333; margin: 0;">
+			✅ Sản phẩm được chọn lọc kỹ lưỡng<br>
+			✅ Đảm bảo chất lượng tốt nhất<br>
+			✅ Giá cả cạnh tranh
+		  </p>
+		</div>
 
-        <p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-          Cảm ơn sự ủng hộ của bạn!<br>
-          <strong>PhongNguyen Puppy Shop</strong> 🐶
-        </p>
-      </div>
-    </div>
-                `
-            },
-            'product_new': {
-                title: '📦 Sản phẩm mới từ PhongNguyen Puppy',
-                content: `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
-      <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
-        <h1 style="color: #667eea; font-size: 28px; margin: 0;">📦 Sản phẩm mới đã xuất hiện!</h1>
-        <p style="color: #666; font-size: 16px; margin: 15px 0;">Xin chào bạn!</p>
+		<a href="@Url.Action("Index", "Home", new { area = "" }, Context.Request.Scheme)" style="display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
+		  👉 XEM NGAY
+		</a>
 
-        <p style="color: #666; font-size: 15px; margin: 15px 0;">
-          PhongNguyen Puppy vừa cập nhật những <strong>sản phẩm mới</strong> chất lượng cao cho thú cưng yêu của bạn.
-        </p>
+		<p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+		  Cảm ơn bạn đã tin tưởng PhongNguyen Puppy!<br>
+		  <strong>PhongNguyen Puppy Shop</strong> 🐶
+		</p>
+	  </div>
+	</div>
+				`
+			},
+			'announcement': {
+				title: '📣 Thông báo quan trọng từ PhongNguyen Puppy',
+				content: `
+	<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 10px;">
+	  <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
+		<h1 style="color: #0066cc; font-size: 28px; margin: 0;">📣 Thông báo quan trọng</h1>
+		<p style="color: #666; font-size: 16px; margin: 15px 0;">Quý khách hàng thân yêu,</p>
 
-        <div style="background: #f0f4ff; padding: 15px; border-radius: 4px; margin: 15px 0;">
-          <p style="font-size: 14px; color: #333; margin: 0;">
-            ✅ Sản phẩm được chọn lọc kỹ lưỡng<br>
-            ✅ Đảm bảo chất lượng tốt nhất<br>
-            ✅ Giá cả cạnh tranh
-          </p>
-        </div>
+		<p style="color: #666; font-size: 15px; margin: 15px 0;">
+		  PhongNguyen Puppy xin thông báo những thay đổi quan trọng nhằm nâng cao chất lượng dịch vụ.
+		</p>
 
-        <a href="https://exacting-glenda-usurpingly.ngrok-free.dev/" style="display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
-          👉 XEM NGAY
-        </a>
+		<a href="@Url.Action("Index", "Home", new { area = "" }, Context.Request.Scheme)" style="display: inline-block; background: #0066cc; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
+		  📖 CHI TIẾT THÊM
+		</a>
 
-        <p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-          Cảm ơn bạn đã tin tưởng PhongNguyen Puppy!<br>
-          <strong>PhongNguyen Puppy Shop</strong> 🐶
-        </p>
-      </div>
-    </div>
-                `
-            },
-            'announcement': {
-                title: '📣 Thông báo quan trọng từ PhongNguyen Puppy',
-                content: `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 10px;">
-      <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
-        <h1 style="color: #0066cc; font-size: 28px; margin: 0;">📣 Thông báo quan trọng</h1>
-        <p style="color: #666; font-size: 16px; margin: 15px 0;">Quý khách hàng thân yêu,</p>
+		<p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+		  Cảm ơn sự hợp tác của bạn!<br>
+		  <strong>PhongNguyen Puppy Shop</strong> 🐶
+		</p>
+	  </div>
+	</div>
+				`
+			},
+			'feedback': {
+				title: '⭐ Chia sẻ trải nghiệm mua hàng của bạn',
+				content: `
+	<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%); padding: 20px; border-radius: 10px;">
+	  <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
+		<h1 style="color: #f39c12; font-size: 28px; margin: 0;">⭐ Giọng nói của bạn rất quan trọng!</h1>
+		<p style="color: #666; font-size: 16px; margin: 15px 0;">Xin chào bạn!</p>
 
-        <p style="color: #666; font-size: 15px; margin: 15px 0;">
-          PhongNguyen Puppy xin thông báo những thay đổi quan trọng nhằm nâng cao chất lượng dịch vụ.
-        </p>
+		<p style="color: #666; font-size: 15px; margin: 15px 0;">
+		  Chúng tôi muốn biết trải nghiệm của bạn khi mua hàng tại PhongNguyen Puppy để có thể cải thiện dịch vụ.
+		</p>
 
-        <a href="https://exacting-glenda-usurpingly.ngrok-free.dev/" style="display: inline-block; background: #0066cc; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
-          📖 CHI TIẾT THÊM
-        </a>
+		<a href="@Url.Action("Index", "Home", new { area = "" }, Context.Request.Scheme)" style="display: inline-block; background: #f39c12; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
+		  💬 GỬI NHẬN XÉT
+		</a>
 
-        <p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-          Cảm ơn sự hợp tác của bạn!<br>
-          <strong>PhongNguyen Puppy Shop</strong> 🐶
-        </p>
-      </div>
-    </div>
-                `
-            },
-            'feedback': {
-                title: '⭐ Chia sẻ trải nghiệm mua hàng của bạn',
-                content: `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%); padding: 20px; border-radius: 10px;">
-      <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
-        <h1 style="color: #f39c12; font-size: 28px; margin: 0;">⭐ Giọng nói của bạn rất quan trọng!</h1>
-        <p style="color: #666; font-size: 16px; margin: 15px 0;">Xin chào bạn!</p>
+		<p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+		  Cảm ơn bạn đã dành thời gian chia sẻ!<br>
+		  <strong>PhongNguyen Puppy Shop</strong> 🐶
+		</p>
+	  </div>
+	</div>
+				`
+			},
+			'thank_you': {
+				title: '🙏 Cảm ơn bạn đã mua hàng tại PhongNguyen Puppy',
+				content: `
+	<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); padding: 20px; border-radius: 10px;">
+	  <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
+		<h1 style="color: #d63031; font-size: 28px; margin: 0;">🙏 Cảm ơn bạn!</h1>
+		<p style="color: #666; font-size: 16px; margin: 15px 0;">Quý khách hàng thân yêu,</p>
 
-        <p style="color: #666; font-size: 15px; margin: 15px 0;">
-          Chúng tôi muốn biết trải nghiệm của bạn khi mua hàng tại PhongNguyen Puppy để có thể cải thiện dịch vụ.
-        </p>
+		<p style="color: #666; font-size: 15px; margin: 15px 0;">
+		  Cảm ơn bạn đã tin tưởng và chọn PhongNguyen Puppy. Chúng tôi rất vinh dự được phục vụ bạn!
+		</p>
 
-        <a href="https://exacting-glenda-usurpingly.ngrok-free.dev/" style="display: inline-block; background: #f39c12; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
-          💬 GỬI NHẬN XÉT
-        </a>
+		<div style="background: #e8f5e9; padding: 15px; border-radius: 4px; margin: 15px 0;">
+		  <p style="font-size: 14px; color: #2e7d32; margin: 0;">
+			✅ Đơn hàng của bạn đang được chuẩn bị<br>
+			✅ Bạn sẽ nhận được thông báo cập nhật<br>
+			✅ Liên hệ chúng tôi nếu cần hỗ trợ
+		  </p>
+		</div>
 
-        <p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-          Cảm ơn bạn đã dành thời gian chia sẻ!<br>
-          <strong>PhongNguyen Puppy Shop</strong> 🐶
-        </p>
-      </div>
-    </div>
-                `
-            },
-            'thank_you': {
-                title: '🙏 Cảm ơn bạn đã mua hàng tại PhongNguyen Puppy',
-                content: `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); padding: 20px; border-radius: 10px;">
-      <div style="background: white; border-radius: 8px; padding: 30px; text-align: center;">
-        <h1 style="color: #d63031; font-size: 28px; margin: 0;">🙏 Cảm ơn bạn!</h1>
-        <p style="color: #666; font-size: 16px; margin: 15px 0;">Quý khách hàng thân yêu,</p>
+		<a href="@Url.Action("Index", "Home", new { area = "" }, Context.Request.Scheme)" style="display: inline-block; background: #2ecc71; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
+		  📦 THEO DÕI ĐƠN HÀNG
+		</a>
 
-        <p style="color: #666; font-size: 15px; margin: 15px 0;">
-          Cảm ơn bạn đã tin tưởng và chọn PhongNguyen Puppy. Chúng tôi rất vinh dự được phục vụ bạn!
-        </p>
+		<p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+		  Chúc bạn và thú cưng luôn khỏe mạnh!<br>
+		  <strong>PhongNguyen Puppy Shop</strong> 🐶
+		</p>
+	  </div>
+	</div>
+				`
+			}
+		};
+	@* ===== EMAIL FUNCTIONS ===== *@
+	function loadTemplate() {
+		const templateId = document.getElementById('TemplateId').value;
+		if (templateId && emailTemplates[templateId]) {
+			document.getElementById('TieuDe').value = emailTemplates[templateId].title;
+			tinymce.get('NoiDung').setContent(emailTemplates[templateId].content);
+		}
+	}
 
-        <div style="background: #e8f5e9; padding: 15px; border-radius: 4px; margin: 15px 0;">
-          <p style="font-size: 14px; color: #2e7d32; margin: 0;">
-            ✅ Đơn hàng của bạn đang được chuẩn bị<br>
-            ✅ Bạn sẽ nhận được thông báo cập nhật<br>
-            ✅ Liên hệ chúng tôi nếu cần hỗ trợ
-          </p>
-        </div>
+	function chonTatCaEmail(source) {
+		document.querySelectorAll('.email-checkbox').forEach(cb => cb.checked = source.checked);
+		updateEmailCount();
+	}
 
-        <a href="https://exacting-glenda-usurpingly.ngrok-free.dev/" style="display: inline-block; background: #2ecc71; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">
-          📦 THEO DÕI ĐƠN HÀNG
-        </a>
+	function updateEmailCount() {
+		document.getElementById('soLuongChon').textContent = document.querySelectorAll('.email-checkbox:checked').length;
+	}
 
-        <p style="color: #999; font-size: 13px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-          Chúc bạn và thú cưng luôn khỏe mạnh!<br>
-          <strong>PhongNguyen Puppy Shop</strong> 🐶
-        </p>
-      </div>
-    </div>
-                `
-            }
-        };
+	function xemTruoc() {
+		const tieuDe = document.getElementById('TieuDe').value;
+		const noiDung = tinymce.get('NoiDung').getContent();
+		if (!tieuDe || !noiDung) { alert('⚠️ Vui lòng nhập tiêu đề và nội dung!'); return; }
+		document.getElementById('previewTieuDe').textContent = tieuDe;
+		document.getElementById('previewNoiDung').innerHTML = noiDung;
+		new bootstrap.Modal(document.getElementById('modalXemTruoc')).show();
+	}
 
-                // Cập nhật preview khi thay đổi email bổ sung
-        document.getElementById('EmailBoSung').addEventListener('input', function() {
-            processEmailBoSung();
-        });
+	function processEmailBoSung() {
+		const emailInput = document.getElementById('EmailBoSung').value.trim();
+		if (!emailInput) { document.getElementById('emailBoSungList').style.display = 'none'; return []; }
+		const emails = emailInput.split(',').map(e => e.trim()).filter(e => e.includes('@@'));
+		if (emails.length > 0) {
+			document.getElementById('emailBoSungList').style.display = 'block';
+			document.getElementById('emailBoSungPreview').innerHTML = emails.map(e => '<span class="badge bg-primary me-1 mb-1">' + e + '</span>').join('');
+		} else { document.getElementById('emailBoSungList').style.display = 'none'; }
+		return emails;
+	}
 
-        // Load template
-        function loadTemplate() {
-            const templateId = document.getElementById('TemplateId').value;
-            if (templateId && emailTemplates[templateId]) {
-                const template = emailTemplates[templateId];
-                document.getElementById('TieuDe').value = template.title;
-                tinymce.get('NoiDung').setContent(template.content);
-            }
-        }
+	@* ===== PRODUCT FUNCTIONS ===== *@
+	function toggleProductSelector() {
+		const container = document.getElementById('productSelectorContainer');
+		const isVisible = container.style.display !== 'none';
+		container.style.display = isVisible ? 'none' : 'block';
+		if (!isVisible) { currentPage = 1; currentQuery = ''; document.getElementById('productSearchInput').value = ''; }
+	}
 
-        // Hàm chọn/bỏ chọn tất cả email
-        function chonTatCaEmail(source) {
-            const checkboxes = document.querySelectorAll('.email-checkbox');
-            checkboxes.forEach(cb => cb.checked = source.checked);
-            updateEmailCount();
-        }
+	function searchProducts() { currentPage = 1; currentQuery = document.getElementById('productSearchInput').value.trim(); loadProducts(true); }
 
-        // Hàm cập nhật số lượng email được chọn
-        function updateEmailCount() {
-            const soLuong = document.querySelectorAll('.email-checkbox:checked').length;
-            document.getElementById('soLuongChon').textContent = soLuong;
-        }
+	function loadProducts(clearExisting) {
+		if (isLoading) return;
+		isLoading = true;
+		const loadingEl = document.getElementById('productLoading');
+		const gridEl = document.getElementById('productGrid');
+		const noResultsEl = document.getElementById('noResultsMessage');
+		const loadMoreBtn = document.getElementById('loadMoreContainer');
+		loadingEl.style.display = 'block';
+		noResultsEl.style.display = 'none';
+		if (clearExisting) gridEl.innerHTML = '';
 
-        // Hàm xem trước email
-        function xemTruoc() {
-            const tieuDe = document.getElementById('TieuDe').value;
-            const noiDung = tinymce.get('NoiDung').getContent();
+		fetch('/Admin/KhachHang/SearchProducts?query=' + encodeURIComponent(currentQuery) + '&page=' + currentPage + '&pageSize=10')
+			.then(response => response.json())
+			.then(data => {
+				loadingEl.style.display = 'none';
+				if (data.success) {
+					if (data.products.length === 0 && clearExisting) { noResultsEl.style.display = 'block'; loadMoreBtn.style.display = 'none'; }
+					else { renderProducts(data.products); hasMoreProducts = currentPage < data.totalPages; loadMoreBtn.style.display = hasMoreProducts ? 'block' : 'none'; }
+				} else { alert('⚠️ Lỗi tải sản phẩm'); }
+			})
+			.catch(error => { console.error('Error:', error); loadingEl.style.display = 'none'; alert('⚠️ Lỗi kết nối'); })
+			.finally(() => { isLoading = false; });
+	}
 
-            if (!tieuDe || !noiDung) {
-                alert('⚠️ Vui lòng nhập tiêu đề và nội dung trước khi xem trước!');
-                return;
-            }
+		function renderProducts(products) {
+		const gridEl = document.getElementById('productGrid');
+		products.forEach(product => {
+			// DÙNG TRỰC TIẾP product.hinh (ĐÃ CÓ HTTP://)
+			const productHtml = '<div class="col-md-6 product-item"><div class="card h-100 product-card"><div class="form-check p-3">' +
+				'<input class="form-check-input product-checkbox" type="checkbox" value="' + product.maHh + '" id="product_' + product.maHh + '" ' +
+				'data-product-name="' + product.tenHh + '" data-product-price="' + product.donGia + '" data-product-image="' + product.hinh + '" ' +
+				'data-product-desc="' + (product.moTaNgan || '') + '" data-product-discount="' + (product.giamGia || 0) + '" onchange="updateSelectedProducts()" />' +
+				'<label class="form-check-label w-100" for="product_' + product.maHh + '"><div class="row g-2"><div class="col-4">' +
+				// DÙNG TRỰC TIẾP product.hinh
+				'<img src="' + product.hinh + '" alt="' + product.tenHh + '" class="img-fluid rounded" style="max-height: 80px; object-fit: cover;" /></div>' +
+				'<div class="col-8"><h6 class="mb-1" style="font-size: 14px;">' + product.tenHh + '</h6><p class="mb-0 text-primary" style="font-weight: bold;">' +
+				product.donGia.toLocaleString('vi-VN') + ' VNĐ</p></div></div></label></div></div></div>';
+			gridEl.insertAdjacentHTML('beforeend', productHtml);
+		});
+	}
 
-            document.getElementById('previewTieuDe').textContent = tieuDe;
-            document.getElementById('previewNoiDung').innerHTML = noiDung;
+	function loadMoreProducts() { if (!hasMoreProducts || isLoading) return; currentPage++; loadProducts(false); }
 
-            const modal = new bootstrap.Modal(document.getElementById('modalXemTruoc'));
-            modal.show();
-        }
+	function updateSelectedProducts() {
+		selectedProducts = [];
+		document.querySelectorAll('.product-checkbox:checked').forEach(checkbox => {
+			selectedProducts.push({ id: checkbox.value, name: checkbox.dataset.productName, price: parseFloat(checkbox.dataset.productPrice),
+				image: checkbox.dataset.productImage, desc: checkbox.dataset.productDesc, discount: parseFloat(checkbox.dataset.productDiscount || 0) });
+		});
+		document.getElementById('soLuongSanPham').textContent = selectedProducts.length;
+	}
 
-        // ===== VALIDATE FORM BEFORE SUBMIT =====
-        document.getElementById('formGuiEmail').addEventListener('submit', function (e) {
-            const tieuDe = document.getElementById('TieuDe').value.trim();
-            const noiDung = tinymce.get('NoiDung').getContent().trim();
-            const soEmailChon = document.querySelectorAll('.email-checkbox:checked').length;
-            const validEmailBoSung = processEmailBoSung().length;
+		function insertProductsToEmail() {
+		if (selectedProducts.length === 0) {
+			alert('⚠️ Vui lòng chọn ít nhất 1 sản phẩm!');
+			return;
+		}
 
-            // Kiểm tra tiêu đề và nội dung
-            if (!tieuDe || !noiDung) {
-                e.preventDefault();
-                alert('⚠️ Vui lòng:\n1. Nhập tiêu đề\n2. Nhập nội dung email');
-                return;
-            }
+			let productsHtml = `
+	<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 0 10px;">
+		<h2 style="color: #d63031; text-align: center; margin-bottom: 20px; font-size: 24px;">🛍️ Sản phẩm nổi bật</h2>
 
-            // Kiểm tra có email để gửi không
-            if (soEmailChon === 0 && validEmailBoSung === 0) {
-                e.preventDefault();
-                alert('⚠️ Vui lòng chọn ít nhất 1 email\n(từ danh sách khách hàng hoặc email bổ sung)');
-                return;
-            }
+		<!-- ✅ SỬ DỤNG TABLE ĐỂ TƯƠNG THÍCH VỚI MỌI EMAIL CLIENT -->
+		<table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto;">
+			<tr>`;
 
-            // Hiển thị loading state
-            const btn = document.getElementById('btnGuiEmail');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang gửi...';
-        });
+		selectedProducts.forEach((product, index) => {
+			const priceAfterDiscount = product.discount > 0
+				? product.price * (1 - product.discount / 100)
+				: product.price;
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            updateEmailCount();
-            document.querySelectorAll('.email-checkbox').forEach(cb => {
-                cb.addEventListener('change', updateEmailCount);
-            });
-        });
+			const discountBadge = product.discount > 0
+				? `<span style="background: #dc3545; color: white; padding: 4px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 5px;">-${product.discount}%</span>`
+				: '';
+
+			const priceDisplay = product.discount > 0
+				? `<p style="margin: 5px 0 0 0; font-size: 12px; color: #999; text-decoration: line-through;">${product.price.toLocaleString('vi-VN')} VNĐ</p>
+				   <p style="margin: 3px 0 0 0; font-size: 16px; color: #d63031; font-weight: bold;">${priceAfterDiscount.toLocaleString('vi-VN')} VNĐ</p>`
+				: `<p style="margin: 5px 0 0 0; font-size: 16px; color: #d63031; font-weight: bold;">${product.price.toLocaleString('vi-VN')} VNĐ</p>`;
+
+			// MỖI 2 SẢN PHẨM XUỐNG HÀNG MỚI
+			if (index > 0 && index % 2 === 0) {
+				productsHtml += `</tr><tr>`;
+			}
+
+			productsHtml += `
+				<td style="width: 50%; padding: 10px; vertical-align: top;">
+					<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background: white; border: 1px solid #ddd; border-radius: 8px;">
+						<tr>
+							<td style="padding: 15px; text-align: center;">
+								<!-- ẢNH RESPONSIVE -->
+								<img src="${product.image}"
+									 alt="${product.name}"
+									 style="width: 100%; max-width: 200px; height: auto; display: block; margin: 0 auto; border-radius: 5px;" />
+
+								<!-- TÊN SẢN PHẨM -->
+								<h3 style="font-size: 14px; color: #333; margin: 10px 0 5px 0; min-height: 40px; line-height: 1.4;">
+									${product.name}
+								</h3>
+
+								<!-- BADGE GIẢM GIÁ -->
+								${discountBadge}
+
+								<!-- GIÁ -->
+								${priceDisplay}
+							</td>
+						</tr>
+					</table>
+				</td>`;
+		});
+
+		productsHtml += `
+			</tr>
+		</table>
+
+		<!--  THÊM CSS CHO MOBILE (CHỈ HỖ TRỢ MỘT SỐ EMAIL CLIENT) -->
+		<style type="text/css">
+			@@media only screen and (max-width: 600px) {
+				table[class="responsive-table"] td {
+					display: block !important;
+					width: 100% !important;
+					padding: 10px 0 !important;
+				}
+			}
+		</style>
+	</div>`;
+
+		const currentContent = tinymce.get('NoiDung').getContent();
+		tinymce.get('NoiDung').setContent(currentContent + productsHtml);
+
+		alert('✅ Đã thêm ' + selectedProducts.length + ' sản phẩm vào email!');
+		toggleProductSelector();
+	}
+
+	@* ===== FORM VALIDATION ===== *@
+	document.getElementById('formGuiEmail').addEventListener('submit', function (e) {
+		const tieuDe = document.getElementById('TieuDe').value.trim();
+		const noiDung = tinymce.get('NoiDung').getContent().trim();
+		const soEmailChon = document.querySelectorAll('.email-checkbox:checked').length;
+		const validEmailBoSung = processEmailBoSung().length;
+		if (!tieuDe || !noiDung) { e.preventDefault(); alert('⚠️ Vui lòng nhập tiêu đề và nội dung'); return; }
+		if (soEmailChon === 0 && validEmailBoSung === 0) { e.preventDefault(); alert('⚠️ Vui lòng chọn ít nhất 1 email'); return; }
+		document.getElementById('btnGuiEmail').disabled = true;
+		document.getElementById('btnGuiEmail').innerHTML = '<i class="bi bi-hourglass-split"></i> Đang gửi...';
+	});
+
+	@* ===== INITIALIZATION ===== *@
+	document.addEventListener('DOMContentLoaded', function() {
+		updateEmailCount();
+		document.querySelectorAll('.email-checkbox').forEach(cb => cb.addEventListener('change', updateEmailCount));
+		document.getElementById('EmailBoSung').addEventListener('input', processEmailBoSung);
+		const searchInput = document.getElementById('productSearchInput');
+		if (searchInput) searchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') { e.preventDefault(); searchProducts(); } });
+	});
+
+	@* ===== CSS ===== *@
+	const style = document.createElement('style');
+	style.textContent = '.product-card:hover{box-shadow:0 4px 8px rgba(0,0,0,0.1);transform:translateY(-2px);transition:all 0.3s ease}';
+	document.head.appendChild(style);
 </script>
