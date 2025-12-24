@@ -776,6 +776,7 @@ namespace PhongNguyenPuppy_MVC.Controllers
 
         #region VNPay callback
         [Authorize]
+        [AllowAnonymous]
         public async Task<IActionResult> PaymentCallBack()
         {
             var response = _vnPayService.PaymentExecute(Request.Query);

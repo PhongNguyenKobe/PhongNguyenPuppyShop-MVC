@@ -3,6 +3,39 @@
 
 @{
     ViewData["Title"] = "Detail";
+
+    var productUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/san-pham/{SeoHelper.GenerateSlug(Model.TenHh)}-{Model.MaHh}";
+    var productImageUrl = $"/Hinh/HangHoa/{Model.Hinh}";
+
+    var metaDescription = !string.IsNullOrWhiteSpace(Model.MoTaNgan) && Model.MoTaNgan.Length >= 50
+        ? Model.MoTaNgan
+        : $"Mua {Model.TenHh} chính hãng, chất lượng cao tại PhongNguyen Puppy Shop. " +
+          $"Giá tốt nhất {Model.DonGia:N0}đ, giao hàng toàn quốc, thanh toán khi nhận hàng. " +
+          $"Chuyên cung cấp {Model.TenLoai.ToLower()} cho thú cưng. Đặt mua ngay!";
+
+    if (metaDescription.Length > 300)
+    {
+        metaDescription = metaDescription.Substring(0, 297) + "...";
+    }
+    else if (metaDescription.Length < 160)
+    {
+        metaDescription += $"  Sản phẩm {Model.TenLoai.ToLower()} uy tín. " +
+                          " Hàng chính hãng 100%.  Freeship đơn từ 500k.  Tư vấn miễn phí 24/7.";
+
+        if (metaDescription.Length > 300)
+        {
+            metaDescription = metaDescription.Substring(0, 297) + "...";
+        }
+    }
+
+    ViewData["SeoData"] = new SeoData
+    {
+        Title = $"{Model.TenHh} - Giá {Model.DonGia:N0}đ | PhongNguyen Puppy Shop",
+        Description = metaDescription,
+        Keywords = $"{Model.TenHh}, {Model.TenLoai}, thức ăn chó, phụ kiện chó, đồ dùng thú cưng, puppy shop, mua {Model.TenHh.ToLower()}, giá {Model.TenHh.ToLower()}",
+        CanonicalUrl = productUrl,
+        ImageUrl = productImageUrl
+    };
 }
 
 <!-- Single Page Header Start -->
