@@ -76,7 +76,7 @@
 Dưới đây là một số hình ảnh minh họa cho giao diện ứng dụng ASP.NET Core MVC tương tự với dự án **PhongNguyenPuppy**:
 
 - Trang chủ
-<img width="1578" height="9550" alt="localhost_7112_" src="https://github.com/user-attachments/assets/83c66a94-d5e9-4a91-8d1f-f06d303c262f" />
+<img width="980" height="477" alt="image" src="https://github.com/user-attachments/assets/164ff2f9-6b9c-4b92-90d7-50210d4df6aa" />
 
 - Admin
 *<img width="980" height="477" alt="image" src="https://github.com/user-attachments/assets/053d3f32-d34a-4608-90b1-bfd527baa22f" />*
