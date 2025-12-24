@@ -70,7 +70,8 @@
 - Email: phongnguyenfe@gmail.com
 - Cập nhật lần cuối: 12/11/2025
 ---
-
+## 📬 Video demo chức năng thanh toán
+- Youtube: [Demo thanh toán](https://www.youtube.com/watch?v=IL-HstHvRiM)
 ## 🖼️ Hình ảnh giao diện ứng dụng
 
 Dưới đây là một số hình ảnh minh họa cho giao diện ứng dụng ASP.NET Core MVC tương tự với dự án **PhongNguyenPuppy**:
