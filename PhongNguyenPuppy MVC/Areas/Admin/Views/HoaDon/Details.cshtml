@@ -1,6 +1,7 @@
 ﻿@model PhongNguyenPuppy_MVC.Areas.Admin.ViewModels.HoaDonDetailsViewModel
 @{
     ViewData["Title"] = "Chi tiết hóa đơn";
+    Layout = "_LayoutAdmin";
 
     string GetBadgeClass(string trangThai) => trangThai switch
     {
@@ -30,7 +31,7 @@
     }
 </style>
 
-<div class="container" style="padding-top: 180px; padding-bottom: 50px;">
+<div class="container" style="padding-top: 10px; padding-bottom: 50px;">
     <!-- Header -->
     <div class="mb-4">
         <h2>Chi tiết hóa đơn <span class="text-primary">#@Model.MaHd</span></h2>

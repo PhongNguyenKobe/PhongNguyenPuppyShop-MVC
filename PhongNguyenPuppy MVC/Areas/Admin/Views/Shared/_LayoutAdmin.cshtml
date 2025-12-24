@@ -220,10 +220,10 @@
                     <span class="ms-2 d-none d-sm-inline text-muted">Quản trị viên</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
-                    <li><a class="dropdown-item" href="/Admin/Profile">Hồ sơ</a></li>
-                    <li><a class="dropdown-item" href="/Admin/CaiDat">Cài đặt</a></li>
+                    <li><a class="dropdown-item" href="/admin/profile/index">Hồ sơ</a></li>
+                    <li><a class="dropdown-item" href="/admin/caidat/index">Cài đặt</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="/Account/Logout">Đăng xuất</a></li>
+                    <li><a class="dropdown-item text-danger" href="/account/logout">Đăng xuất</a></li>
                 </ul>
             </div>
         </div>
@@ -241,7 +241,7 @@
 
                 <ul class="nav-admin px-2">
                     <li class="nav-item">
-                        <a class="nav-link active" href="/Admin/Dashboard">
+                        <a class="nav-link active" href="/admin/dashboard/index">
                             <i class="bi bi-speedometer2"></i><span class="link-text">Trang tổng quan</span>
                         </a>
                     </li>
@@ -406,7 +406,6 @@
             init();
         })();
     </script>
-	// Toast notification for status update
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
         <div id="toastThongBao" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
