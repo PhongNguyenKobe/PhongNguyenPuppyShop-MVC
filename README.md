@@ -26,6 +26,7 @@
 - Upload & quản lý hình ảnh sản phẩm với validation
 - Tìm kiếm, lọc, sắp xếp dữ liệu động
 - Gửi email tự động xác nhận đơn hàng
+- Gửi, tạo email marketing gửi khách hàng
 - Theo dõi lịch sử mua hàng chi tiết
 
 ### 🛒 Khu vực User
