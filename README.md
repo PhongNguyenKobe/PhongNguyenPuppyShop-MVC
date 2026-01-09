@@ -90,12 +90,11 @@ Dưới đây là một số hình ảnh minh họa cho giao diện ứng dụng
 <img width="975" height="519" alt="image" src="https://github.com/user-attachments/assets/168fcfc6-50e4-4273-8d34-85ad8c76cef3" />
 
 - Livechat
-<img width="616" height="495" alt="image" src="https://github.com/user-attachments/assets/b75f5f8d-4942-4be6-9045-08db20a04a85" />
 <img width="616" height="495" alt="image" src="https://github.com/user-attachments/assets/3740174f-a170-4e01-92e1-9a795cfcfb84" />
 <img width="975" height="548" alt="image" src="https://github.com/user-attachments/assets/ac11a66b-d52e-432f-ae08-c08a0df085ee" />
 <img width="975" height="490" alt="image" src="https://github.com/user-attachments/assets/94c48015-bf0e-4820-9143-9422d6b8f066" />
 <img width="386" height="647" alt="image" src="https://github.com/user-attachments/assets/b8bf05bf-4490-4cf9-8ba4-44b70335e891" />
 <img width="880" height="469" alt="image" src="https://github.com/user-attachments/assets/22d7674c-de73-4430-ae7d-b69e1077fed5" />
 - Admin
-*<img width="980" height="477" alt="image" src="https://github.com/user-attachments/assets/053d3f32-d34a-4608-90b1-bfd527baa22f" />*
+<img width="980" height="477" alt="image" src="https://github.com/user-attachments/assets/053d3f32-d34a-4608-90b1-bfd527baa22f" />
 
