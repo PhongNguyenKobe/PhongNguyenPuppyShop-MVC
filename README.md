@@ -75,7 +75,7 @@
 - Youtube: [Demo thanh toán](https://www.youtube.com/watch?v=IL-HstHvRiM)
 ## 🖼️ Hình ảnh giao diện ứng dụng
 
-Dưới đây là một số hình ảnh minh họa cho giao diện ứng dụng ASP.NET Core MVC tương tự với dự án **PhongNguyenPuppy**:
+Dưới đây là một số hình ảnh minh họa cho giao diện ứng dụng ASP.NET Core MVC của dự án **PhongNguyenPuppy**:
 
 - Trang chủ
 <img width="980" height="477" alt="image" src="https://github.com/user-attachments/assets/164ff2f9-6b9c-4b92-90d7-50210d4df6aa" />
